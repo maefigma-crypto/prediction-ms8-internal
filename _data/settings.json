@@ -1,7 +1,12 @@
 {
-  "meta_title": "ScoreOcs8 — AI Sports Predictions | Football & Badminton Malaysia",
-  "meta_description": "ScoreOcs8 uses AI to deliver accurate football and badminton predictions for Malaysia Super League, EPL, UCL, FIFA World Cup 2026 and BWF. Free 2-day trial.",
-  "keywords": "football prediction Malaysia, Malaysia Super League tips, badminton prediction BWF, EPL tips Malaysia, FIFA World Cup 2026 Malaysia",
-  "og_image": "https://scoreocs8.pages.dev/images/og-image.jpg",
-  "google_verify": ""
+  "site_name": "ScoreOcs8",
+  "default_seo_title": "ScoreOcs8 — AI Sports Predictions | Football & Badminton Malaysia",
+  "default_meta_description": "ScoreOcs8 uses AI to deliver accurate football and badminton predictions for Malaysia Super League, EPL, UCL, FIFA World Cup 2026 and BWF. Free 2-day trial.",
+  "default_og_image": "",
+  "favicon": "",
+  "google_analytics_id": "",
+  "search_console_verify": "",
+  "auto_sitemap": true,
+  "robots_txt": "User-agent: *\nAllow: /\nDisallow: /admin/\nSitemap: https://scoreocs8.pages.dev/sitemap.xml",
+  "organisation_schema": "{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"SportsOrganization\",\n  \"name\": \"ScoreOcs8\",\n  \"url\": \"https://scoreocs8.pages.dev\",\n  \"logo\": \"https://scoreocs8.pages.dev/images/logo.png\",\n  \"sameAs\": [\"https://t.me/livebad\"]\n}"
 }

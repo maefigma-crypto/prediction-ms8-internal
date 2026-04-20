@@ -6,6 +6,24 @@
 <title>ScoreOcs8 — AI Sports Predictions | Football & Badminton</title>
 <meta name="description" content="ScoreOcs8 uses AI to deliver accurate football and badminton predictions for Malaysia Super League, FIFA World Cup, BWF and more. Free 2-day trial.">
 <meta name="keywords" content="football prediction Malaysia, Malaysia Super League prediction, badminton prediction BWF, AI sports prediction Malaysia, EPL prediction MYT, FIFA World Cup 2026 Malaysia, slot RTP Malaysia, ScoreOcs8, Lee Zii Jia prediction, Johor DT prediction, Asian handicap guide Malaysia">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://scoreocs8.pages.dev/">
+<meta property="og:site_name" content="ScoreOcs8">
+<meta property="og:title" content="ScoreOcs8 — AI Sports Predictions | Football & Badminton Malaysia">
+<meta property="og:description" content="AI-powered predictions for Malaysia Super League, EPL, UCL, FIFA World Cup 2026 and BWF. Free 2-day trial.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://scoreocs8.pages.dev/">
+<meta property="og:image" content="https://scoreocs8.pages.dev/images/og-image.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ScoreOcs8 — AI Sports Predictions">
+<meta name="twitter:description" content="AI-powered predictions for MSL, EPL, UCL, FIFA WC and BWF.">
+<meta name="twitter:image" content="https://scoreocs8.pages.dev/images/og-image.jpg">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SportsOrganization","name":"ScoreOcs8","url":"https://scoreocs8.pages.dev","logo":"https://scoreocs8.pages.dev/images/logo.png","sameAs":["https://t.me/livebad"]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","name":"ScoreOcs8","url":"https://scoreocs8.pages.dev/","potentialAction":{"@type":"SearchAction","target":"https://scoreocs8.pages.dev/blog/?q={search_term_string}","query-input":"required name=search_term_string"}}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -816,7 +834,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:3r
     <p class="ssub">AI-powered match previews, league analysis & betting guides · Updated daily</p>
 
     <!-- Featured post -->
-    <a href="#" class="bcard fu" style="display:flex;flex-direction:row;gap:0;margin-bottom:16px;max-height:180px;">
+    <a id="blog-featured" href="#" class="bcard fu" style="display:flex;flex-direction:row;gap:0;margin-bottom:16px;max-height:180px;">
       <div style="width:220px;flex-shrink:0;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:56px;border-right:1px solid var(--border);">🏆</div>
       <div class="bbody" style="flex:1;display:flex;flex-direction:column;justify-content:center;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span class="btag" style="margin:0;">FIFA World Cup 2026</span><span style="font-family:var(--fm);font-size:9px;color:var(--amber);background:rgba(245,166,35,.1);padding:2px 7px;border-radius:2px;border:1px solid rgba(245,166,35,.2);">⭐ FEATURED</span></div>
@@ -826,7 +844,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:3r
       </div>
     </a>
 
-    <div class="bgrid fu">
+    <div id="blog-grid" class="bgrid fu">
       <a href="#" class="bcard">
         <div class="bimg">🇲🇾</div>
         <div class="bbody">
@@ -1182,6 +1200,72 @@ window.addEventListener('load',()=>{
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', main);
   else main();
+})();
+</script>
+
+<script>
+/* ── SEO settings + real blog posts loader ── */
+(() => {
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const fmtDate = iso => { try { return new Date(iso).toLocaleDateString('en-MY', { year:'numeric', month:'short', day:'numeric' }); } catch { return ''; } };
+  const CAT_EMOJI = { 'Malaysia Super League':'🇲🇾', 'English Premier League':'🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'UEFA Champions League':'⭐', 'FIFA World Cup':'🏆', 'BWF Badminton':'🏸', 'Football Prediction':'⚽', 'Badminton Prediction':'🏸', 'Betting Guide':'📊', 'Slot RTP':'🎯' };
+
+  // Apply dynamic SEO bits from settings.json if present.
+  fetch('/_data/settings.json').then(r => r.ok ? r.json() : null).then(s => {
+    if (!s) return;
+    if (s.default_seo_title) document.title = s.default_seo_title;
+    const md = document.querySelector('meta[name="description"]');
+    if (md && s.default_meta_description) md.setAttribute('content', s.default_meta_description);
+    if (s.search_console_verify) {
+      const m = document.createElement('meta');
+      m.setAttribute('name', 'google-site-verification');
+      m.setAttribute('content', s.search_console_verify);
+      document.head.appendChild(m);
+    }
+    if (s.google_analytics_id) {
+      const s1 = document.createElement('script');
+      s1.async = true;
+      s1.src = `https://www.googletagmanager.com/gtag/js?id=${s.google_analytics_id}`;
+      document.head.appendChild(s1);
+      const s2 = document.createElement('script');
+      s2.textContent = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${s.google_analytics_id}');`;
+      document.head.appendChild(s2);
+    }
+  }).catch(() => {});
+
+  // Replace mock blog cards with real posts if any exist.
+  fetch('/api/blog/list?limit=7').then(r => r.ok ? r.json() : null).then(data => {
+    if (!data || !data.posts?.length) return;
+    const featured = data.posts[0];
+    const rest = data.posts.slice(1, 7);
+    const fEl = document.getElementById('blog-featured');
+    if (fEl && featured) {
+      const emoji = CAT_EMOJI[featured.category] || '📰';
+      fEl.setAttribute('href', `/blog/${featured.slug}/`);
+      fEl.innerHTML = `<div style="width:220px;flex-shrink:0;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:56px;border-right:1px solid var(--border);${featured.featured_image?`background-image:url('${esc(featured.featured_image)}');background-size:cover;background-position:center;font-size:0;`:''}">${featured.featured_image?'':emoji}</div>
+        <div class="bbody" style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span class="btag" style="margin:0;">${esc(featured.category||'')}</span><span style="font-family:var(--fm);font-size:9px;color:var(--amber);background:rgba(245,166,35,.1);padding:2px 7px;border-radius:2px;border:1px solid rgba(245,166,35,.2);">⭐ FEATURED</span></div>
+          <div class="btitle" style="font-size:18px;margin-bottom:8px;">${esc(featured.title)}</div>
+          <div class="bexc">${esc(featured.excerpt||'')}</div>
+          <div class="bmeta" style="margin-top:8px;"><span class="bdate">${esc(fmtDate(featured.date))}</span><span class="bread">Read →</span></div>
+        </div>`;
+    }
+    const grid = document.getElementById('blog-grid');
+    if (grid && rest.length) {
+      grid.innerHTML = rest.map(p => {
+        const emoji = CAT_EMOJI[p.category] || '📰';
+        return `<a href="/blog/${esc(p.slug)}/" class="bcard">
+          <div class="bimg"${p.featured_image?` style="background-image:url('${esc(p.featured_image)}');background-size:cover;background-position:center;font-size:0;"`:''}>${p.featured_image?'':emoji}</div>
+          <div class="bbody">
+            <div class="btag">${esc(p.category||'')}</div>
+            <div class="btitle">${esc(p.title)}</div>
+            <div class="bexc">${esc(p.excerpt||'')}</div>
+            <div class="bmeta"><span class="bdate">${esc(fmtDate(p.date))}</span><span class="bread">Read →</span></div>
+          </div>
+        </a>`;
+      }).join('');
+    }
+  }).catch(() => {});
 })();
 </script>
 </body>
