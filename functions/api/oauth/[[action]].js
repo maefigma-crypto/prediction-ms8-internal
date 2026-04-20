@@ -35,13 +35,24 @@ function postMessagePage({ success, content }) {
 <script>
 (function() {
   var msg = ${JSON.stringify(payload)};
+  var parent = window.opener || window.parent;
+  var done = false;
   function receive(e) {
-    if (!/^github$/.test(String(e.data))) return;
+    if (done) return;
+    if (e.data !== 'github') return;
+    done = true;
     window.removeEventListener('message', receive, false);
-    (window.opener || window.parent).postMessage(msg, e.origin);
+    clearInterval(poke);
+    parent.postMessage(msg, '*');
+    setTimeout(function() { try { window.close(); } catch (_) {} }, 200);
   }
   window.addEventListener('message', receive, false);
-  (window.opener || window.parent).postMessage('authorizing:github', '*');
+  var poke = setInterval(function() {
+    if (done) { clearInterval(poke); return; }
+    parent.postMessage('authorizing:github', '*');
+  }, 250);
+  parent.postMessage('authorizing:github', '*');
+  setTimeout(function() { if (!done) { clearInterval(poke); document.body.innerHTML = '<p style=\"font-family:system-ui;padding:2rem\">Sign-in timed out. Close this window and try again.</p>'; } }, 20000);
 })();
 </script>
 </body></html>`, { headers: { 'content-type': 'text/html; charset=utf-8' } });
