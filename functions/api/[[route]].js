@@ -204,6 +204,24 @@ export async function onRequest(context) {
         break;
       case 'health':
         return json({ ok: true, time: Date.now() });
+      case 'leagues': {
+        const search = url.searchParams.get('search') || '';
+        const country = url.searchParams.get('country') || '';
+        const params = {};
+        if (search) params.search = search;
+        if (country) params.country = country;
+        const data = await afGet(env, '/leagues', params);
+        return json({
+          count: data.response?.length || 0,
+          results: (data.response || []).map(x => ({
+            id: x.league.id,
+            name: x.league.name,
+            type: x.league.type,
+            country: x.country.name,
+            seasons: (x.seasons || []).map(s => s.year),
+          })),
+        });
+      }
       default:
         return json({
           error: 'not found',
