@@ -10,7 +10,7 @@ crons = ["0 23 * * *"]
 # so Pages can read what this Worker writes.
 [[kv_namespaces]]
 binding = "CACHE"
-id = "REPLACE_WITH_CACHE_KV_ID"
+id = "4c1cb47552044d7fb27e582a77b02962"
 
 # Secrets to set in dashboard or via `wrangler secret put`:
 #   API_FOOTBALL_KEY     (same as Pages)
