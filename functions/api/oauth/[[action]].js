@@ -20,7 +20,7 @@ async function handleStart(request, env) {
   const authUrl = new URL(GH_AUTHORIZE);
   authUrl.searchParams.set('client_id', env.GITHUB_OAUTH_CLIENT_ID);
   authUrl.searchParams.set('redirect_uri', redirectUri);
-  authUrl.searchParams.set('scope', url.searchParams.get('scope') || 'repo,user');
+  authUrl.searchParams.set('scope', url.searchParams.get('scope') || 'public_repo,user:email');
   authUrl.searchParams.set('state', state);
   return Response.redirect(authUrl.toString(), 302);
 }
