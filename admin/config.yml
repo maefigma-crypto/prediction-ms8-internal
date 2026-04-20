@@ -1,0 +1,41 @@
+backend:
+  name: github
+  repo: maefigma-crypto/scoreocs8
+  branch: main
+
+media_folder: "images/uploads"
+public_folder: "/images/uploads"
+
+collections:
+  - name: "settings"
+    label: "Site SEO Settings"
+    files:
+      - name: "general"
+        label: "General SEO"
+        file: "_data/settings.json"
+        fields:
+          - {label: "Meta Title", name: "meta_title", widget: "string"}
+          - {label: "Meta Description", name: "meta_description", widget: "text"}
+          - {label: "Keywords", name: "keywords", widget: "string"}
+          - {label: "OG Image URL", name: "og_image", widget: "string"}
+          - {label: "Google Verification Code", name: "google_verify", widget: "string"}
+
+  - name: "blog"
+    label: "Blog Posts"
+    folder: "_posts"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - {label: "Title", name: "title", widget: "string"}
+      - {label: "Date", name: "date", widget: "datetime"}
+      - {label: "Category", name: "category", widget: "select",
+         options: ["Football Prediction", "Badminton Prediction",
+                   "Malaysia Super League", "EPL", "UCL",
+                   "FIFA World Cup", "BWF", "Betting Guide"]}
+      - {label: "League", name: "league", widget: "select",
+         options: ["MSL", "EPL", "UCL", "FIFA", "BWF", "General"]}
+      - {label: "Meta Title", name: "meta_title", widget: "string"}
+      - {label: "Meta Description", name: "meta_description", widget: "text"}
+      - {label: "Featured Image", name: "featured_image", widget: "string", required: false}
+      - {label: "Excerpt", name: "excerpt", widget: "text"}
+      - {label: "Body", name: "body", widget: "markdown"}
