@@ -224,6 +224,17 @@ export async function onRequest(context) {
           })),
         });
       }
+      case 'content/today': {
+        const date = new Date().toISOString().slice(0, 10);
+        const cached = await env.CACHE.get(`content:${date}`, 'json');
+        if (!cached) return json({ status: 'empty', date, message: 'no content generated yet today' }, 200);
+        return json(cached);
+      }
+      case 'content/usage': {
+        const date = new Date().toISOString().slice(0, 10);
+        const used = parseInt(await env.CACHE.get(`usage:tokens:${date}`) || '0', 10);
+        return json({ date, used, budget: 8000, remaining: 8000 - used });
+      }
       default:
         return json({
           error: 'not found',

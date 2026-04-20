@@ -1,0 +1,18 @@
+name = "scoreocs8-cron"
+main = "src/index.js"
+compatibility_date = "2025-09-01"
+
+# Daily at 23:00 UTC = 07:00 MYT (UTC+8)
+[triggers]
+crons = ["0 23 * * *"]
+
+# KV binding — MUST point to the SAME namespace the Pages project uses
+# so Pages can read what this Worker writes.
+[[kv_namespaces]]
+binding = "CACHE"
+id = "REPLACE_WITH_CACHE_KV_ID"
+
+# Secrets to set in dashboard or via `wrangler secret put`:
+#   API_FOOTBALL_KEY     (same as Pages)
+#   ANTHROPIC_API_KEY    (same as Pages)
+#   CRON_SECRET          (random string; gates the manual /?key=... trigger)
