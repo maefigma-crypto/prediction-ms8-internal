@@ -1,4 +1,4 @@
-name = "scoreocs8-cron"
+name = "prediction-ms8-internal-cron"
 main = "src/index.js"
 compatibility_date = "2025-09-01"
 
