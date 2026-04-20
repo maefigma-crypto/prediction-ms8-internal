@@ -2,7 +2,7 @@
 // Results are cached in KV with short TTLs so we don't hammer GitHub's 60/hr
 // unauthenticated rate limit per Cloudflare colo.
 
-export const REPO = 'maefigma-crypto/scoreocs8';
+export const REPO = 'maefigma-crypto/prediction-ms8-internal';
 export const BRANCH = 'main';
 const RAW = `https://raw.githubusercontent.com/${REPO}/${BRANCH}`;
 const API = `https://api.github.com/repos/${REPO}/contents`;

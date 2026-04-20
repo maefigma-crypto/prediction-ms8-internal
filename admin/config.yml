@@ -1,6 +1,6 @@
 backend:
   name: github
-  repo: maefigma-crypto/scoreocs8
+  repo: maefigma-crypto/prediction-ms8-internal
   branch: main
   base_url: https://scoreocs8.pages.dev
   auth_endpoint: api/oauth
