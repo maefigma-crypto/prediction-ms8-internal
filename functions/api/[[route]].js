@@ -1,4 +1,3 @@
-const ALLOWED_ORIGIN = 'https://scoreocs8.pages.dev';
 const API_FOOTBALL_BASE = 'https://v3.football.api-sports.io';
 const ODDS_API_BASE = 'https://api.the-odds-api.com/v4';
 const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
@@ -16,22 +15,12 @@ const TTL = {
   predictions: 12 * 3600,
 };
 
-function corsHeaders() {
-  return {
-    'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Max-Age': '86400',
-    'Vary': 'Origin',
-  };
-}
-
 function json(body, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
-      ...corsHeaders(),
+      'Access-Control-Allow-Origin': '*',
       ...extraHeaders,
     },
   });
@@ -55,8 +44,7 @@ async function afGet(env, path, params = {}) {
 }
 
 async function handleLive(env) {
-  const key = 'live:all';
-  return cached(env, key, TTL.live, async () => {
+  return cached(env, 'live:all', TTL.live, async () => {
     const leagueIds = Object.values(LEAGUES).join('-');
     const data = await afGet(env, '/fixtures', { live: leagueIds });
     return { updated: Date.now(), response: data.response || [] };
@@ -65,8 +53,7 @@ async function handleLive(env) {
 
 async function handleFixtures(env, url) {
   const season = url.searchParams.get('season') || DEFAULT_SEASON;
-  const key = `fixtures:${season}`;
-  return cached(env, key, TTL.fixtures, async () => {
+  return cached(env, `fixtures:${season}`, TTL.fixtures, async () => {
     const today = new Date().toISOString().slice(0, 10);
     const results = await Promise.all(
       Object.entries(LEAGUES).map(async ([name, id]) => {
@@ -88,16 +75,14 @@ async function handleFixtures(env, url) {
 
 async function handleStandings(env, url) {
   const season = url.searchParams.get('season') || DEFAULT_SEASON;
-  const key = `standings:msl:${season}`;
-  return cached(env, key, TTL.standings, async () => {
+  return cached(env, `standings:msl:${season}`, TTL.standings, async () => {
     const data = await afGet(env, '/standings', { league: LEAGUES.MSL, season });
     return { updated: Date.now(), response: data.response || [] };
   });
 }
 
 async function handleOdds(env) {
-  const key = `odds:${ODDS_SPORT}`;
-  return cached(env, key, TTL.odds, async () => {
+  return cached(env, `odds:${ODDS_SPORT}`, TTL.odds, async () => {
     const params = new URLSearchParams({
       apiKey: env.ODDS_API_KEY,
       regions: 'eu',
@@ -113,25 +98,18 @@ async function handleOdds(env) {
 
 async function handlePredictions(env, url) {
   const fixtureId = url.searchParams.get('fixture_id');
-  if (!fixtureId) {
-    return { error: 'fixture_id required', status: 400 };
-  }
-  const key = `prediction:${fixtureId}`;
-  return cached(env, key, TTL.predictions, async () => {
-    const [fixtureData, h2hData] = await Promise.all([
-      afGet(env, '/fixtures', { id: fixtureId }),
-      (async () => {
-        const fx = await afGet(env, '/fixtures', { id: fixtureId });
-        const home = fx.response?.[0]?.teams?.home?.id;
-        const away = fx.response?.[0]?.teams?.away?.id;
-        if (!home || !away) return null;
-        return afGet(env, '/fixtures/headtohead', { h2h: `${home}-${away}`, last: 5 });
-      })(),
-    ]);
+  if (!fixtureId) return { error: 'fixture_id required', status: 400 };
+
+  return cached(env, `prediction:${fixtureId}`, TTL.predictions, async () => {
+    const fixtureData = await afGet(env, '/fixtures', { id: fixtureId });
     const fx = fixtureData.response?.[0];
     if (!fx) throw new Error('fixture not found');
 
-    const prompt = buildPredictionPrompt(fx, h2hData?.response || []);
+    const home = fx.teams.home.id;
+    const away = fx.teams.away.id;
+    const h2hData = await afGet(env, '/fixtures/headtohead', { h2h: `${home}-${away}`, last: 5 });
+
+    const prompt = buildPredictionPrompt(fx, h2hData.response || []);
     const prediction = await callClaude(env, prompt);
     return { updated: Date.now(), fixtureId, ...prediction };
   });
@@ -192,43 +170,49 @@ async function callClaude(env, prompt) {
   return JSON.parse(match[0]);
 }
 
-export default {
-  async fetch(request, env) {
-    const url = new URL(request.url);
+export async function onRequest(context) {
+  const { request, env, params } = context;
+  const url = new URL(request.url);
+  const route = Array.isArray(params.route) ? params.route.join('/') : (params.route || '');
 
-    if (request.method === 'OPTIONS') {
-      return new Response(null, { status: 204, headers: corsHeaders() });
-    }
-    if (request.method !== 'GET') {
-      return json({ error: 'method not allowed' }, 405);
-    }
+  if (request.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      },
+    });
+  }
+  if (request.method !== 'GET') return json({ error: 'method not allowed' }, 405);
 
-    try {
-      let result;
-      switch (url.pathname) {
-        case '/live':
-          result = await handleLive(env); break;
-        case '/fixtures':
-          result = await handleFixtures(env, url); break;
-        case '/standings':
-          result = await handleStandings(env, url); break;
-        case '/odds':
-          result = await handleOdds(env); break;
-        case '/predictions':
-          result = await handlePredictions(env, url);
-          if (result.status) return json({ error: result.error }, result.status);
-          break;
-        case '/health':
-          return json({ ok: true, time: Date.now() });
-        default:
-          return json({
-            error: 'not found',
-            routes: ['/live', '/fixtures', '/standings', '/odds', '/predictions?fixture_id=', '/health'],
-          }, 404);
-      }
-      return json(result.data, 200, { 'X-Cache': result.source });
-    } catch (err) {
-      return json({ error: 'upstream failed', detail: String(err.message || err) }, 502);
+  try {
+    let result;
+    switch (route) {
+      case 'live':
+        result = await handleLive(env); break;
+      case 'fixtures':
+        result = await handleFixtures(env, url); break;
+      case 'standings':
+        result = await handleStandings(env, url); break;
+      case 'odds':
+        result = await handleOdds(env); break;
+      case 'predictions':
+        result = await handlePredictions(env, url);
+        if (result.status) return json({ error: result.error }, result.status);
+        break;
+      case 'health':
+        return json({ ok: true, time: Date.now() });
+      default:
+        return json({
+          error: 'not found',
+          route,
+          routes: ['/api/live', '/api/fixtures', '/api/standings', '/api/odds', '/api/predictions?fixture_id=', '/api/health'],
+        }, 404);
     }
-  },
-};
+    return json(result.data, 200, { 'X-Cache': result.source });
+  } catch (err) {
+    return json({ error: 'upstream failed', detail: String(err.message || err) }, 502);
+  }
+}
