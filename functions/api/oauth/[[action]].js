@@ -36,23 +36,38 @@ function postMessagePage({ success, content }) {
 (function() {
   var msg = ${JSON.stringify(payload)};
   var parent = window.opener || window.parent;
-  var done = false;
-  function receive(e) {
-    if (done) return;
-    if (e.data !== 'github') return;
-    done = true;
-    window.removeEventListener('message', receive, false);
-    clearInterval(poke);
-    parent.postMessage(msg, '*');
-    setTimeout(function() { try { window.close(); } catch (_) {} }, 200);
+  if (!parent || parent === window) {
+    document.body.innerHTML = '<p style="font-family:system-ui;padding:2rem;color:#c00">Popup has no opener. Close this window, disable popup blockers, and retry.</p>';
+    return;
   }
-  window.addEventListener('message', receive, false);
-  var poke = setInterval(function() {
-    if (done) { clearInterval(poke); return; }
-    parent.postMessage('authorizing:github', '*');
-  }, 250);
-  parent.postMessage('authorizing:github', '*');
-  setTimeout(function() { if (!done) { clearInterval(poke); document.body.innerHTML = '<p style=\"font-family:system-ui;padding:2rem\">Sign-in timed out. Close this window and try again.</p>'; } }, 20000);
+  // Handshake pattern: tell Decap we are the auth popup and wait for ack.
+  // Post repeatedly in case Decap's listener wasn't ready on the first attempt.
+  function send(data) { try { parent.postMessage(data, '*'); } catch (_) {} }
+  send('authorizing:github');
+  var poke = setInterval(function() { send('authorizing:github'); }, 200);
+  var handshakeDone = false;
+  function onMsg(e) {
+    if (handshakeDone) return;
+    if (e.data !== 'github') return;
+    handshakeDone = true;
+    clearInterval(poke);
+    window.removeEventListener('message', onMsg, false);
+    send(msg);
+    setTimeout(function() { try { window.close(); } catch (_) {} }, 150);
+  }
+  window.addEventListener('message', onMsg, false);
+  // Fallback: some Decap builds don't reply. After 2s, post the final message
+  // anyway — Decap's receiver accepts it without the handshake.
+  setTimeout(function() {
+    if (handshakeDone) return;
+    clearInterval(poke);
+    send(msg);
+    setTimeout(function() { try { window.close(); } catch (_) {} }, 800);
+  }, 2000);
+  // Hard stop: if still open after 10s, show error.
+  setTimeout(function() {
+    if (!handshakeDone) document.body.innerHTML = '<p style="font-family:system-ui;padding:2rem">Sign-in did not complete. Close this window and try again.</p>';
+  }, 10000);
 })();
 </script>
 </body></html>`, { headers: { 'content-type': 'text/html; charset=utf-8' } });
