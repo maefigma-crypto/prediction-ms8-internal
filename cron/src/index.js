@@ -1,7 +1,7 @@
 const API_FOOTBALL_BASE = 'https://v3.football.api-sports.io';
 const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
 const CLAUDE_MODEL = 'claude-haiku-4-5-20251001';
-const MAX_TOKENS_PER_REQ = 800;
+const MAX_TOKENS_PER_REQ = 1500;
 const DAILY_TOKEN_BUDGET = 8000;
 
 const LEAGUE_PRIORITY = [
@@ -34,6 +34,7 @@ async function claudeCall(env, prompt) {
     body: JSON.stringify({
       model: CLAUDE_MODEL,
       max_tokens: MAX_TOKENS_PER_REQ,
+      system: 'You are a ScoreOcs8 AI football writer. Respond ONLY with a single valid JSON object. No prose, no markdown code fences, no commentary before or after. Every requested field must be present.',
       messages: [{ role: 'user', content: prompt }],
     }),
   });
@@ -41,7 +42,7 @@ async function claudeCall(env, prompt) {
   const data = await res.json();
   const text = data.content?.[0]?.text || '';
   const u = data.usage || {};
-  return { text, tokens: (u.input_tokens || 0) + (u.output_tokens || 0) };
+  return { text, tokens: (u.input_tokens || 0) + (u.output_tokens || 0), stopReason: data.stop_reason };
 }
 
 async function readBudget(env) {
@@ -107,10 +108,18 @@ Shape:
 }`;
 }
 
-function parseJsonLoose(text) {
+function parseJsonLoose(text, context = {}) {
   const m = text.match(/\{[\s\S]*\}/);
-  if (!m) throw new Error('no JSON in response');
-  return JSON.parse(m[0]);
+  if (!m) {
+    const preview = (text || '').slice(0, 300).replace(/\n/g, ' ');
+    throw new Error(`no JSON in response (stop=${context.stopReason || '?'}, preview="${preview}")`);
+  }
+  try {
+    return JSON.parse(m[0]);
+  } catch (err) {
+    const preview = m[0].slice(0, 200).replace(/\n/g, ' ');
+    throw new Error(`invalid JSON (${err.message}, preview="${preview}")`);
+  }
 }
 
 async function generateDaily(env) {
@@ -131,7 +140,7 @@ async function generateDaily(env) {
 
   try {
     const topCall = await claudeCall(env, longPrompt(fixtures[0]));
-    output.top = { fixture: fixtures[0], content: parseJsonLoose(topCall.text) };
+    output.top = { fixture: fixtures[0], content: parseJsonLoose(topCall.text, { stopReason: topCall.stopReason }) };
     output.tokensUsed += topCall.tokens;
     await spendBudget(env, topCall.tokens);
   } catch (e) {
@@ -143,7 +152,7 @@ async function generateDaily(env) {
       const { remaining: rem } = await readBudget(env);
       if (rem < 1000) break;
       const call = await claudeCall(env, shortPrompt(fx));
-      output.previews.push({ fixture: fx, content: parseJsonLoose(call.text) });
+      output.previews.push({ fixture: fx, content: parseJsonLoose(call.text, { stopReason: call.stopReason }) });
       output.tokensUsed += call.tokens;
       await spendBudget(env, call.tokens);
     } catch (_) { /* skip this preview, keep others */ }
