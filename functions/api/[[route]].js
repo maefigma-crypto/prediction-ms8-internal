@@ -26,12 +26,14 @@ function json(body, status = 200, extraHeaders = {}) {
   });
 }
 
-async function cached(env, key, ttl, fetcher) {
-  const hit = await env.CACHE.get(key, 'json');
-  if (hit) return { data: hit, source: 'kv' };
+async function cached(env, key, ttl, fetcher, opts = {}) {
+  if (!opts.refresh) {
+    const hit = await env.CACHE.get(key, 'json');
+    if (hit) return { data: hit, source: 'kv' };
+  }
   const data = await fetcher();
   await env.CACHE.put(key, JSON.stringify(data), { expirationTtl: ttl });
-  return { data, source: 'origin' };
+  return { data, source: opts.refresh ? 'refreshed' : 'origin' };
 }
 
 async function afGet(env, path, params = {}) {
@@ -43,16 +45,18 @@ async function afGet(env, path, params = {}) {
   return res.json();
 }
 
-async function handleLive(env) {
+async function handleLive(env, url) {
+  const refresh = url.searchParams.get('refresh') === '1';
   return cached(env, 'live:all', TTL.live, async () => {
     const leagueIds = Object.values(LEAGUES).join('-');
     const data = await afGet(env, '/fixtures', { live: leagueIds });
     return { updated: Date.now(), response: data.response || [] };
-  });
+  }, { refresh });
 }
 
 async function handleFixtures(env, url) {
   const season = url.searchParams.get('season') || DEFAULT_SEASON;
+  const refresh = url.searchParams.get('refresh') === '1';
   return cached(env, `fixtures:${season}`, TTL.fixtures, async () => {
     const today = new Date().toISOString().slice(0, 10);
     const results = await Promise.all(
@@ -72,30 +76,36 @@ async function handleFixtures(env, url) {
       })
     );
     return { updated: Date.now(), leagues: results };
-  });
+  }, { refresh });
 }
 
 async function handleStandings(env, url) {
   const season = url.searchParams.get('season') || DEFAULT_SEASON;
+  const refresh = url.searchParams.get('refresh') === '1';
   return cached(env, `standings:msl:${season}`, TTL.standings, async () => {
     const data = await afGet(env, '/standings', { league: LEAGUES.MSL, season });
     return { updated: Date.now(), response: data.response || [] };
-  });
+  }, { refresh });
 }
 
-async function handleOdds(env) {
-  return cached(env, `odds:${ODDS_SPORT}`, TTL.odds, async () => {
+async function handleOdds(env, url) {
+  const sport = url.searchParams.get('sport') || ODDS_SPORT;
+  const refresh = url.searchParams.get('refresh') === '1';
+  return cached(env, `odds:${sport}`, TTL.odds, async () => {
     const params = new URLSearchParams({
       apiKey: env.ODDS_API_KEY,
       regions: 'eu',
       markets: 'h2h',
       oddsFormat: 'decimal',
     });
-    const res = await fetch(`${ODDS_API_BASE}/sports/${ODDS_SPORT}/odds/?${params}`);
+    const res = await fetch(`${ODDS_API_BASE}/sports/${sport}/odds/?${params}`);
+    if (res.status === 404 || res.status === 422) {
+      return { updated: Date.now(), sport, outOfSeason: true, response: [] };
+    }
     if (!res.ok) throw new Error(`Odds API ${res.status}`);
     const data = await res.json();
-    return { updated: Date.now(), response: data };
-  });
+    return { updated: Date.now(), sport, response: data };
+  }, { refresh });
 }
 
 async function handlePredictions(env, url) {
@@ -193,13 +203,13 @@ export async function onRequest(context) {
     let result;
     switch (route) {
       case 'live':
-        result = await handleLive(env); break;
+        result = await handleLive(env, url); break;
       case 'fixtures':
         result = await handleFixtures(env, url); break;
       case 'standings':
         result = await handleStandings(env, url); break;
       case 'odds':
-        result = await handleOdds(env); break;
+        result = await handleOdds(env, url); break;
       case 'predictions':
         result = await handlePredictions(env, url);
         if (result.status) return json({ error: result.error }, result.status);

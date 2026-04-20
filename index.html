@@ -958,5 +958,231 @@ window.addEventListener('load',()=>{
   if(a){let n=0;const t=setInterval(()=>{n=Math.min(n+2,87);a.textContent=n+'%';if(n>=87)clearInterval(t);},20);}
 });
 </script>
+
+<script>
+/* ── Live data wiring: Pages Functions /api/* → DOM ── */
+(() => {
+  const API = '/api';
+  const LEAGUE_META = {
+    MSL: { flag: '🇲🇾', name: 'Malaysia Super League', code: 'msl' },
+    EPL: { flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', name: 'English Premier League', code: 'epl' },
+    UCL: { flag: '⭐', name: 'UEFA Champions League', code: 'ucl' },
+    WC:  { flag: '🏆', name: 'FIFA World Cup', code: 'fifa' },
+  };
+  const LEAGUE_ID_TO_KEY = { 2:'UCL', 39:'EPL', 1:'WC', 278:'MSL' };
+  const LIVE_STATUSES = new Set(['1H','2H','HT','ET','BT','P','LIVE']);
+
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const fmtMyt = iso => { try { return new Date(iso).toLocaleString('en-MY',{timeZone:'Asia/Kuala_Lumpur',hour:'2-digit',minute:'2-digit',hour12:false})+' MYT'; } catch { return ''; } };
+  const klKey = iso => new Date(new Date(iso).getTime() + 8*3600*1000).toISOString().slice(0,10);
+  const klToday = () => klKey(new Date().toISOString());
+  const klTomorrow = () => { const d=new Date(); d.setUTCDate(d.getUTCDate()+1); return klKey(d.toISOString()); };
+  const isLive = fx => LIVE_STATUSES.has(fx?.fixture?.status?.short);
+  const metaOf = fx => { const k = LEAGUE_ID_TO_KEY[fx?.league?.id]; return k ? LEAGUE_META[k] : { flag:'⚽', name:fx?.league?.name||'', code:'' }; };
+
+  async function getJSON(path) {
+    try { const r = await fetch(path); if (!r.ok) return null; return await r.json(); } catch { return null; }
+  }
+
+  function buildOddsMap(oddsResp) {
+    const map = {};
+    for (const ev of (oddsResp?.response || [])) {
+      const book = ev.bookmakers?.[0]; const h2h = book?.markets?.find(m=>m.key==='h2h'); if (!h2h) continue;
+      const p = {};
+      for (const o of h2h.outcomes) {
+        if (o.name === ev.home_team) p.home = o.price;
+        else if (o.name === ev.away_team) p.away = o.price;
+        else p.draw = o.price;
+      }
+      map[(ev.home_team+':'+ev.away_team).toLowerCase()] = p;
+    }
+    return map;
+  }
+  const oddsFor = (fx, map) => map[(fx.teams.home.name+':'+fx.teams.away.name).toLowerCase()] || null;
+
+  function flatten(fixturesData) {
+    const all = [], seen = new Set();
+    for (const lg of (fixturesData?.leagues || [])) {
+      const meta = LEAGUE_META[lg.league] || { flag:'⚽', name:lg.league, code:String(lg.league).toLowerCase() };
+      for (const src of ['today','next','last']) {
+        for (const fx of (lg[src] || [])) {
+          if (seen.has(fx.fixture.id)) continue;
+          seen.add(fx.fixture.id);
+          all.push({ fx, meta });
+        }
+      }
+    }
+    return all;
+  }
+
+  function renderTicker(live, upcoming, completed) {
+    const el = document.querySelector('.ticker-inner'); if (!el) return;
+    const items = [];
+    for (const { fx } of live) {
+      items.push(`<div class="ti"><span class="tlive">● LIVE</span><strong>${esc(fx.teams.home.name)}</strong> ${fx.goals.home ?? 0}–${fx.goals.away ?? 0} <strong>${esc(fx.teams.away.name)}</strong><span style="color:var(--text3);font-size:9px">${fx.fixture.status.elapsed||''}'</span></div>`);
+    }
+    for (const { fx } of upcoming.slice(0,5)) {
+      items.push(`<div class="ti">⏰ <strong>${esc(fx.teams.home.name)} vs ${esc(fx.teams.away.name)}</strong><span style="color:var(--amber);font-size:9px">${fmtMyt(fx.fixture.date)}</span></div>`);
+    }
+    for (const { fx } of completed.slice(0,5)) {
+      items.push(`<div class="ti"><span class="twin">✓</span><strong>${esc(fx.teams.home.name)}</strong> ${fx.goals.home ?? 0}–${fx.goals.away ?? 0} <strong>${esc(fx.teams.away.name)}</strong></div>`);
+    }
+    if (!items.length) items.push(`<div class="ti" style="color:var(--text3)">⚽ Waiting for fixture data — pre-season or free-tier limit</div>`);
+    const joined = items.join('<span style="color:var(--text3)">|</span>');
+    el.innerHTML = joined + '<span style="color:var(--text3)">|</span>' + joined;
+  }
+
+  function motdRow({ fx, meta }, featured = false) {
+    const live_ = isLive(fx);
+    const score = live_ || fx.fixture?.status?.short === 'FT' ? `${fx.goals.home ?? 0} — ${fx.goals.away ?? 0}` : 'VS';
+    const sub = live_ ? `● LIVE ${fx.fixture.status.elapsed||''}'` : fmtMyt(fx.fixture.date);
+    const hLogo = fx.teams.home.logo || ''; const aLogo = fx.teams.away.logo || '';
+    const border = featured ? 'border:1px solid rgba(249,115,22,.4);' : 'border:1px solid var(--border);';
+    const badge = featured ? `<div style="position:absolute;top:10px;right:12px;font-family:var(--fm);font-size:9px;color:var(--accent);background:rgba(249,115,22,.1);padding:2px 8px;border-radius:2px;border:1px solid rgba(249,115,22,.25);">⭐ MATCH OF THE DAY</div>` : '';
+    const btnStyle = featured ? 'background:var(--accent);color:#fff;border:none;' : 'background:transparent;color:var(--accent);border:1px solid rgba(249,115,22,.3);';
+    const btnLabel = featured ? '⚡ View Prediction' : '🔒 Members Only';
+    return `<div class="motd-row fu v" style="background:var(--card);${border}border-radius:8px;padding:14px 16px;position:relative;">
+      ${badge}
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:10px;">${hLogo?`<img src="${hLogo}" onerror="this.style.display='none'" style="width:32px;height:32px;border-radius:50%;object-fit:contain;">`:''}<div><div style="font-family:var(--ff);font-size:15px;font-weight:600;letter-spacing:.04em;">${esc(fx.teams.home.name)}</div></div></div>
+        <div style="text-align:center;"><div style="font-family:var(--ff);font-size:${live_?'28':'22'}px;font-weight:700;line-height:1;${live_?'':'color:var(--text2);'}">${score}</div><div style="font-family:var(--fm);font-size:10px;color:${live_?'var(--red)':'var(--amber)'};margin-top:2px;">${sub}</div></div>
+        <div style="display:flex;align-items:center;gap:10px;justify-content:flex-end;"><div style="text-align:right;"><div style="font-family:var(--ff);font-size:15px;font-weight:600;letter-spacing:.04em;">${esc(fx.teams.away.name)}</div></div>${aLogo?`<img src="${aLogo}" onerror="this.style.display='none'" style="width:32px;height:32px;border-radius:50%;object-fit:contain;">`:''}</div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);padding-top:10px;">
+        <div style="font-family:var(--fm);font-size:10px;color:var(--text3);">${meta.flag} ${esc(meta.name)} · ${fmtMyt(fx.fixture.date)}</div>
+        <button style="font-family:var(--ff);font-size:12px;font-weight:700;letter-spacing:.05em;padding:5px 14px;border-radius:4px;cursor:pointer;${btnStyle}" onclick="event.stopPropagation();alert('Sign up to view full AI prediction!')">${btnLabel}</button>
+      </div>
+    </div>`;
+  }
+
+  function renderMotd(todayList, tomorrowList) {
+    const emptyBox = msg => `<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:40px;text-align:center;color:var(--text3);">${msg}</div>`;
+    const today = document.getElementById('motd-today');
+    const tomorrow = document.getElementById('motd-tomorrow');
+    if (today) today.innerHTML = todayList.length
+      ? `<div style="display:flex;flex-direction:column;gap:8px;">${todayList.map((it,i)=>motdRow(it,i===0)).join('')}</div>`
+      : emptyBox('No matches scheduled today.');
+    if (tomorrow) tomorrow.innerHTML = tomorrowList.length
+      ? `<div style="display:flex;flex-direction:column;gap:8px;">${tomorrowList.map(it=>motdRow(it,false)).join('')}</div>`
+      : emptyBox('No matches scheduled tomorrow.');
+  }
+
+  function renderStandings(standingsData) {
+    const tbody = document.getElementById('league-table'); if (!tbody) return;
+    const rows = standingsData?.response?.[0]?.league?.standings?.[0];
+    if (!rows?.length) { tbody.innerHTML = `<tr><td colspan="9" style="padding:40px;text-align:center;color:var(--text3);">Standings unavailable for current season.</td></tr>`; return; }
+    tbody.innerHTML = rows.slice(0,10).map((r,i) => {
+      const top = i === 0;
+      const form = (r.form || '').slice(-5).split('').map(c => {
+        const cls = c==='W'?'fw':c==='L'?'fl':'fdraw';
+        return `<span class="fd ${cls}" style="width:16px;height:16px;font-size:8px;">${c}</span>`;
+      }).join('');
+      return `<tr${top?' style="border-left:3px solid var(--accent)"':''}>
+        <td style="padding:10px 14px;color:${top?'var(--accent)':'var(--text2)'};font-weight:${top?'600':'400'};font-family:var(--ff);">${r.rank}</td>
+        <td style="padding:10px 14px;"><div style="display:flex;align-items:center;gap:8px;"><img src="${r.team.logo}" onerror="this.style.display='none'" style="width:22px;height:22px;border-radius:50%;object-fit:contain;"><span style="font-family:var(--ff);font-size:14px;font-weight:600;">${esc(r.team.name)}</span></div></td>
+        <td style="padding:10px 8px;text-align:center;color:var(--text2);">${r.all.played}</td>
+        <td style="padding:10px 8px;text-align:center;color:var(--green);">${r.all.win}</td>
+        <td style="padding:10px 8px;text-align:center;color:var(--text2);">${r.all.draw}</td>
+        <td style="padding:10px 8px;text-align:center;color:var(--red);">${r.all.lose}</td>
+        <td style="padding:10px 8px;text-align:center;color:${r.goalsDiff>=0?'var(--green)':'var(--red)'};">${r.goalsDiff>=0?'+':''}${r.goalsDiff}</td>
+        <td style="padding:10px 8px;text-align:center;font-family:var(--ff);font-size:16px;font-weight:700;color:${top?'var(--accent)':'var(--text)'};">${r.points}</td>
+        <td style="padding:10px 14px;"><div style="display:flex;gap:2px;">${form}</div></td>
+      </tr>`;
+    }).join('');
+  }
+
+  function renderPredictions(items, oddsMap) {
+    const grid = document.querySelector('#spf .pgrid'); if (!grid) return;
+    if (!items.length) { grid.innerHTML = `<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--text3);background:var(--card);border:1px solid var(--border);border-radius:8px;">No upcoming fixtures available. Predictions appear when matches are scheduled.</div>`; return; }
+    grid.innerHTML = items.slice(0,6).map(({ fx, meta }, i) => {
+      const live_ = isLive(fx);
+      const score = live_ ? `${fx.goals.home ?? 0}–${fx.goals.away ?? 0}` : 'VS';
+      const sub = live_ ? `● ${fx.fixture.status.elapsed||''}'` : fmtMyt(fx.fixture.date);
+      const badge = live_ ? `<span class="blive"><span class="ldot"></span>LIVE ${fx.fixture.status.elapsed||''}'</span>` : `<span class="bpred">AI PICK</span>`;
+      const o = oddsFor(fx, oddsMap);
+      const oddsHtml = o ? `<div style="display:flex;gap:8px;justify-content:center;font-family:var(--fm);font-size:10px;color:var(--text2);margin-top:6px;border-top:1px dashed var(--border);padding-top:6px;"><span>H <strong style="color:var(--accent)">${o.home?.toFixed(2)||'—'}</strong></span><span>D <strong>${o.draw?.toFixed(2)||'—'}</strong></span><span>A <strong style="color:var(--blue)">${o.away?.toFixed(2)||'—'}</strong></span></div>` : '';
+      return `<div class="pc fu v" data-league="${meta.code}" data-fixture-id="${fx.fixture.id}">
+        <div class="pch"><span class="pcl">${meta.flag} ${esc(meta.name)}</span>${badge}</div>
+        <div class="pcb">
+          <div class="pct"><div class="pctm">${esc(fx.teams.home.name)}</div><div><div class="pcvs">${score}</div><span class="pctm2">${sub}</span></div><div class="pctm pctmr">${esc(fx.teams.away.name)}</div></div>
+          ${oddsHtml}
+        </div>
+        <div class="pcf"><span class="ptag">⚡ AI PICK PENDING</span><div style="display:flex;align-items:center;gap:3px"><span class="cdl">CONF</span><div class="cdots"><div class="cdot on"></div><div class="cdot on"></div><div class="cdot on"></div><div class="cdot"></div><div class="cdot"></div></div></div></div>
+      </div>`;
+    }).join('');
+  }
+
+  function renderHeroCard(pick, oddsMap) {
+    const el = document.querySelector('.hcard'); if (!el || !pick) return;
+    const { fx, meta } = pick;
+    const live_ = isLive(fx);
+    const score = live_ ? `${fx.goals.home ?? 0} — ${fx.goals.away ?? 0}` : 'VS';
+    const pill = live_ ? `<span class="blive"><span class="ldot"></span>LIVE ${fx.fixture.status.elapsed||''}'</span>` : `<span class="bpred">${fmtMyt(fx.fixture.date)}</span>`;
+    const o = oddsFor(fx, oddsMap);
+    el.innerHTML = `<div class="ch"><span class="cl">${meta.flag} ${esc(meta.name)}</span>${pill}</div>
+      <div class="mb">
+        <div class="mt">
+          <div><div style="font-size:20px;margin-bottom:3px">🏟️</div><div class="tn">${esc(fx.teams.home.name)}</div></div>
+          <div class="sb"><div class="sbn">${score}</div><div class="sbm">${live_?'● '+(fx.fixture.status.elapsed||'')+"'":fmtMyt(fx.fixture.date)}</div></div>
+          <div><div style="font-size:20px;margin-bottom:3px;text-align:right">🏟️</div><div class="tn tnr">${esc(fx.teams.away.name)}</div></div>
+        </div>
+        <div class="ps">
+          <div class="pl">${o?'Live Betting Odds (EU)':'ScoreOcs8 AI Prediction'}</div>
+          ${o ? `
+            <div class="pbr"><span class="pbt">Home Win</span><div class="pbw"><div class="pbf" style="width:${Math.min(100,Math.max(5,100/o.home))}%;background:var(--accent)"></div></div><span class="pbp" style="color:var(--accent)">${o.home?.toFixed(2)||'—'}</span></div>
+            <div class="pbr"><span class="pbt">Draw</span><div class="pbw"><div class="pbf" style="width:${Math.min(100,Math.max(5,100/(o.draw||10)))}%;background:var(--text3)"></div></div><span class="pbp" style="color:var(--text3)">${o.draw?.toFixed(2)||'—'}</span></div>
+            <div class="pbr"><span class="pbt">Away Win</span><div class="pbw"><div class="pbf" style="width:${Math.min(100,Math.max(5,100/o.away))}%;background:var(--blue)"></div></div><span class="pbp" style="color:var(--blue)">${o.away?.toFixed(2)||'—'}</span></div>
+          ` : `<div style="font-size:12px;color:var(--text3);padding:8px 0;">AI analysis generated daily at 07:00 MYT. Sign up to unlock full prediction.</div>`}
+          <div class="aipick"><div><div class="aipl">AI Pick</div><div class="aipv">${live_?'IN PLAY':'PENDING'}</div></div><div style="font-family:var(--fm);font-size:10px;color:var(--text2)">${live_?'Live':'Confidence'}<br><strong style="color:var(--accent)">${live_?'● UPDATING':'—'}</strong></div></div>
+        </div>
+      </div>`;
+  }
+
+  async function refreshLive(state) {
+    const live = await getJSON(API + '/live');
+    if (!live) return;
+    state.liveList = (live.response || []).map(fx => ({ fx, meta: metaOf(fx) }));
+    renderTicker(state.liveList, state.upcomingList, state.completedList);
+    const hero = state.liveList[0] || state.upcomingList[0];
+    if (hero) renderHeroCard(hero, state.oddsMap);
+  }
+
+  async function main() {
+    const [fixtures, standings, live, odds] = await Promise.all([
+      getJSON(API + '/fixtures?refresh=1'),
+      getJSON(API + '/standings?refresh=1'),
+      getJSON(API + '/live'),
+      getJSON(API + '/odds?refresh=1'),
+    ]);
+
+    const all = flatten(fixtures);
+    const tKey = klToday(), tmKey = klTomorrow(), now = Date.now();
+    const todayList = all.filter(it => klKey(it.fx.fixture.date) === tKey);
+    const tomorrowList = all.filter(it => klKey(it.fx.fixture.date) === tmKey);
+    const upcomingList = all.filter(it => new Date(it.fx.fixture.date).getTime() > now)
+      .sort((a,b) => new Date(a.fx.fixture.date) - new Date(b.fx.fixture.date));
+    const completedList = all.filter(it => it.fx.fixture?.status?.short === 'FT')
+      .sort((a,b) => new Date(b.fx.fixture.date) - new Date(a.fx.fixture.date));
+    const liveList = (live?.response || []).map(fx => ({ fx, meta: metaOf(fx) }));
+    const oddsMap = buildOddsMap(odds);
+
+    const state = { liveList, upcomingList, completedList, todayList, tomorrowList, oddsMap };
+
+    renderTicker(liveList, upcomingList, completedList);
+    renderHeroCard(liveList[0] || upcomingList[0] || completedList[0], oddsMap);
+    renderMotd(todayList.length ? todayList : upcomingList.slice(0,3), tomorrowList);
+    renderStandings(standings);
+    renderPredictions(upcomingList.length ? upcomingList : completedList, oddsMap);
+
+    const intervalMs = liveList.length ? 120_000 : 5 * 60_000;
+    setInterval(() => refreshLive(state), intervalMs);
+
+    if (odds?.outOfSeason) console.info('[scoreocs8] odds: sport out of season');
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', main);
+  else main();
+})();
+</script>
 </body>
 </html>
