@@ -245,12 +245,49 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:3r
 .fu{opacity:0;transform:translateY(20px);transition:opacity .55s ease,transform .55s ease;}
 .fu.v{opacity:1;transform:translateY(0);}
 html,body{overflow-x:hidden;max-width:100vw;}
+
+/* Hamburger button (hidden on desktop, visible <=900px) */
+.hamburger{display:none;background:transparent;border:1px solid var(--border2);color:var(--text);font-size:18px;cursor:pointer;padding:6px 10px;line-height:1;border-radius:4px;}
+.hamburger:hover{border-color:var(--accent);color:var(--accent);}
+
+/* Drawer */
+.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:400;opacity:0;pointer-events:none;transition:opacity .25s;backdrop-filter:blur(4px);}
+.drawer-overlay.open{opacity:1;pointer-events:auto;}
+.drawer{position:fixed;top:0;right:-340px;width:320px;max-width:85vw;height:100vh;background:var(--card);border-left:1px solid var(--border2);z-index:401;transition:right .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;box-shadow:-20px 0 40px rgba(0,0,0,.5);}
+.drawer.open{right:0;}
+.drawer-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.drawer-brand{font-family:var(--ff);font-size:20px;font-weight:700;letter-spacing:.06em;color:var(--text);}
+.drawer-brand .hl{color:var(--accent);}
+.drawer-close{background:transparent;border:none;color:var(--text2);font-size:22px;cursor:pointer;padding:4px 10px;line-height:1;border-radius:4px;}
+.drawer-close:hover{color:var(--accent);background:rgba(249,115,22,.08);}
+.drawer-body{flex:1;padding:8px 0;overflow-y:auto;}
+.drawer-link{display:flex;align-items:center;justify-content:space-between;padding:13px 20px;color:var(--text);text-decoration:none;font-family:var(--ff);font-size:14px;font-weight:600;letter-spacing:.04em;border-bottom:1px solid var(--border);transition:background .15s,color .15s;background:transparent;border-top:none;border-left:none;border-right:none;width:100%;text-align:left;cursor:pointer;font-family:var(--ff);}
+.drawer-link:hover{background:rgba(249,115,22,.07);color:var(--accent);}
+.drawer-link .arr{color:var(--text3);font-size:11px;transition:transform .2s;}
+.drawer-link.open .arr{transform:rotate(180deg);color:var(--accent);}
+.drawer-submenu{max-height:0;overflow:hidden;background:var(--bg2);transition:max-height .3s ease;}
+.drawer-submenu.open{max-height:500px;}
+.drawer-submenu a{display:block;padding:10px 20px 10px 36px;color:var(--text2);text-decoration:none;font-family:var(--fb);font-size:13px;border-bottom:1px solid var(--border);}
+.drawer-submenu a:hover{color:var(--accent);background:rgba(249,115,22,.05);}
+.drawer-foot{padding:14px 16px 18px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;flex-shrink:0;}
+.drawer-lang{display:flex;gap:6px;margin-bottom:4px;}
+.drawer-lang button{flex:1;padding:8px 4px;background:var(--card2);border:1px solid var(--border2);color:var(--text2);font-family:var(--fb);font-size:11px;border-radius:4px;cursor:pointer;transition:all .15s;}
+.drawer-lang button:hover{border-color:var(--accent);color:var(--accent);}
+.drawer-btn-primary{display:flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;font-family:var(--ff);font-size:13px;font-weight:700;letter-spacing:.05em;padding:11px;border-radius:4px;border:none;cursor:pointer;text-decoration:none;}
+.drawer-btn-primary:hover{background:var(--accent2);}
+.drawer-btn-secondary{display:flex;align-items:center;justify-content:center;background:transparent;color:var(--text);font-family:var(--ff);font-size:13px;font-weight:600;letter-spacing:.05em;padding:10px;border-radius:4px;border:1px solid var(--border2);cursor:pointer;text-decoration:none;}
+.drawer-btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+body.drawer-open{overflow:hidden;}
 @media(max-width:900px){
   .hero-inner,.ftop{grid-template-columns:1fr;}
   .hero h1{font-size:44px;}
   .hcard{display:none;}
   .nav-links{display:none;}
   .nav-hiw{display:none;}
+  .lang-btn{display:none;}       /* moved into drawer */
+  .nav-signin{display:none;}     /* moved into drawer */
+  #lang-wrap{display:none;}      /* whole lang wrapper hidden */
+  .hamburger{display:block;}     /* show hamburger */
   .wgrid,.cgrid{grid-template-columns:1fr 1fr;}
   .bgrid{grid-template-columns:1fr;}
   .sec{padding:48px 1.25rem;}
@@ -398,8 +435,46 @@ html,body{overflow-x:hidden;max-width:100vw;}
         </div>
       </div>
     </div>
+    <button class="hamburger" onclick="openDrawer()" aria-label="Open menu">☰</button>
   </div>
 </nav>
+
+<!-- MOBILE DRAWER -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <div class="drawer-head">
+    <div class="drawer-brand">Score<span class="hl">Ocs8</span></div>
+    <button class="drawer-close" onclick="closeDrawer()" aria-label="Close menu">✕</button>
+  </div>
+  <nav class="drawer-body">
+    <a class="drawer-link" href="/" onclick="closeDrawer()">🏠 Home</a>
+    <a class="drawer-link" href="#predictions" onclick="closeDrawer()">📊 Match Prediction</a>
+    <button class="drawer-link" onclick="toggleDrawerSub(this)">📋 League Blog <span class="arr">▼</span></button>
+    <div class="drawer-submenu" id="drawer-sub">
+      <a href="/predictions/malaysia-super-league/" onclick="closeDrawer()">🇲🇾 Malaysia Super League</a>
+      <a href="/predictions/premier-league/" onclick="closeDrawer()">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</a>
+      <a href="/predictions/champions-league/" onclick="closeDrawer()">⭐ Champions League</a>
+      <a href="/predictions/la-liga/" onclick="closeDrawer()">🇪🇸 La Liga</a>
+      <a href="/predictions/bundesliga/" onclick="closeDrawer()">🇩🇪 Bundesliga</a>
+      <a href="/predictions/serie-a/" onclick="closeDrawer()">🇮🇹 Serie A</a>
+      <a href="/predictions/ligue-1/" onclick="closeDrawer()">🇫🇷 Ligue 1</a>
+      <a href="/predictions/fifa-world-cup/" onclick="closeDrawer()">🏆 FIFA World Cup 2026</a>
+      <a href="/predictions/badminton/" onclick="closeDrawer()">🏸 BWF Badminton</a>
+    </div>
+    <a class="drawer-link" href="/blog/" onclick="closeDrawer()">📝 Blog</a>
+    <button class="drawer-link" onclick="closeDrawer();openHiw();">❓ How It Works</button>
+    <a class="drawer-link" href="#faq" onclick="closeDrawer()">❔ FAQ</a>
+  </nav>
+  <div class="drawer-foot">
+    <div class="drawer-lang">
+      <button onclick="setLang('EN','🇬🇧');closeDrawer();">🇬🇧 EN</button>
+      <button onclick="setLang('BM','🇲🇾');closeDrawer();">🇲🇾 BM</button>
+      <button onclick="setLang('中文','🇨🇳');closeDrawer();">🇨🇳 中文</button>
+    </div>
+    <button class="drawer-btn-primary" onclick="closeDrawer();openModal();">Sign Up Free</button>
+    <button class="drawer-btn-secondary" onclick="closeDrawer();openModal();">Sign In</button>
+  </div>
+</aside>
 
 <div class="ticker-wrap">
   <div class="ticker-inner">
@@ -984,6 +1059,29 @@ window.addEventListener('load',()=>{
 function openHiw(){gohiw(1);document.getElementById('hiw-overlay').style.display='flex';}
 function closeHiw(){document.getElementById('hiw-overlay').style.display='none';}
 function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw-s'+i);if(s)s.style.display=i===n?'block':'none';});}
+
+// Mobile drawer
+function openDrawer(){
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawer-overlay').classList.add('open');
+  document.body.classList.add('drawer-open');
+}
+function closeDrawer(){
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawer-overlay').classList.remove('open');
+  document.body.classList.remove('drawer-open');
+  // Also collapse any open submenu so it's fresh on reopen
+  var sub = document.getElementById('drawer-sub');
+  if (sub) sub.classList.remove('open');
+  document.querySelectorAll('.drawer-link').forEach(function(l){l.classList.remove('open');});
+}
+function toggleDrawerSub(btn){
+  var sub = document.getElementById('drawer-sub');
+  if (sub) sub.classList.toggle('open');
+  if (btn) btn.classList.toggle('open');
+}
+// Close drawer on Escape
+document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeDrawer(); });
 </script>
 
 <script>
