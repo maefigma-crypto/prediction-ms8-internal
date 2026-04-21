@@ -1,6 +1,5 @@
 const SESSION_TTL_SECONDS = 30 * 24 * 3600;
 const TRIAL_DURATION_MS = 2 * 24 * 3600 * 1000;
-const OAUTH_STATE_TTL = 600;
 
 function json(body, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(body), {
@@ -98,72 +97,6 @@ function publicUser(user) {
   };
 }
 
-async function handleGoogleStart(request, env) {
-  if (!env.GOOGLE_CLIENT_ID) return json({ error: 'GOOGLE_CLIENT_ID not set' }, 500);
-  const url = new URL(request.url);
-  const redirectUri = `${url.origin}/api/auth/google/callback`;
-  const state = randomHex(12);
-  await env.CACHE.put(`oauth-state:${state}`, '1', { expirationTtl: OAUTH_STATE_TTL });
-  const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-  authUrl.searchParams.set('client_id', env.GOOGLE_CLIENT_ID);
-  authUrl.searchParams.set('redirect_uri', redirectUri);
-  authUrl.searchParams.set('response_type', 'code');
-  authUrl.searchParams.set('scope', 'openid email profile');
-  authUrl.searchParams.set('state', state);
-  authUrl.searchParams.set('access_type', 'online');
-  authUrl.searchParams.set('prompt', 'select_account');
-  return Response.redirect(authUrl.toString(), 302);
-}
-
-async function handleGoogleCallback(request, env) {
-  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
-    return json({ error: 'Google OAuth not configured' }, 500);
-  }
-  const url = new URL(request.url);
-  const code = url.searchParams.get('code');
-  const state = url.searchParams.get('state');
-  if (!code || !state) return json({ error: 'missing code or state' }, 400);
-
-  const stateValid = await env.CACHE.get(`oauth-state:${state}`);
-  if (!stateValid) return json({ error: 'invalid or expired state' }, 400);
-  await env.CACHE.delete(`oauth-state:${state}`);
-
-  const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'content-type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      code,
-      client_id: env.GOOGLE_CLIENT_ID,
-      client_secret: env.GOOGLE_CLIENT_SECRET,
-      redirect_uri: `${url.origin}/api/auth/google/callback`,
-      grant_type: 'authorization_code',
-    }),
-  });
-  if (!tokenRes.ok) return json({ error: 'token exchange failed', detail: await tokenRes.text() }, 502);
-  const tokens = await tokenRes.json();
-
-  const userRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-    headers: { Authorization: `Bearer ${tokens.access_token}` },
-  });
-  if (!userRes.ok) return json({ error: 'userinfo failed' }, 502);
-  const gUser = await userRes.json();
-
-  const user = await upsertUser(env, 'google', gUser.sub, {
-    email: gUser.email,
-    name: gUser.name,
-    avatar: gUser.picture,
-  });
-  const sid = await createSession(env, `user:google:${gUser.sub}`);
-
-  return new Response(null, {
-    status: 302,
-    headers: {
-      Location: '/',
-      'Set-Cookie': sessionCookie(sid),
-    },
-  });
-}
-
 async function handleTelegramLogin(request, env) {
   if (!env.TELEGRAM_BOT_TOKEN) return json({ error: 'TELEGRAM_BOT_TOKEN not set' }, 500);
   const data = await request.json().catch(() => null);
@@ -206,8 +139,6 @@ export async function onRequest(context) {
   const method = request.method;
 
   try {
-    if (method === 'GET' && action === 'google/start') return handleGoogleStart(request, env);
-    if (method === 'GET' && action === 'google/callback') return handleGoogleCallback(request, env);
     if (method === 'POST' && action === 'telegram') return handleTelegramLogin(request, env);
     if (method === 'GET' && action === 'me') return handleMe(request, env);
     if (method === 'POST' && action === 'logout') return handleLogout(request, env);
