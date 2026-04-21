@@ -1,3 +1,12 @@
+const EMOJI = { UCL: '⭐', EPL: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', WC: '🏆', MSL: '🇲🇾', BWF: '🏸' };
+
+function excerptOf(content) {
+  // Prefer the purpose-built SEO meta_description, else strip markdown and clip body.
+  if (content?.meta_description) return content.meta_description;
+  const body = (content?.body_en || '').replace(/[#*`]/g, '').replace(/\s+/g, ' ').trim();
+  return body.length > 140 ? body.slice(0, 140) + '…' : body;
+}
+
 export async function onRequest({ env }) {
   const posts = [];
   for (let i = 0; i < 7; i++) {
@@ -6,30 +15,28 @@ export async function onRequest({ env }) {
     if (!raw) continue;
     try {
       const data = JSON.parse(raw);
-      const emojiMap = { UCL: '⭐', EPL: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', WC: '🏆', MSL: '🇲🇾', BWF: '🏸' };
+      const fmtDate = new Date(d).toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric' });
       if (data.top) {
-        const fx = data.top.fixture;
-        const c = data.top.content;
+        const fx = data.top.fixture, c = data.top.content;
         posts.push({
           slug: `daily-${d}-top`,
           title: c.title_en,
-          excerpt: (c.body_en || '').replace(/[#*`]/g, '').slice(0, 120) + '...',
+          excerpt: excerptOf(c),
           category_label: fx.league?.name || '',
-          emoji: emojiMap[fx._leagueKey] || '📝',
-          date: new Date(d).toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric' }),
+          emoji: EMOJI[fx._leagueKey] || '📝',
+          date: fmtDate,
         });
       }
       for (let idx = 0; idx < (data.previews || []).length; idx++) {
         const p = data.previews[idx];
-        const fx = p.fixture;
-        const c = p.content;
+        const fx = p.fixture, c = p.content;
         posts.push({
           slug: `daily-${d}-p${idx + 1}`,
           title: c.title_en,
-          excerpt: (c.body_en || '').replace(/[#*`]/g, '').slice(0, 120) + '...',
+          excerpt: excerptOf(c),
           category_label: fx.league?.name || '',
-          emoji: emojiMap[fx._leagueKey] || '📝',
-          date: new Date(d).toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric' }),
+          emoji: EMOJI[fx._leagueKey] || '📝',
+          date: fmtDate,
         });
       }
     } catch (_) { /* skip malformed day */ }

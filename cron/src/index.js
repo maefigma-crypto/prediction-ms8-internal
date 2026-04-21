@@ -1,7 +1,7 @@
 const API_FOOTBALL_BASE = 'https://v3.football.api-sports.io';
 const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
 const CLAUDE_MODEL = 'claude-haiku-4-5-20251001';
-const MAX_TOKENS_PER_REQ = 1500;
+const MAX_TOKENS_PER_REQ = 2000;
 const DAILY_TOKEN_BUDGET = 8000;
 
 const LEAGUE_PRIORITY = [
@@ -72,39 +72,37 @@ async function pickTopFixtures(env) {
 }
 
 function longPrompt(fx) {
-  return `Write a football match preview as JSON only (no prose outside the JSON).
+  return `Write an SEO-optimised football match preview as JSON only (no prose outside the JSON).
 
 Match: ${fx.teams.home.name} vs ${fx.teams.away.name}
 League: ${fx.league.name}
 Kickoff: ${fx.fixture.date}
 Venue: ${fx.fixture.venue?.name || 'TBD'}
 
-Shape:
+Shape (ALL fields required, double quotes, valid JSON):
 {
-  "title_en": "punchy headline, <90 chars",
-  "title_bm": "Bahasa Malaysia headline",
-  "title_zh": "中文 headline",
-  "body_en": "~400 words, markdown, cover: form, key players, tactics, prediction with reasoning",
-  "summary_bm": "~120 words in Bahasa Malaysia",
-  "summary_zh": "~120 字中文"
+  "title_en": "SEO headline, 50-70 chars, primary keyword at start, compelling, sentence-case",
+  "title_bm": "Localised Bahasa Malaysia headline (for BM readers on listing pages)",
+  "title_zh": "中文本地化标题 (for Chinese-Malaysian readers on listing pages)",
+  "meta_description": "140-155 chars, natural English, includes match + league + key angle, action verb",
+  "body_en": "500-600 words in markdown. Use H2/H3 subheadings, short paragraphs, scannable structure. Sections: intro with hook, recent form both teams, key player matchups, tactical analysis, injury/lineup notes, clear prediction with reasoning and confidence %. Include relevant keywords naturally."
 }`;
 }
 
 function shortPrompt(fx) {
-  return `Write a short football match preview as JSON only.
+  return `Write a short SEO-optimised football match preview as JSON only.
 
 Match: ${fx.teams.home.name} vs ${fx.teams.away.name}
 League: ${fx.league.name}
 Kickoff: ${fx.fixture.date}
 
-Shape:
+Shape (ALL fields required, valid JSON):
 {
-  "title_en": "headline, <90 chars",
+  "title_en": "SEO headline, 50-70 chars, keyword-forward",
   "title_bm": "Bahasa Malaysia headline",
-  "title_zh": "中文 headline",
-  "body_en": "~200 words, quick form + prediction",
-  "summary_bm": "~80 words in Bahasa Malaysia",
-  "summary_zh": "~80 字中文"
+  "title_zh": "中文标题",
+  "meta_description": "140-155 chars, compelling English snippet",
+  "body_en": "300-400 words in markdown. One or two H2 subheadings, form snapshot, key angle, prediction with reasoning."
 }`;
 }
 

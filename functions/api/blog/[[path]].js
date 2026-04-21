@@ -14,21 +14,22 @@ function json(body, status = 200) {
 function publicPost(p, lang = 'en') {
   const m = p.meta;
   const titleByLang = { en: m.title, bm: m.title_bm || m.title, zh: m.title_zh || m.title };
-  const bodyByLang = { en: p.body, bm: m.summary_bm || p.body, zh: m.summary_zh || p.body };
+  // Body is always English — SEO focus is EN. Title is localised so listings
+  // and share cards feel native to BM/中文 viewers.
   return {
     slug: p.slug,
     title: titleByLang[lang] || m.title,
     date: m.date || '',
     category: m.category || '',
     league: m.league || '',
-    excerpt: m.excerpt || '',
+    excerpt: m.excerpt || m.meta_description || '',
     featured_image: m.featured_image || '',
     seo_title: m.seo_title || '',
     meta_description: m.meta_description || '',
     og_image: m.og_image || m.featured_image || '',
     url: `/blog/${p.slug}/`,
     lang,
-    body: bodyByLang[lang] || p.body,
+    body: p.body,
   };
 }
 

@@ -23,8 +23,9 @@ function renderPost(post, settings, url) {
 
   const titleByLang = { en: m.title, bm: m.title_bm || m.title, zh: m.title_zh || m.title };
   const title = titleByLang[lang] || m.title;
-  const summaryByLang = { bm: m.summary_bm, zh: m.summary_zh };
-  const contentSource = lang === 'en' ? post.body : (summaryByLang[lang] || post.body);
+  // Body is always English — SEO focus is EN and it saves token budget. Title still localised
+  // so BM/中文 listings and share cards feel native.
+  const contentSource = post.body;
 
   const seoTitle = m.seo_title || title;
   const metaDesc = m.meta_description || m.excerpt || settings.default_meta_description || '';
