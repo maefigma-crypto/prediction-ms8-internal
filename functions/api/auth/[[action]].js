@@ -1,5 +1,14 @@
 const SESSION_TTL_SECONDS = 30 * 24 * 3600;
 const TRIAL_DURATION_MS = 2 * 24 * 3600 * 1000;
+const OAUTH_STATE_TTL = 600;
+
+const TG_OIDC_DISCOVERY = 'https://oauth.telegram.org/.well-known/openid-configuration';
+// Fallback endpoints if discovery is unreachable (Telegram's documented OIDC endpoints).
+const TG_FALLBACK = {
+  authorization_endpoint: 'https://oauth.telegram.org/auth',
+  token_endpoint: 'https://oauth.telegram.org/token',
+  userinfo_endpoint: 'https://oauth.telegram.org/userinfo',
+};
 
 function json(body, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(body), {
@@ -26,17 +35,6 @@ function randomHex(bytes = 16) {
   const arr = new Uint8Array(bytes);
   crypto.getRandomValues(arr);
   return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-async function hmacSha256Hex(keyData, msg) {
-  const key = await crypto.subtle.importKey('raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(msg));
-  return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-async function sha256(msg) {
-  const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
-  return new Uint8Array(hash);
 }
 
 async function upsertUser(env, provider, providerId, profile) {
@@ -97,28 +95,105 @@ function publicUser(user) {
   };
 }
 
-async function handleTelegramLogin(request, env) {
-  if (!env.TELEGRAM_BOT_TOKEN) return json({ error: 'TELEGRAM_BOT_TOKEN not set' }, 500);
-  const data = await request.json().catch(() => null);
-  if (!data || !data.hash || !data.id) return json({ error: 'invalid telegram payload' }, 400);
+/* OIDC discovery: cached 1h in KV to avoid hitting Telegram on every auth. */
+async function getTgOidc(env) {
+  const cached = await env.CACHE.get('oidc:telegram', 'json');
+  if (cached) return cached;
+  try {
+    const res = await fetch(TG_OIDC_DISCOVERY);
+    if (res.ok) {
+      const doc = await res.json();
+      const endpoints = {
+        authorization_endpoint: doc.authorization_endpoint || TG_FALLBACK.authorization_endpoint,
+        token_endpoint: doc.token_endpoint || TG_FALLBACK.token_endpoint,
+        userinfo_endpoint: doc.userinfo_endpoint || TG_FALLBACK.userinfo_endpoint,
+      };
+      await env.CACHE.put('oidc:telegram', JSON.stringify(endpoints), { expirationTtl: 3600 });
+      return endpoints;
+    }
+  } catch (_) { /* fall through to defaults */ }
+  return TG_FALLBACK;
+}
 
-  const { hash, ...fields } = data;
-  const dataCheckString = Object.keys(fields).sort().map(k => `${k}=${fields[k]}`).join('\n');
-  const secretKey = await sha256(env.TELEGRAM_BOT_TOKEN);
-  const expected = await hmacSha256Hex(secretKey, dataCheckString);
-  if (expected !== hash) return json({ error: 'hash mismatch' }, 401);
+async function handleTelegramStart(request, env) {
+  if (!env.TELEGRAM_CLIENT_ID) return json({ error: 'TELEGRAM_CLIENT_ID not set' }, 500);
+  const url = new URL(request.url);
+  const redirectUri = `${url.origin}/api/auth/telegram/callback`;
+  const state = randomHex(16);
+  await env.CACHE.put(`oauth-state:tg:${state}`, '1', { expirationTtl: OAUTH_STATE_TTL });
 
-  const age = Math.floor(Date.now() / 1000) - parseInt(fields.auth_date, 10);
-  if (age > 86400) return json({ error: 'auth_date too old' }, 401);
+  const { authorization_endpoint } = await getTgOidc(env);
+  const authUrl = new URL(authorization_endpoint);
+  authUrl.searchParams.set('client_id', env.TELEGRAM_CLIENT_ID);
+  authUrl.searchParams.set('redirect_uri', redirectUri);
+  authUrl.searchParams.set('response_type', 'code');
+  authUrl.searchParams.set('scope', 'openid profile');
+  authUrl.searchParams.set('state', state);
+  return Response.redirect(authUrl.toString(), 302);
+}
 
-  const user = await upsertUser(env, 'telegram', fields.id, {
-    name: [fields.first_name, fields.last_name].filter(Boolean).join(' ') || fields.username || null,
-    avatar: fields.photo_url || null,
-    email: null,
+async function handleTelegramCallback(request, env) {
+  if (!env.TELEGRAM_CLIENT_ID || !env.TELEGRAM_CLIENT_SECRET) {
+    return json({ error: 'Telegram OAuth not configured' }, 500);
+  }
+  const url = new URL(request.url);
+  const code = url.searchParams.get('code');
+  const state = url.searchParams.get('state');
+  const err = url.searchParams.get('error');
+  if (err) return json({ error: 'telegram rejected', detail: err, description: url.searchParams.get('error_description') }, 400);
+  if (!code || !state) return json({ error: 'missing code or state' }, 400);
+
+  const stateValid = await env.CACHE.get(`oauth-state:tg:${state}`);
+  if (!stateValid) return json({ error: 'invalid or expired state' }, 400);
+  await env.CACHE.delete(`oauth-state:tg:${state}`);
+
+  const { token_endpoint, userinfo_endpoint } = await getTgOidc(env);
+  const redirectUri = `${url.origin}/api/auth/telegram/callback`;
+
+  const tokenRes = await fetch(token_endpoint, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/x-www-form-urlencoded',
+      'accept': 'application/json',
+    },
+    body: new URLSearchParams({
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: redirectUri,
+      client_id: env.TELEGRAM_CLIENT_ID,
+      client_secret: env.TELEGRAM_CLIENT_SECRET,
+    }),
   });
-  const sid = await createSession(env, `user:telegram:${fields.id}`);
+  if (!tokenRes.ok) {
+    return json({ error: 'token exchange failed', status: tokenRes.status, detail: await tokenRes.text().catch(() => '') }, 502);
+  }
+  const tokens = await tokenRes.json();
+  const accessToken = tokens.access_token;
+  if (!accessToken) return json({ error: 'no access_token in response', tokens }, 502);
 
-  return json({ ok: true, user: publicUser(user) }, 200, { 'Set-Cookie': sessionCookie(sid) });
+  const userRes = await fetch(userinfo_endpoint, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!userRes.ok) return json({ error: 'userinfo failed', status: userRes.status }, 502);
+  const profile = await userRes.json();
+
+  const tgId = profile.sub || profile.id || profile.user_id;
+  if (!tgId) return json({ error: 'userinfo missing subject', profile }, 502);
+
+  const user = await upsertUser(env, 'telegram', tgId, {
+    name: profile.name || [profile.given_name, profile.family_name].filter(Boolean).join(' ') || profile.preferred_username || null,
+    avatar: profile.picture || null,
+    email: profile.email || null,
+  });
+  const sid = await createSession(env, `user:telegram:${tgId}`);
+
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: '/',
+      'Set-Cookie': sessionCookie(sid),
+    },
+  });
 }
 
 async function handleMe(request, env) {
@@ -139,7 +214,8 @@ export async function onRequest(context) {
   const method = request.method;
 
   try {
-    if (method === 'POST' && action === 'telegram') return handleTelegramLogin(request, env);
+    if (method === 'GET' && action === 'telegram/start') return handleTelegramStart(request, env);
+    if (method === 'GET' && action === 'telegram/callback') return handleTelegramCallback(request, env);
     if (method === 'GET' && action === 'me') return handleMe(request, env);
     if (method === 'POST' && action === 'logout') return handleLogout(request, env);
     return json({ error: 'not found', action, method }, 404);
