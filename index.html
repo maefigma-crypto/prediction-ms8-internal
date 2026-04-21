@@ -17,8 +17,9 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:62px;background:rgba(8,11,16,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
 .nav-logo{font-family:var(--ff);font-size:22px;font-weight:700;letter-spacing:0.06em;color:var(--text);text-decoration:none;}.nav-logo .hl{color:var(--accent);}
 .nav-links{display:flex;align-items:center;gap:2px;list-style:none;}
-.nav-links a{font-size:13px;font-weight:500;color:var(--text2);text-decoration:none;padding:6px 11px;border-radius:4px;transition:all .2s;display:flex;align-items:center;gap:5px;}
+.nav-links a{font-size:13px;font-weight:500;color:var(--text2);text-decoration:none;padding:6px 11px;border-radius:4px;transition:all .2s;display:flex;align-items:center;gap:6px;}
 .nav-links a:hover,.nav-links a.active{color:var(--accent);background:rgba(249,115,22,0.07);}
+.ni{width:15px;height:15px;flex-shrink:0;stroke-width:2;}
 .nav-dropdown{position:relative;}.nav-dropdown .dm{display:none;position:absolute;top:calc(100% + 8px);left:0;background:var(--card2);border:1px solid var(--border2);border-radius:6px;min-width:180px;overflow:hidden;z-index:300;}
 .nav-dropdown:hover .dm{display:block;}.dm a{display:block;padding:10px 16px;font-size:13px;color:var(--text2);text-decoration:none;border-bottom:1px solid var(--border);transition:all .2s;}
 .dm a:last-child{border-bottom:none;}.dm a:hover{color:var(--accent);background:rgba(249,115,22,0.06);}
@@ -372,10 +373,10 @@ body.drawer-open{overflow:hidden;}
 <nav>
   <a href="/" class="nav-logo">Score<span class="hl">Ocs8</span></a>
   <ul class="nav-links">
-    <li><a href="/" class="active">🏠 Home</a></li>
-    <li><a href="#predictions">📊 Match Prediction</a></li>
+    <li><a href="/" class="active"><svg class="ni" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</a></li>
+    <li><a href="#predictions"><svg class="ni" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>Match Prediction</a></li>
     <li class="nav-dropdown">
-      <a href="#blog">📋 League Blog ▾</a>
+      <a href="#"><svg class="ni" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>League Blog <span style="font-size:9px;opacity:.7;">▼</span></a>
       <div class="dm">
         <a href="/predictions/malaysia-super-league/">🇲🇾 Malaysia Super League</a>
         <a href="/predictions/premier-league/">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</a>
@@ -388,11 +389,9 @@ body.drawer-open{overflow:hidden;}
         <a href="/predictions/badminton/">🏸 BWF Badminton</a>
       </div>
     </li>
-    <li><a href="/blog/">📝 Blog</a></li>
-    <li><a href="#faq">❔ FAQ</a></li>
+    <li><a href="#" onclick="event.preventDefault();openHiw();"><svg class="ni" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>How It Works</a></li>
   </ul>
   <div class="nav-right">
-    <a href="#" onclick="event.preventDefault();openHiw();" class="nav-hiw" style="font-family:var(--ff);font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--text2);padding:6px 12px;border-radius:4px;border:1px solid var(--border2);text-decoration:none;transition:all .2s;white-space:nowrap;" onmouseover="this.style.color='var(--accent)';this.style.borderColor='rgba(249,115,22,.4)';" onmouseout="this.style.color='var(--text2)';this.style.borderColor='var(--border2)';">❓ How It Works</a>
     <div style="position:relative;" id="lang-wrap">
       <button class="lang-btn" onclick="toggleLangMenu()" id="lang-current">🌐 EN</button>
       <div id="lang-menu" style="display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--card2);border:1px solid var(--border2);border-radius:6px;overflow:hidden;z-index:300;min-width:120px;">
@@ -403,8 +402,7 @@ body.drawer-open{overflow:hidden;}
     </div>
     <!-- LOGGED OUT -->
     <div id="auth-logged-out" style="display:flex;align-items:center;gap:8px;">
-      <button onclick="openModal()" class="nav-signin">Sign In</button>
-      <button onclick="openModal()" class="nav-signup">Sign Up Free</button>
+      <button onclick="openModal()" class="nav-signup">Login</button>
     </div>
     <!-- LOGGED IN (hidden by default, shown after auth) -->
     <div id="auth-logged-in" style="display:none;position:relative;">
@@ -447,9 +445,9 @@ body.drawer-open{overflow:hidden;}
     <button class="drawer-close" onclick="closeDrawer()" aria-label="Close menu">✕</button>
   </div>
   <nav class="drawer-body">
-    <a class="drawer-link" href="/" onclick="closeDrawer()">🏠 Home</a>
-    <a class="drawer-link" href="#predictions" onclick="closeDrawer()">📊 Match Prediction</a>
-    <button class="drawer-link" onclick="toggleDrawerSub(this)">📋 League Blog <span class="arr">▼</span></button>
+    <a class="drawer-link" href="/" onclick="closeDrawer()"><svg class="ni" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Home</a>
+    <a class="drawer-link" href="#predictions" onclick="closeDrawer()"><svg class="ni" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg> Match Prediction</a>
+    <button class="drawer-link" onclick="toggleDrawerSub(this)"><span style="display:flex;align-items:center;gap:8px;"><svg class="ni" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> League Blog</span><span class="arr">▼</span></button>
     <div class="drawer-submenu" id="drawer-sub">
       <a href="/predictions/malaysia-super-league/" onclick="closeDrawer()">🇲🇾 Malaysia Super League</a>
       <a href="/predictions/premier-league/" onclick="closeDrawer()">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</a>
@@ -461,9 +459,10 @@ body.drawer-open{overflow:hidden;}
       <a href="/predictions/fifa-world-cup/" onclick="closeDrawer()">🏆 FIFA World Cup 2026</a>
       <a href="/predictions/badminton/" onclick="closeDrawer()">🏸 BWF Badminton</a>
     </div>
-    <a class="drawer-link" href="/blog/" onclick="closeDrawer()">📝 Blog</a>
-    <button class="drawer-link" onclick="closeDrawer();openHiw();">❓ How It Works</button>
-    <a class="drawer-link" href="#faq" onclick="closeDrawer()">❔ FAQ</a>
+    <button class="drawer-link" onclick="closeDrawer();openHiw();"><svg class="ni" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> How It Works</button>
+    <div style="padding:10px 20px 8px;font-family:var(--fm);font-size:10px;color:var(--text3);letter-spacing:.1em;border-top:1px solid var(--border);margin-top:4px;">MORE</div>
+    <a class="drawer-link" href="/blog/" onclick="closeDrawer()" style="font-size:13px;font-weight:500;color:var(--text2);">Blog</a>
+    <a class="drawer-link" href="#faq" onclick="closeDrawer()" style="font-size:13px;font-weight:500;color:var(--text2);">FAQ</a>
   </nav>
   <div class="drawer-foot">
     <div class="drawer-lang">
@@ -471,8 +470,7 @@ body.drawer-open{overflow:hidden;}
       <button onclick="setLang('BM','🇲🇾');closeDrawer();">🇲🇾 BM</button>
       <button onclick="setLang('中文','🇨🇳');closeDrawer();">🇨🇳 中文</button>
     </div>
-    <button class="drawer-btn-primary" onclick="closeDrawer();openModal();">Sign Up Free</button>
-    <button class="drawer-btn-secondary" onclick="closeDrawer();openModal();">Sign In</button>
+    <button class="drawer-btn-primary" onclick="closeDrawer();openModal();">Login</button>
   </div>
 </aside>
 
@@ -899,8 +897,8 @@ body.drawer-open{overflow:hidden;}
   <div class="fi">
     <div class="ftop">
       <div><div class="fbn">Score<span class="hl">Ocs8</span></div><div class="fbd">AI-powered football and badminton predictions. Malaysia's #1 sports prediction platform.</div><div style="display:flex;gap:10px"><a href="https://t.me/livebad" target="_blank" style="color:var(--text3);font-size:18px;text-decoration:none" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">✈️</a></div></div>
-      <div class="fcol"><div class="fct">Quick Links</div><ul><li><a href="/">Home</a></li><li><a href="#predictions">Predictions</a></li><li><a href="#motd">Match of the Day</a></li><li><a href="#faq">FAQ</a></li></ul></div>
-      <div class="fcol"><div class="fct">Resources</div><ul><li><a href="#blog">Football Blog</a></li><li><a href="#blog">Badminton Blog</a></li><li><a href="#history">Accuracy Stats</a></li><li><a href="#highlights">Highlights</a></li></ul></div>
+      <div class="fcol"><div class="fct">Quick Links</div><ul><li><a href="/">Home</a></li><li><a href="#predictions">Match Prediction</a></li><li><a href="#motd">Match of the Day</a></li><li><a href="/blog/">Blog</a></li><li><a href="#faq">FAQ</a></li></ul></div>
+      <div class="fcol"><div class="fct">Resources</div><ul><li><a href="/blog/">Latest Articles</a></li><li><a href="#history">Accuracy Stats</a></li><li><a href="#highlights">Highlights</a></li><li><a href="#" onclick="event.preventDefault();openHiw();">How It Works</a></li></ul></div>
       <div class="fcol"><div class="fct">Connect</div><ul><li><a href="https://t.me/livebad" target="_blank">Telegram @livebad</a></li><li><a href="#">Support</a></li><li><a href="#">About Us</a></li></ul></div>
     </div>
     <div class="seob">
