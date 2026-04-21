@@ -287,8 +287,9 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:3r
         <a href="/predictions/badminton/">🏸 BWF Badminton</a>
       </div>
     </li>
-    <li><a href="#blog">📝 Blog</a></li>
-    <li><a href="#faq">❓ FAQ</a></li>
+    <li><a href="/blog/">📝 Blog</a></li>
+    <li><a href="#" onclick="event.preventDefault();openHiw();">❓ How It Works</a></li>
+    <li><a href="#faq">❔ FAQ</a></li>
   </ul>
   <div class="nav-right">
     <div style="position:relative;" id="lang-wrap">
@@ -386,7 +387,6 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:3r
       <div class="hero-btns">
         <a href="#predictions" class="btn-p" id="hl-btn1">📊 View Predictions</a>
         <a href="#highlights" class="btn-o" id="hl-btn2">📺 Live Streaming</a>
-        <button onclick="openHiw()" class="btn-o" style="border-color:rgba(249,115,22,.4);color:var(--accent);">❓ How it Works</button>
       </div>
       <div class="hstats">
         <div class="hsc"><div class="hscv" id="accctr">87%</div><div class="hscl" id="hl-acc">Accuracy</div><div class="hsct">↑ 3% this month</div></div>
@@ -627,7 +627,41 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:3r
     <div class="stag">Post-Match</div>
     <h2 class="stitle">Latest Highlights</h2>
     <p class="ssub">Goal clips & match highlights powered by ScoreBat</p>
-    <div class="sbwrap fu"><div class="sbh"><div class="sbt">⚽ Match Highlights</div><span class="bpred">SCOREBAT</span></div><iframe src="https://www.scorebat.com/embed/?" frameborder="0" width="100%" height="480" allowfullscreen allow="autoplay; fullscreen" style="display:block;background:var(--bg2);"></iframe></div>
+    <div class="sbwrap fu">
+      <div class="sbh" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div class="sbt">⚽ Match Highlights</div>
+        <div id="sb-tabs" style="display:flex;gap:4px;flex-wrap:wrap;">
+          <button class="sbtab active" data-sb="england-premier-league">🏴󠁧󠁢󠁥󠁮󠁧󠁿 EPL</button>
+          <button class="sbtab" data-sb="uefa-champions-league">⭐ UCL</button>
+          <button class="sbtab" data-sb="spain-la-liga">🇪🇸 La Liga</button>
+          <button class="sbtab" data-sb="italy-serie-a">🇮🇹 Serie A</button>
+          <button class="sbtab" data-sb="germany-bundesliga">🇩🇪 Bundesliga</button>
+          <button class="sbtab" data-sb="france-ligue-1">🇫🇷 Ligue 1</button>
+          <button class="sbtab" data-sb="">🌐 All</button>
+        </div>
+        <span class="bpred">SCOREBAT</span>
+      </div>
+      <iframe id="sb-iframe" src="https://www.scorebat.com/embed/competition/england-premier-league/" frameborder="0" width="100%" height="480" allowfullscreen allow="autoplay; fullscreen" style="display:block;background:var(--bg2);"></iframe>
+    </div>
+    <style>
+      #sb-tabs .sbtab{font-family:var(--fm);font-size:11px;letter-spacing:.04em;padding:6px 12px;border:1px solid var(--border);color:var(--text2);border-radius:4px;background:var(--card);cursor:pointer;transition:all .2s;white-space:nowrap;}
+      #sb-tabs .sbtab:hover{border-color:rgba(249,115,22,.4);color:var(--text);}
+      #sb-tabs .sbtab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+    </style>
+    <script>
+    (function(){
+      const tabs = document.querySelectorAll('#sb-tabs .sbtab');
+      const iframe = document.getElementById('sb-iframe');
+      tabs.forEach(t => t.addEventListener('click', () => {
+        tabs.forEach(b => b.classList.remove('active'));
+        t.classList.add('active');
+        const slug = t.dataset.sb;
+        iframe.src = slug
+          ? `https://www.scorebat.com/embed/competition/${slug}/`
+          : `https://www.scorebat.com/embed/?`;
+      }));
+    })();
+    </script>
   </div>
 </section>
 
