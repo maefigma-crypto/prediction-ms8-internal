@@ -63,10 +63,42 @@ function renderPost(post, settings, url) {
     })),
   } : null;
 
+  // BreadcrumbList — helps Google render path as structured breadcrumb in SERPs.
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/` },
+      { '@type': 'ListItem', position: 2, name: 'Blog', item: `${SITE_URL}/blog/` },
+      { '@type': 'ListItem', position: 3, name: title },
+    ],
+  };
+
+  // SportsEvent — for cron-generated match previews, lets Google surface the
+  // fixture as a sports event with start date, teams, venue.
+  const sportsSchema = (m.sports_home_name && m.sports_away_name && m.sports_start_date) ? {
+    '@context': 'https://schema.org',
+    '@type': 'SportsEvent',
+    name: `${m.sports_home_name} vs ${m.sports_away_name}`,
+    startDate: m.sports_start_date,
+    sport: m.sports_sport || 'Football',
+    homeTeam: { '@type': 'SportsTeam', name: m.sports_home_name },
+    awayTeam: { '@type': 'SportsTeam', name: m.sports_away_name },
+    location: m.sports_venue ? { '@type': 'Place', name: m.sports_venue } : undefined,
+    organizer: m.sports_league ? { '@type': 'SportsOrganization', name: m.sports_league } : undefined,
+  } : null;
+
   const orgSchema = safeParseJson(settings.organisation_schema);
 
-  const schemaBlocks = [articleSchema, faqSchema, orgSchema].filter(Boolean)
+  const schemaBlocks = [articleSchema, faqSchema, breadcrumbSchema, sportsSchema, orgSchema].filter(Boolean)
     .map(s => `<script type="application/ld+json">${JSON.stringify(s).replace(/</g, '\\u003c')}</script>`).join('\n');
+
+  // hreflang alternates — tells Google which URL serves which language variant.
+  const hreflangTags = `
+<link rel="alternate" hreflang="en" href="${canonical}">
+<link rel="alternate" hreflang="ms" href="${canonical.replace(/\/$/, '/')}?lang=bm">
+<link rel="alternate" hreflang="zh" href="${canonical.replace(/\/$/, '/')}?lang=zh">
+<link rel="alternate" hreflang="x-default" href="${canonical}">`.trim();
 
   const bodyHtml = `
 <div class="wrap post">
@@ -107,6 +139,7 @@ function renderPost(post, settings, url) {
     ogTitle, ogDesc, ogImage, ogType, ogImageAlt: m.og_image_alt || title,
     twitterCard, twitterHandle,
     schemaBlocks,
+    hreflangTags,
     gaId: settings.google_analytics_id,
     searchConsoleVerify: settings.search_console_verify,
     body: bodyHtml,
@@ -120,7 +153,7 @@ function shell(opts) {
     title, description, canonical, robots = 'index, follow',
     ogTitle, ogDesc, ogImage, ogType = 'article', ogImageAlt,
     twitterCard = 'summary_large_image', twitterHandle,
-    schemaBlocks = '', gaId, searchConsoleVerify,
+    schemaBlocks = '', hreflangTags = '', gaId, searchConsoleVerify,
     body,
   } = opts;
   const esc = escHtml;
@@ -133,6 +166,8 @@ function shell(opts) {
 <meta name="description" content="${esc(description || '')}">
 <meta name="robots" content="${esc(robots)}">
 ${canonical ? `<link rel="canonical" href="${esc(canonical)}">` : ''}
+${hreflangTags}
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 ${searchConsoleVerify ? `<meta name="google-site-verification" content="${esc(searchConsoleVerify)}">` : ''}
 <meta property="og:title" content="${esc(ogTitle || title)}">
 <meta property="og:description" content="${esc(ogDesc || description || '')}">

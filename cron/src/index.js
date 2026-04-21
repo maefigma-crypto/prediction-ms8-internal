@@ -157,7 +157,44 @@ async function generateDaily(env) {
   }
 
   await env.CACHE.put(`content:${date}`, JSON.stringify(output), { expirationTtl: 48 * 3600 });
-  return { status: 'ok', date, tokensUsed: output.tokensUsed, items: 1 + output.previews.length };
+
+  // Ping IndexNow (Bing/Yandex) so fresh posts get crawled fast. Google
+  // removed their sitemap ping in 2023; IndexNow is the modern equivalent.
+  const indexNowResult = await pingIndexNow(output, date).catch(e => ({ error: String(e.message || e) }));
+
+  return {
+    status: 'ok',
+    date,
+    tokensUsed: output.tokensUsed,
+    items: 1 + output.previews.length,
+    indexnow: indexNowResult,
+  };
+}
+
+const SITE_HOST = 'scoreocs8.pages.dev';
+const INDEXNOW_KEY = '8c4e6d9f2b7a1e3f5c8d0a9b2e4f7c1d';
+
+async function pingIndexNow(bundle, date) {
+  const urls = [];
+  if (bundle.top) urls.push(`https://${SITE_HOST}/blog/daily-${date}-top/`);
+  for (let i = 0; i < (bundle.previews || []).length; i++) {
+    urls.push(`https://${SITE_HOST}/blog/daily-${date}-p${i + 1}/`);
+  }
+  // Also ping the listing pages that changed
+  urls.push(`https://${SITE_HOST}/blog/`, `https://${SITE_HOST}/sitemap.xml`);
+  if (!urls.length) return { submitted: 0 };
+
+  const res = await fetch('https://api.indexnow.org/indexnow', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json; charset=utf-8' },
+    body: JSON.stringify({
+      host: SITE_HOST,
+      key: INDEXNOW_KEY,
+      keyLocation: `https://${SITE_HOST}/${INDEXNOW_KEY}.txt`,
+      urlList: urls,
+    }),
+  });
+  return { submitted: urls.length, status: res.status };
 }
 
 export default {

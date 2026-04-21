@@ -219,6 +219,13 @@ function toKvPost(dateKey, kind, entry, generatedAt) {
       og_type: 'article',
       twitter_card: 'summary_large_image',
       schema_type: 'Article',
+      // SportsEvent schema surfaces — populated from fixture for cron posts.
+      sports_sport: leagueKey === 'BWF' ? 'Badminton' : 'Football',
+      sports_home_name: homeName,
+      sports_away_name: awayName,
+      sports_start_date: fx.fixture?.date || '',
+      sports_venue: fx.fixture?.venue?.name || '',
+      sports_league: leagueLabel,
     },
     body: c.body_en || '',
   };
