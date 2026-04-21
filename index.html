@@ -894,6 +894,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
   const LIVE = new Set(['1H','2H','HT','ET','BT','P','LIVE']);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const mytTime = iso => { try { return new Date(iso).toLocaleString('en-MY',{timeZone:'Asia/Kuala_Lumpur',hour:'2-digit',minute:'2-digit',hour12:false})+' MYT'; } catch { return ''; } };
+  const mytDate = iso => { try { return new Date(iso).toLocaleDateString('en-CA',{timeZone:'Asia/Kuala_Lumpur'}); } catch { return ''; } };
   const klDateKey = iso => new Date(new Date(iso).getTime() + 8*3600*1000).toISOString().slice(0,10);
   const klToday = () => klDateKey(new Date().toISOString());
   const klTomorrow = () => { const d=new Date(); d.setUTCDate(d.getUTCDate()+1); return klDateKey(d.toISOString()); };
@@ -946,7 +947,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
         <div style="font-size:12px;color:var(--text2);text-align:center;max-width:190px;line-height:1.5;">Free 2-day trial to unlock all predictions</div>
         <a href="#subscribe" style="background:var(--accent);color:#fff;font-family:var(--ff);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:8px 20px;border-radius:4px;text-decoration:none;">Get Free Trial</a>
       </div>` : '';
-    const dateStr = fx.fixture.date?.slice(0,10) || '';
+    const dateStr = mytDate(fx.fixture.date);
     const analysis = ai?.body_en ? esc(ai.body_en.replace(/[#*`]/g,'').slice(0, 220)) + '…' : 'AI preview generates daily at 07:00 MYT. Full analysis unlocks after sign-up.';
     const pickLabel = ai?.title_en ? esc(ai.title_en.slice(0, 60)) : 'Pending';
     const conf = ai ? `<div class="ppred-clbl">Confidence</div><div class="ppred-cval" style="color:var(--accent)">—</div>` : `<div class="ppred-clbl">Status</div><div class="ppred-cval" style="color:var(--text2);font-size:14px;">${status || 'NS'}</div>`;
