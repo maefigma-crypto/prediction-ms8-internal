@@ -57,6 +57,32 @@ async function handleLive(env, url) {
 async function handleFixtures(env, url) {
   const season = url.searchParams.get('season') || DEFAULT_SEASON;
   const refresh = url.searchParams.get('refresh') === '1';
+  const leagueParam = url.searchParams.get('league');
+
+  // Scoped single-league fetch (used by /predictions/<slug>/ landing pages).
+  if (leagueParam) {
+    const id = parseInt(leagueParam, 10);
+    if (!id) return { data: { error: 'invalid league id' }, source: 'error' };
+    return cached(env, `fixtures:league:${id}:${season}`, TTL.fixtures, async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const [next, last, todayMatches] = await Promise.all([
+        afGet(env, '/fixtures', { league: id, season, next: 10 }),
+        afGet(env, '/fixtures', { league: id, season, last: 10 }),
+        afGet(env, '/fixtures', { league: id, season, date: today }),
+      ]);
+      return {
+        updated: Date.now(),
+        leagues: [{
+          leagueId: id,
+          next: next.response || [],
+          last: last.response || [],
+          today: todayMatches.response || [],
+        }],
+      };
+    }, { refresh });
+  }
+
+  // Default: fetch all 4 primary leagues at once (homepage behaviour).
   return cached(env, `fixtures:${season}`, TTL.fixtures, async () => {
     const today = new Date().toISOString().slice(0, 10);
     const results = await Promise.all(
@@ -82,9 +108,16 @@ async function handleFixtures(env, url) {
 async function handleStandings(env, url) {
   const season = url.searchParams.get('season') || DEFAULT_SEASON;
   const refresh = url.searchParams.get('refresh') === '1';
-  return cached(env, `standings:msl:${season}`, TTL.standings, async () => {
-    const data = await afGet(env, '/standings', { league: LEAGUES.MSL, season });
-    return { updated: Date.now(), response: data.response || [] };
+  // Default to MSL for backwards compat, but accept any league id.
+  const leagueId = parseInt(url.searchParams.get('league') || String(LEAGUES.MSL), 10);
+  return cached(env, `standings:${leagueId}:${season}`, TTL.standings, async () => {
+    try {
+      const data = await afGet(env, '/standings', { league: leagueId, season });
+      return { updated: Date.now(), leagueId, season, response: data.response || [] };
+    } catch (err) {
+      // Knockout comps (UCL, FIFA WC) don't have a league table — return empty.
+      return { updated: Date.now(), leagueId, season, response: [], error: String(err.message || err) };
+    }
   }, { refresh });
 }
 

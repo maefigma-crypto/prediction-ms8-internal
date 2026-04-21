@@ -373,5 +373,89 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:2.
   </div>
 </footer>
 
+<script>window.LEAGUE = {"slug":"badminton","name":"BWF Badminton","short":"BWF","emoji":"🏸","api_id":0,"api_season":""};</script>
+<script>
+(() => {
+  const L = window.LEAGUE || {};
+  const esc = s => String(s ?? '').replace(/[<>"'&]/g, c => ({'<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','&':'&amp;'}[c]));
+  const mytTime = iso => { try { return new Date(iso).toLocaleTimeString('en-MY', {timeZone:'Asia/Kuala_Lumpur', hour:'2-digit', minute:'2-digit', hour12:false}); } catch { return ''; } };
+  const mytDate = iso => { try { return new Date(iso).toLocaleDateString('en-CA', {timeZone:'Asia/Kuala_Lumpur'}); } catch { return ''; } };
+  const LIVE = new Set(['1H','2H','HT','ET','BT','P','LIVE']);
+  const isLive = fx => LIVE.has(fx?.fixture?.status?.short);
+
+  async function getJSON(path) { try { const r = await fetch(path); return r.ok ? await r.json() : null; } catch { return null; } }
+
+  function matchCard(fx) {
+    const live = isLive(fx);
+    const status = fx.fixture?.status?.short;
+    const hScore = fx.goals?.home ?? 0, aScore = fx.goals?.away ?? 0;
+    const kickoff = mytTime(fx.fixture.date);
+    const date = mytDate(fx.fixture.date);
+    const badge = live
+      ? `<span class="blive"><span class="ldot"></span>LIVE ${fx.fixture.status.elapsed||''}'</span>`
+      : status === 'FT'
+        ? `<span class="bpred" style="color:var(--text2);background:rgba(255,255,255,.05);border-color:var(--border)">FT</span>`
+        : `<span class="bpred">AI PICK</span>`;
+    const scoreBlock = (live || status === 'FT')
+      ? `<div class="vs-score">${hScore} — ${aScore}</div><div class="vs-time" style="color:${live?'var(--red)':'var(--text3)'}">${live ? '● '+(fx.fixture.status.elapsed||'')+"'" : 'FT'}</div>`
+      : `<div class="vs-score" style="font-size:24px;color:var(--text2)">VS</div><div class="vs-time">${esc(kickoff)} MYT</div>`;
+    const logo = url => url ? `<img src="${esc(url)}" onerror="this.style.display='none';this.parentElement.textContent='⚽'" style="width:44px;height:44px;border-radius:50%;object-fit:contain;">` : '⚽';
+    return `<div class="pc">
+      <div class="pch"><span class="pcl">${L.emoji} ${esc(L.name)} · ${esc(date)} · ${esc(kickoff)} MYT</span>${badge}</div>
+      <div class="pcb">
+        <div class="pct">
+          <div class="team-side"><div class="tlogo">${logo(fx.teams.home.logo)}</div><div class="tname">${esc(fx.teams.home.name)}</div></div>
+          <div class="vs-mid">${scoreBlock}</div>
+          <div class="team-side"><div class="tlogo">${logo(fx.teams.away.logo)}</div><div class="tname">${esc(fx.teams.away.name)}</div></div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function tableRow(r, i) {
+    const top = i === 0 ? ' top1' : '';
+    return `<div class="ltrow${top}">
+      <div class="ltn">${r.rank}</div>
+      <div class="ltn" style="display:flex;align-items:center;gap:6px;overflow:hidden;"><img src="${esc(r.team.logo)}" onerror="this.style.display='none'" style="width:18px;height:18px;border-radius:50%;object-fit:contain;flex-shrink:0;"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(r.team.name)}</span></div>
+      <div class="ltv">${r.all.played}</div>
+      <div class="ltv" style="color:var(--green);">${r.all.win}</div>
+      <div class="ltv">${r.all.draw}</div>
+      <div class="ltv" style="color:var(--red);">${r.all.lose}</div>
+      <div class="ltpts">${r.points}</div>
+    </div>`;
+  }
+
+  const matchHost = document.getElementById('match-cards');
+  const stHost = document.getElementById('standings-table');
+  const empty = (host, msg) => { if (host) host.innerHTML = `<div style="font-family:var(--fm);font-size:11px;color:var(--text3);padding:1.5rem 1rem;text-align:center;">${msg}</div>`; };
+
+  async function main() {
+    if (!L.api_id) {
+      empty(matchHost, 'Live data for this sport is coming soon. See today\x27s AI picks on the <a href="/" style="color:var(--accent);">homepage</a> in the meantime.');
+      empty(stHost, 'Standings not available for this competition.');
+      return;
+    }
+
+    // Fixtures for this league
+    const fx = await getJSON(`/api/fixtures?league=${L.api_id}&season=${encodeURIComponent(L.api_season||'')}`);
+    const lg = fx?.leagues?.[0];
+    const matches = lg ? [...(lg.today||[]), ...(lg.next||[])].slice(0, 8) : [];
+    if (!matches.length) empty(matchHost, 'No upcoming fixtures from the API right now. Check back later — the feed updates hourly.');
+    else matchHost.innerHTML = matches.map(matchCard).join('');
+
+    // Standings — knockout comps (UCL, FIFA WC) will return empty.
+    const st = await getJSON(`/api/standings?league=${L.api_id}&season=${encodeURIComponent(L.api_season||'')}`);
+    const rows = st?.response?.[0]?.league?.standings?.[0];
+    if (!rows?.length) empty(stHost, `${L.short || L.name} is a knockout competition or has no league table available.`);
+    else {
+      stHost.innerHTML = `<div class="ltrow header"><div>#</div><div>Team</div><div>P</div><div>W</div><div>D</div><div>L</div><div>PTS</div></div>` + rows.slice(0, 10).map(tableRow).join('');
+    }
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', main);
+  else main();
+})();
+</script>
+
 </body>
 </html>
