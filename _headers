@@ -1,0 +1,17 @@
+# Cloudflare Pages _headers file
+# Force HTML revalidation on every request so nav/layout changes
+# appear immediately — never serve stale HTML from edge or browser.
+
+/
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+  Expires: 0
+
+/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/predictions/*
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/blog/*
+  Cache-Control: no-cache, no-store, must-revalidate
