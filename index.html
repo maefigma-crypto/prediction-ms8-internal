@@ -664,9 +664,12 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:3r
     <script>
     fetch('/api/posts').then(r=>r.json()).then(posts=>{
       if(!posts.length) return;
+      const cardBg = p => p.og_image
+        ? `background-image:url('${p.og_image.replace(/'/g,"%27")}');background-size:cover;background-position:center;font-size:0;`
+        : '';
       const f=posts[0];
       document.getElementById('blog-featured').innerHTML=`
-        <div style="width:220px;flex-shrink:0;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:56px;border-right:1px solid var(--border);">${f.emoji}</div>
+        <div style="width:220px;flex-shrink:0;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:56px;border-right:1px solid var(--border);${cardBg(f)}">${f.og_image?'':f.emoji}</div>
         <div class="bbody" style="flex:1;display:flex;flex-direction:column;justify-content:center;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span class="btag" style="margin:0;">${f.category_label}</span><span style="font-family:var(--fm);font-size:9px;color:var(--amber);background:rgba(245,166,35,.1);padding:2px 7px;border-radius:2px;border:1px solid rgba(245,166,35,.2);">⭐ LATEST</span></div>
           <div class="btitle" style="font-size:18px;margin-bottom:8px;">${f.title}</div>
@@ -676,7 +679,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:3r
       document.getElementById('blog-featured').href='/blog/'+f.slug+'/?lang=en';
       document.getElementById('blog-grid').innerHTML=posts.slice(1,6).map(p=>`
         <a href="/blog/${p.slug}/?lang=en" class="bcard">
-          <div class="bimg">${p.emoji}</div>
+          <div class="bimg" style="${cardBg(p)}">${p.og_image?'':p.emoji}</div>
           <div class="bbody">
             <div class="btag">${p.category_label}</div>
             <div class="btitle">${p.title}</div>

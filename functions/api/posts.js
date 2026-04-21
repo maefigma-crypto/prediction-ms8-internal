@@ -1,13 +1,23 @@
 const EMOJI = { UCL: '⭐', EPL: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', WC: '🏆', MSL: '🇲🇾', BWF: '🏸' };
 
 function excerptOf(content) {
-  // Prefer the purpose-built SEO meta_description, else strip markdown and clip body.
   if (content?.meta_description) return content.meta_description;
   const body = (content?.body_en || '').replace(/[#*`]/g, '').replace(/\s+/g, ' ').trim();
   return body.length > 140 ? body.slice(0, 140) + '…' : body;
 }
 
-export async function onRequest({ env }) {
+function ogImageUrl(origin, fx, kind) {
+  const p = new URLSearchParams();
+  if (fx.teams?.home?.name) p.set('home', fx.teams.home.name);
+  if (fx.teams?.away?.name) p.set('away', fx.teams.away.name);
+  p.set('league', fx.league?.name || '');
+  p.set('date', fx.fixture?.date || '');
+  p.set('tag', kind === 'top' ? 'MATCH OF THE DAY' : 'AI PICK');
+  return `${origin}/og/match?${p.toString()}`;
+}
+
+export async function onRequest({ env, request }) {
+  const origin = new URL(request.url).origin;
   const posts = [];
   for (let i = 0; i < 7; i++) {
     const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
@@ -24,6 +34,7 @@ export async function onRequest({ env }) {
           excerpt: excerptOf(c),
           category_label: fx.league?.name || '',
           emoji: EMOJI[fx._leagueKey] || '📝',
+          og_image: ogImageUrl(origin, fx, 'top'),
           date: fmtDate,
         });
       }
@@ -36,6 +47,7 @@ export async function onRequest({ env }) {
           excerpt: excerptOf(c),
           category_label: fx.league?.name || '',
           emoji: EMOJI[fx._leagueKey] || '📝',
+          og_image: ogImageUrl(origin, fx, 'preview'),
           date: fmtDate,
         });
       }

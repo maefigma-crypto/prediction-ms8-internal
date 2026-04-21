@@ -177,6 +177,23 @@ function toKvPost(dateKey, kind, entry, generatedAt) {
   };
   const slug = `daily-${dateKey}-${kind}`;
   const dateIso = new Date(generatedAt || (dateKey + 'T07:00:00+08:00')).toISOString();
+
+  // Branded composite OG image — a ScoreOcs8-themed match card served by
+  // /og/match (pure-SVG, no deps, cached 1y immutable). We pass home/away/
+  // league/date via query so every match gets a unique URL that crawlers
+  // cache by URL.
+  const homeName = fx.teams?.home?.name || '';
+  const awayName = fx.teams?.away?.name || '';
+  const leagueLabel = fx.league?.name || categoryMap[leagueKey] || 'Match Preview';
+  const kickoff = fx.fixture?.date || dateIso;
+  const ogParams = new URLSearchParams();
+  if (homeName) ogParams.set('home', homeName);
+  if (awayName) ogParams.set('away', awayName);
+  ogParams.set('league', leagueLabel);
+  ogParams.set('date', kickoff);
+  ogParams.set('tag', kind === 'top' ? 'MATCH OF THE DAY' : 'AI PICK');
+  const ogImage = `${SITE_URL}/og/match?${ogParams.toString()}`;
+
   return {
     filename: `${slug}.kv`,
     slug,
@@ -187,7 +204,7 @@ function toKvPost(dateKey, kind, entry, generatedAt) {
       category: categoryMap[leagueKey] || 'Football Prediction',
       league: leagueKey,
       excerpt: c.meta_description || (c.body_en || '').replace(/[#*_`>\-]/g, '').slice(0, 155) || 'AI-generated match preview.',
-      featured_image: '',
+      featured_image: ogImage,
       seo_title: c.title_en || 'Daily AI Preview',
       meta_description: c.meta_description || (c.body_en || '').replace(/\s+/g, ' ').slice(0, 155),
       // Keep title localisation; body is EN-only (SEO focus).
@@ -198,6 +215,7 @@ function toKvPost(dateKey, kind, entry, generatedAt) {
       meta_robots: 'index, follow',
       og_title: c.title_en || '',
       og_description: c.meta_description || '',
+      og_image: ogImage,
       og_type: 'article',
       twitter_card: 'summary_large_image',
       schema_type: 'Article',
