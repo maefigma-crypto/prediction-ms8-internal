@@ -3,11 +3,12 @@ const TRIAL_DURATION_MS = 2 * 24 * 3600 * 1000;
 const OAUTH_STATE_TTL = 600;
 
 const TG_OIDC_DISCOVERY = 'https://oauth.telegram.org/.well-known/openid-configuration';
-// Fallback endpoints if discovery is unreachable (Telegram's documented OIDC endpoints).
+// Fallback endpoints if discovery is unreachable. Telegram's OIDC does NOT
+// publish a userinfo_endpoint — user claims live inside the id_token JWT.
 const TG_FALLBACK = {
   authorization_endpoint: 'https://oauth.telegram.org/auth',
   token_endpoint: 'https://oauth.telegram.org/token',
-  userinfo_endpoint: 'https://oauth.telegram.org/userinfo',
+  userinfo_endpoint: null,
 };
 
 function json(body, status = 200, extraHeaders = {}) {
@@ -97,7 +98,7 @@ function publicUser(user) {
 
 /* OIDC discovery: cached 1h in KV to avoid hitting Telegram on every auth. */
 async function getTgOidc(env) {
-  const cached = await env.CACHE.get('oidc:telegram', 'json');
+  const cached = await env.CACHE.get('oidc:telegram:v2', 'json');
   if (cached) return cached;
   try {
     const res = await fetch(TG_OIDC_DISCOVERY);
@@ -106,13 +107,30 @@ async function getTgOidc(env) {
       const endpoints = {
         authorization_endpoint: doc.authorization_endpoint || TG_FALLBACK.authorization_endpoint,
         token_endpoint: doc.token_endpoint || TG_FALLBACK.token_endpoint,
-        userinfo_endpoint: doc.userinfo_endpoint || TG_FALLBACK.userinfo_endpoint,
+        userinfo_endpoint: doc.userinfo_endpoint || null,
       };
-      await env.CACHE.put('oidc:telegram', JSON.stringify(endpoints), { expirationTtl: 3600 });
+      await env.CACHE.put('oidc:telegram:v2', JSON.stringify(endpoints), { expirationTtl: 3600 });
       return endpoints;
     }
   } catch (_) { /* fall through to defaults */ }
   return TG_FALLBACK;
+}
+
+/* Decode a JWT payload without verifying signature. Safe-ish because the
+ * token came directly from Telegram over TLS. For production strictness
+ * we'd fetch the JWKs and verify RS256 — deferred until needed. */
+function decodeJwtPayload(jwt) {
+  const parts = String(jwt || '').split('.');
+  if (parts.length < 2) return null;
+  try {
+    const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const pad = b64.length % 4;
+    const padded = pad ? b64 + '='.repeat(4 - pad) : b64;
+    const bin = atob(padded);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return JSON.parse(new TextDecoder().decode(bytes));
+  } catch { return null; }
 }
 
 async function handleTelegramStart(request, env) {
@@ -169,16 +187,21 @@ async function handleTelegramCallback(request, env) {
   }
   const tokens = await tokenRes.json();
   const accessToken = tokens.access_token;
-  if (!accessToken) return json({ error: 'no access_token in response', tokens }, 502);
 
-  const userRes = await fetch(userinfo_endpoint, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  if (!userRes.ok) return json({ error: 'userinfo failed', status: userRes.status }, 502);
-  const profile = await userRes.json();
+  // Telegram's OIDC returns user claims in the id_token JWT (no userinfo endpoint).
+  // If an explicit userinfo_endpoint is discovered later, prefer that; else decode the JWT.
+  let profile = null;
+  if (userinfo_endpoint && accessToken) {
+    const userRes = await fetch(userinfo_endpoint, { headers: { Authorization: `Bearer ${accessToken}` } });
+    if (userRes.ok) profile = await userRes.json();
+  }
+  if (!profile && tokens.id_token) {
+    profile = decodeJwtPayload(tokens.id_token);
+  }
+  if (!profile) return json({ error: 'no user profile', tokens }, 502);
 
   const tgId = profile.sub || profile.id || profile.user_id;
-  if (!tgId) return json({ error: 'userinfo missing subject', profile }, 502);
+  if (!tgId) return json({ error: 'profile missing subject', profile }, 502);
 
   const user = await upsertUser(env, 'telegram', tgId, {
     name: profile.name || [profile.given_name, profile.family_name].filter(Boolean).join(' ') || profile.preferred_username || null,
