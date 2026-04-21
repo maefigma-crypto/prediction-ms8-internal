@@ -64,9 +64,10 @@ export async function onRequestGet({ request }) {
   <rect x="60" y="50" width="${Math.max(160, league.length * 11 + 24)}" height="34" rx="4" fill="rgba(249,115,22,0.12)" stroke="rgba(249,115,22,0.35)" stroke-width="1"/>
   <text x="${60 + 12}" y="73" font-family="'Rajdhani','Helvetica Neue',system-ui,sans-serif" font-size="16" fill="#f97316" letter-spacing="3" font-weight="600">${escXml(league)}</text>
 
-  <!-- Tag (top-right) -->
-  <rect x="${1140 - Math.max(130, tag.length * 10 + 24)}" y="50" width="${Math.max(130, tag.length * 10 + 24)}" height="34" rx="4" fill="rgba(245,166,35,0.12)" stroke="rgba(245,166,35,0.35)" stroke-width="1"/>
-  <text x="${1140 - 12}" y="73" font-family="'Rajdhani','Helvetica Neue',system-ui,sans-serif" font-size="15" fill="#f5a623" letter-spacing="2.5" font-weight="700" text-anchor="end">⚡ ${escXml(tag)}</text>
+  <!-- Tag (top-right) — with inline SVG bolt so emoji support isn't required -->
+  <rect x="${1140 - Math.max(150, tag.length * 10 + 44)}" y="50" width="${Math.max(150, tag.length * 10 + 44)}" height="34" rx="4" fill="rgba(245,166,35,0.12)" stroke="rgba(245,166,35,0.35)" stroke-width="1"/>
+  <path d="M ${1140 - Math.max(150, tag.length * 10 + 44) + 14} 60 L ${1140 - Math.max(150, tag.length * 10 + 44) + 10} 70 L ${1140 - Math.max(150, tag.length * 10 + 44) + 17} 70 L ${1140 - Math.max(150, tag.length * 10 + 44) + 13} 80 L ${1140 - Math.max(150, tag.length * 10 + 44) + 22} 68 L ${1140 - Math.max(150, tag.length * 10 + 44) + 15} 68 Z" fill="#f5a623"/>
+  <text x="${1140 - 12}" y="73" font-family="'Rajdhani','Helvetica Neue',system-ui,sans-serif" font-size="15" fill="#f5a623" letter-spacing="2.5" font-weight="700" text-anchor="end">${escXml(tag)}</text>
 
   <!-- Teams stack -->
   <text x="600" y="${280 - (homeSize > 50 ? 0 : 10)}" font-family="'Rajdhani','Helvetica Neue',system-ui,sans-serif" font-size="${homeSize}" fill="#ffffff" text-anchor="middle" font-weight="700" letter-spacing="1">${escXml(home)}</text>
@@ -85,8 +86,9 @@ export async function onRequestGet({ request }) {
   <text x="60" y="580" font-family="'Rajdhani','Helvetica Neue',system-ui,sans-serif" font-size="34" fill="#ffffff" font-weight="700" letter-spacing="1">Score<tspan fill="#f97316">Ocs8</tspan></text>
   <text x="60" y="602" font-family="'DM Mono','Menlo','monospace'" font-size="12" fill="#4a5a72" letter-spacing="2">AI SPORTS PREDICTIONS</text>
 
-  <rect x="1060" y="562" width="80" height="32" rx="4" fill="#f97316"/>
-  <text x="1100" y="584" font-family="'Rajdhani','Helvetica Neue',system-ui,sans-serif" font-size="14" fill="#ffffff" text-anchor="middle" font-weight="700" letter-spacing="2">⚡ PICK</text>
+  <rect x="1040" y="562" width="100" height="32" rx="4" fill="#f97316"/>
+  <path d="M 1054 570 L 1048 582 L 1058 582 L 1052 594 L 1064 578 L 1054 578 Z" fill="#ffffff"/>
+  <text x="1106" y="584" font-family="'Rajdhani','Helvetica Neue',system-ui,sans-serif" font-size="14" fill="#ffffff" text-anchor="middle" font-weight="700" letter-spacing="2">PICK</text>
 </svg>`;
 
   return new Response(svg, {
