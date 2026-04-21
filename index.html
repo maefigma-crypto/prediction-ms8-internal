@@ -390,8 +390,6 @@ body.drawer-open{overflow:hidden;}
         <a href="/predictions/badminton/">🏸 BWF Badminton</a>
       </div>
     </li>
-    <li><a href="#blog">📝 Blog</a></li>
-    <li><a href="#faq">❓ FAQ</a></li>
   </ul>
   <div class="nav-right">
     <div style="position:relative;" id="lang-wrap">
@@ -403,8 +401,7 @@ body.drawer-open{overflow:hidden;}
       </div>
     </div>
     <div id="auth-logged-out" style="display:flex;align-items:center;gap:8px;">
-      <button onclick="openModal()" class="nav-signin">Sign In</button>
-      <button onclick="openModal()" class="nav-signup">Sign Up Free</button>
+      <a href="/login" class="nav-signup">Login</a>
     </div>
     <div id="auth-logged-in" style="display:none;position:relative;">
       <div onclick="toggleProfile()" style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:5px 10px;border-radius:6px;border:1px solid var(--border2);transition:border-color .2s;" onmouseover="this.style.borderColor='rgba(249,115,22,.4)'" onmouseout="this.style.borderColor='var(--border2)'">
@@ -523,6 +520,7 @@ body.drawer-open{overflow:hidden;}
       <div class="hero-btns">
         <a href="#predictions" class="btn-p" id="hl-btn1">📊 View Predictions</a>
         <a href="#highlights" class="btn-o" id="hl-btn2">📺 Live Streaming</a>
+        <a href="#" class="btn-o" id="hl-btn3" onclick="event.preventDefault();openHiw();">💡 How It Works</a>
       </div>
       <div class="hstats">
         <div class="hsc"><div class="hscv" id="accctr">87%</div><div class="hscl" id="hl-acc">Accuracy</div><div class="hsct">↑ 3% this month</div></div>
