@@ -389,7 +389,6 @@ body.drawer-open{overflow:hidden;}
         <a href="/predictions/badminton/">🏸 BWF Badminton</a>
       </div>
     </li>
-    <li><a href="#" onclick="event.preventDefault();openHiw();"><svg class="ni" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>How It Works</a></li>
   </ul>
   <div class="nav-right">
     <div style="position:relative;" id="lang-wrap">
@@ -402,7 +401,7 @@ body.drawer-open{overflow:hidden;}
     </div>
     <!-- LOGGED OUT -->
     <div id="auth-logged-out" style="display:flex;align-items:center;gap:8px;">
-      <button onclick="openModal()" class="nav-signup">Login</button>
+      <a href="/login" class="nav-signup" style="display:inline-flex;align-items:center;gap:6px;"><svg class="ni" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>Login</a>
     </div>
     <!-- LOGGED IN (hidden by default, shown after auth) -->
     <div id="auth-logged-in" style="display:none;position:relative;">
@@ -459,10 +458,9 @@ body.drawer-open{overflow:hidden;}
       <a href="/predictions/fifa-world-cup/" onclick="closeDrawer()">🏆 FIFA World Cup 2026</a>
       <a href="/predictions/badminton/" onclick="closeDrawer()">🏸 BWF Badminton</a>
     </div>
+    <a class="drawer-link" href="/blog/" onclick="closeDrawer()"><svg class="ni" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Blog</a>
     <button class="drawer-link" onclick="closeDrawer();openHiw();"><svg class="ni" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> How It Works</button>
-    <div style="padding:10px 20px 8px;font-family:var(--fm);font-size:10px;color:var(--text3);letter-spacing:.1em;border-top:1px solid var(--border);margin-top:4px;">MORE</div>
-    <a class="drawer-link" href="/blog/" onclick="closeDrawer()" style="font-size:13px;font-weight:500;color:var(--text2);">Blog</a>
-    <a class="drawer-link" href="#faq" onclick="closeDrawer()" style="font-size:13px;font-weight:500;color:var(--text2);">FAQ</a>
+    <a class="drawer-link" href="#faq" onclick="closeDrawer()"><svg class="ni" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> FAQ</a>
   </nav>
   <div class="drawer-foot">
     <div class="drawer-lang">
@@ -470,7 +468,7 @@ body.drawer-open{overflow:hidden;}
       <button onclick="setLang('BM','🇲🇾');closeDrawer();">🇲🇾 BM</button>
       <button onclick="setLang('中文','🇨🇳');closeDrawer();">🇨🇳 中文</button>
     </div>
-    <button class="drawer-btn-primary" onclick="closeDrawer();openModal();">Login</button>
+    <a href="/login" class="drawer-btn-primary" onclick="closeDrawer()" style="text-decoration:none;">Login</a>
   </div>
 </aside>
 
