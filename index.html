@@ -30,7 +30,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
 .nav-signup{background:var(--accent);color:#fff;font-family:var(--ff);font-size:13px;font-weight:700;letter-spacing:.05em;padding:7px 16px;border-radius:4px;cursor:pointer;text-decoration:none;transition:all .2s;border:none;}
 .nav-signup:hover{background:var(--accent2);}
 .avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--ff);font-weight:700;font-size:14px;color:#fff;cursor:pointer;}
-.ticker-wrap{position:relative;z-index:1;background:var(--card2);border-bottom:1px solid var(--border);padding:7px 0;overflow:hidden;margin-top:0;}
+.ticker-wrap{position:relative;z-index:1;background:var(--card2);border-bottom:1px solid var(--border);padding:7px 0;overflow:hidden;margin-top:62px;}
 .ticker-inner{display:flex;gap:2.5rem;animation:ticker 60s linear infinite;width:max-content;}
 .ticker-wrap:hover .ticker-inner{animation-play-state:paused;}
 @keyframes ticker{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
@@ -250,18 +250,6 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:3r
 </head>
 <body>
 
-<a href="https://t.me/livebad" target="_blank" rel="noopener" class="tg-bar" id="tg-bar" style="display:flex;align-items:center;justify-content:space-between;padding:9px 20px;background:#229ED9;color:#fff;text-decoration:none;font-family:var(--fb);font-size:13px;font-weight:600;z-index:201;transition:background .2s;" onmouseover="this.style.background='#1a8bbf'" onmouseout="this.style.background='#229ED9'">
-  <div style="display:flex;align-items:center;gap:8px;">
-    <svg width="20" height="20" viewBox="0 0 24 24"><path d="M21.944 2.506a1.5 1.5 0 0 0-1.521-.234L2.43 9.288a1.5 1.5 0 0 0 .09 2.813l4.193 1.398 1.638 5.113a1.5 1.5 0 0 0 2.567.515l2.33-2.803 4.573 3.37a1.5 1.5 0 0 0 2.352-1.01l2.25-14.25a1.5 1.5 0 0 0-.479-1.928Z" fill="white"/></svg>
-    <span id="tg-bar-text">Get Exclusive Tips on Telegram — Join @livebad Free</span>
-    <span style="background:#ef4444;color:#fff;font-size:10px;font-weight:700;border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;">1</span>
-  </div>
-  <div style="display:flex;align-items:center;gap:10px;">
-    <span style="font-family:var(--fm);font-size:11px;opacity:.75;">Free daily picks →</span>
-    <button onclick="event.preventDefault();document.getElementById('tg-bar').style.display='none';" style="background:rgba(255,255,255,.15);border:none;color:#fff;width:26px;height:26px;border-radius:6px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
-  </div>
-</a>
-
 <!-- AUTH MODAL -->
 <div id="auth-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:500;align-items:center;justify-content:center;">
   <div style="background:#0f1620;border:1px solid rgba(249,115,22,.3);border-radius:12px;padding:2.5rem 2rem;max-width:360px;width:90%;text-align:center;position:relative;">
@@ -373,6 +361,18 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:3r
     <div class="ti">🏸 <strong>BWF Thomas Cup</strong><span style="color:var(--text2);font-size:9px">Live now</span></div>
   </div>
 </div>
+
+<a href="https://t.me/livebad" target="_blank" rel="noopener" id="tg-bar" style="display:flex;align-items:center;justify-content:space-between;padding:9px 20px;background:#229ED9;color:#fff;text-decoration:none;font-family:var(--fb);font-size:13px;font-weight:600;position:relative;z-index:100;transition:background .2s;" onmouseover="this.style.background='#1a8bbf'" onmouseout="this.style.background='#229ED9'">
+  <div style="display:flex;align-items:center;gap:8px;">
+    <svg width="20" height="20" viewBox="0 0 24 24"><path d="M21.944 2.506a1.5 1.5 0 0 0-1.521-.234L2.43 9.288a1.5 1.5 0 0 0 .09 2.813l4.193 1.398 1.638 5.113a1.5 1.5 0 0 0 2.567.515l2.33-2.803 4.573 3.37a1.5 1.5 0 0 0 2.352-1.01l2.25-14.25a1.5 1.5 0 0 0-.479-1.928Z" fill="white"/></svg>
+    <span id="tg-bar-text">Get Exclusive Tips on Telegram — Join @livebad Free</span>
+    <span style="background:#ef4444;color:#fff;font-size:10px;font-weight:700;border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">1</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span style="font-family:var(--fm);font-size:11px;opacity:.75;">Free daily picks →</span>
+    <button onclick="event.preventDefault();document.getElementById('tg-bar').style.display='none';" style="background:rgba(255,255,255,.15);border:none;color:#fff;width:26px;height:26px;border-radius:6px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">×</button>
+  </div>
+</a>
 
 <section class="hero">
   <div class="hglow"></div><div class="hglow2"></div>
