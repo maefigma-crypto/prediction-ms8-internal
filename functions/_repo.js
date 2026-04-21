@@ -123,6 +123,11 @@ export async function listPosts(env) {
 }
 
 export async function getPostBySlug(env, slug) {
+  if (slug?.startsWith('daily-')) {
+    const kv = await listKvContent(env, 60);
+    const hit = kv.find(p => p.slug === slug);
+    if (hit) return hit;
+  }
   const posts = await listPosts(env);
   return posts.find(p => p.slug === slug || p.filename.replace(/\.md$/, '') === slug) || null;
 }
@@ -133,4 +138,71 @@ export function escHtml(s) {
 
 export function escXml(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' }[c]));
+}
+
+// Pull cron-generated content from KV for the last N days. Each daily bundle
+// stored at "content:YYYY-MM-DD" contains { top, previews[] }. Flatten into
+// virtual "posts" with stable slugs so the blog listing + SSR post pages can
+// render cron content without requiring /_posts/ markdown files.
+export async function listKvContent(env, days = 30) {
+  if (!env?.CACHE) return [];
+  const now = new Date();
+  const items = [];
+  for (let i = 0; i < days; i++) {
+    const d = new Date(now);
+    d.setUTCDate(d.getUTCDate() - i);
+    const dateKey = d.toISOString().slice(0, 10);
+    try {
+      const bundle = await env.CACHE.get(`content:${dateKey}`, 'json');
+      if (!bundle) continue;
+      if (bundle.top) items.push(toKvPost(dateKey, 'top', bundle.top, bundle.generatedAt));
+      for (let p = 0; p < (bundle.previews || []).length; p++) {
+        items.push(toKvPost(dateKey, `p${p + 1}`, bundle.previews[p], bundle.generatedAt));
+      }
+    } catch { /* skip day */ }
+  }
+  return items;
+}
+
+function toKvPost(dateKey, kind, entry, generatedAt) {
+  const c = entry?.content || {};
+  const fx = entry?.fixture || {};
+  const leagueKey = fx._leagueKey || (fx.league?.id === 39 ? 'EPL' : fx.league?.id === 2 ? 'UCL' : fx.league?.id === 1 ? 'FIFA' : 'General');
+  const categoryMap = {
+    EPL: 'English Premier League',
+    UCL: 'UEFA Champions League',
+    FIFA: 'FIFA World Cup',
+    BWF: 'BWF Badminton',
+    General: 'Football Prediction',
+  };
+  const slug = `daily-${dateKey}-${kind}`;
+  const dateIso = new Date(generatedAt || (dateKey + 'T07:00:00+08:00')).toISOString();
+  return {
+    filename: `${slug}.kv`,
+    slug,
+    source: 'kv',
+    meta: {
+      title: c.title_en || 'Daily AI Preview',
+      date: dateIso,
+      category: categoryMap[leagueKey] || 'Football Prediction',
+      league: leagueKey,
+      excerpt: (c.body_en || '').replace(/[#*_`>\-]/g, '').slice(0, 155) || 'AI-generated match preview.',
+      featured_image: '',
+      seo_title: c.title_en || 'Daily AI Preview',
+      meta_description: (c.body_en || '').replace(/\s+/g, ' ').slice(0, 155),
+      title_bm: c.title_bm || '',
+      summary_bm: c.summary_bm || '',
+      title_zh: c.title_zh || '',
+      summary_zh: c.summary_zh || '',
+      include_in_sitemap: true,
+      sitemap_priority: kind === 'top' ? '0.8' : '0.6',
+      meta_robots: 'index, follow',
+      og_title: c.title_en || '',
+      og_description: '',
+      og_type: 'article',
+      twitter_card: 'summary_large_image',
+      schema_type: 'Article',
+    },
+    body: c.body_en || '',
+  };
 }

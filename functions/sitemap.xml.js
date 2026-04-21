@@ -1,7 +1,12 @@
-import { listPosts, getSettings, SITE_URL, escXml } from './_repo.js';
+import { listPosts, listKvContent, getSettings, SITE_URL, escXml } from './_repo.js';
 
 export async function onRequestGet({ env }) {
-  const [posts, settings] = await Promise.all([listPosts(env), getSettings(env)]);
+  const [githubPosts, kvPosts, settings] = await Promise.all([
+    listPosts(env),
+    listKvContent(env, 30),
+    getSettings(env),
+  ]);
+  const posts = [...kvPosts, ...githubPosts];
 
   const urls = [
     { loc: `${SITE_URL}/`, priority: '1.0', changefreq: 'daily' },

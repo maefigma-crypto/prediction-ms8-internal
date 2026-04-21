@@ -1,4 +1,4 @@
-import { listPosts, getPostBySlug } from '../../_repo.js';
+import { listPosts, listKvContent, getPostBySlug } from '../../_repo.js';
 
 function json(body, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -38,12 +38,17 @@ export async function onRequestGet({ env, params, request }) {
   const path = Array.isArray(params.path) ? params.path.join('/') : (params.path || '');
 
   if (!path || path === 'list') {
-    const posts = await listPosts(env);
+    const [githubPosts, kvPosts] = await Promise.all([
+      listPosts(env),
+      listKvContent(env, 30),
+    ]);
+    const merged = [...kvPosts, ...githubPosts]
+      .sort((a, b) => new Date(b.meta.date || 0) - new Date(a.meta.date || 0));
     const limit = Math.min(50, parseInt(url.searchParams.get('limit') || '10', 10));
     const page = Math.max(1, parseInt(url.searchParams.get('page') || '1', 10));
     const league = url.searchParams.get('league');
     const category = url.searchParams.get('category');
-    let filtered = posts;
+    let filtered = merged;
     if (league) filtered = filtered.filter(p => (p.meta.league || '') === league);
     if (category) filtered = filtered.filter(p => (p.meta.category || '') === category);
     const total = filtered.length;
@@ -57,9 +62,10 @@ export async function onRequestGet({ env, params, request }) {
   }
 
   if (path === 'today') {
-    const posts = await listPosts(env);
     const today = new Date().toISOString().slice(0, 10);
-    const todaysPost = posts.find(p => String(p.meta.date || '').slice(0, 10) === today);
+    const [githubPosts, kvPosts] = await Promise.all([listPosts(env), listKvContent(env, 3)]);
+    const all = [...kvPosts, ...githubPosts];
+    const todaysPost = all.find(p => String(p.meta.date || '').slice(0, 10) === today);
     return json({ date: today, post: todaysPost ? publicPost(todaysPost, lang) : null });
   }
 
