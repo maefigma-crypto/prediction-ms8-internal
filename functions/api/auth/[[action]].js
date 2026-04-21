@@ -3,8 +3,6 @@ const TRIAL_DURATION_MS = 2 * 24 * 3600 * 1000;
 const OAUTH_STATE_TTL = 600;
 
 const TG_OIDC_DISCOVERY = 'https://oauth.telegram.org/.well-known/openid-configuration';
-// Fallback endpoints if discovery is unreachable. Telegram's OIDC does NOT
-// publish a userinfo_endpoint — user claims live inside the id_token JWT.
 const TG_FALLBACK = {
   authorization_endpoint: 'https://oauth.telegram.org/auth',
   token_endpoint: 'https://oauth.telegram.org/token',
@@ -36,6 +34,17 @@ function randomHex(bytes = 16) {
   const arr = new Uint8Array(bytes);
   crypto.getRandomValues(arr);
   return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function hmacSha256Hex(keyData, msg) {
+  const key = await crypto.subtle.importKey('raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(msg));
+  return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function sha256(msg) {
+  const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
+  return new Uint8Array(hash);
 }
 
 async function upsertUser(env, provider, providerId, profile) {
@@ -96,7 +105,32 @@ function publicUser(user) {
   };
 }
 
-/* OIDC discovery: cached 1h in KV to avoid hitting Telegram on every auth. */
+/* ── Classic widget hash verification (POST /api/auth/telegram) ── */
+async function handleTelegramLogin(request, env) {
+  if (!env.TELEGRAM_BOT_TOKEN) return json({ error: 'TELEGRAM_BOT_TOKEN not set' }, 500);
+  const data = await request.json().catch(() => null);
+  if (!data || !data.hash || !data.id) return json({ error: 'invalid telegram payload' }, 400);
+
+  const { hash, ...fields } = data;
+  const dataCheckString = Object.keys(fields).sort().map(k => `${k}=${fields[k]}`).join('\n');
+  const secretKey = await sha256(env.TELEGRAM_BOT_TOKEN);
+  const expected = await hmacSha256Hex(secretKey, dataCheckString);
+  if (expected !== hash) return json({ error: 'hash mismatch' }, 401);
+
+  const age = Math.floor(Date.now() / 1000) - parseInt(fields.auth_date, 10);
+  if (age > 86400) return json({ error: 'auth_date too old' }, 401);
+
+  const user = await upsertUser(env, 'telegram', fields.id, {
+    name: [fields.first_name, fields.last_name].filter(Boolean).join(' ') || fields.username || null,
+    avatar: fields.photo_url || null,
+    email: null,
+  });
+  const sid = await createSession(env, `user:telegram:${fields.id}`);
+
+  return json({ ok: true, user: publicUser(user) }, 200, { 'Set-Cookie': sessionCookie(sid) });
+}
+
+/* ── OAuth 2.0 / OIDC flow (GET /api/auth/telegram/start + /callback) ── */
 async function getTgOidc(env) {
   const cached = await env.CACHE.get('oidc:telegram:v2', 'json');
   if (cached) return cached;
@@ -112,13 +146,10 @@ async function getTgOidc(env) {
       await env.CACHE.put('oidc:telegram:v2', JSON.stringify(endpoints), { expirationTtl: 3600 });
       return endpoints;
     }
-  } catch (_) { /* fall through to defaults */ }
+  } catch (_) { /* use fallback */ }
   return TG_FALLBACK;
 }
 
-/* Decode a JWT payload without verifying signature. Safe-ish because the
- * token came directly from Telegram over TLS. For production strictness
- * we'd fetch the JWKs and verify RS256 — deferred until needed. */
 function decodeJwtPayload(jwt) {
   const parts = String(jwt || '').split('.');
   if (parts.length < 2) return null;
@@ -133,7 +164,7 @@ function decodeJwtPayload(jwt) {
   } catch { return null; }
 }
 
-async function handleTelegramStart(request, env) {
+async function handleTelegramOauthStart(request, env) {
   if (!env.TELEGRAM_CLIENT_ID) return json({ error: 'TELEGRAM_CLIENT_ID not set' }, 500);
   const url = new URL(request.url);
   const redirectUri = `${url.origin}/api/auth/telegram/callback`;
@@ -150,7 +181,7 @@ async function handleTelegramStart(request, env) {
   return Response.redirect(authUrl.toString(), 302);
 }
 
-async function handleTelegramCallback(request, env) {
+async function handleTelegramOauthCallback(request, env) {
   if (!env.TELEGRAM_CLIENT_ID || !env.TELEGRAM_CLIENT_SECRET) {
     return json({ error: 'Telegram OAuth not configured' }, 500);
   }
@@ -170,10 +201,7 @@ async function handleTelegramCallback(request, env) {
 
   const tokenRes = await fetch(token_endpoint, {
     method: 'POST',
-    headers: {
-      'content-type': 'application/x-www-form-urlencoded',
-      'accept': 'application/json',
-    },
+    headers: { 'content-type': 'application/x-www-form-urlencoded', 'accept': 'application/json' },
     body: new URLSearchParams({
       grant_type: 'authorization_code',
       code,
@@ -186,19 +214,14 @@ async function handleTelegramCallback(request, env) {
     return json({ error: 'token exchange failed', status: tokenRes.status, detail: await tokenRes.text().catch(() => '') }, 502);
   }
   const tokens = await tokenRes.json();
-  const accessToken = tokens.access_token;
 
-  // Telegram's OIDC returns user claims in the id_token JWT (no userinfo endpoint).
-  // If an explicit userinfo_endpoint is discovered later, prefer that; else decode the JWT.
   let profile = null;
-  if (userinfo_endpoint && accessToken) {
-    const userRes = await fetch(userinfo_endpoint, { headers: { Authorization: `Bearer ${accessToken}` } });
+  if (userinfo_endpoint && tokens.access_token) {
+    const userRes = await fetch(userinfo_endpoint, { headers: { Authorization: `Bearer ${tokens.access_token}` } });
     if (userRes.ok) profile = await userRes.json();
   }
-  if (!profile && tokens.id_token) {
-    profile = decodeJwtPayload(tokens.id_token);
-  }
-  if (!profile) return json({ error: 'no user profile', tokens }, 502);
+  if (!profile && tokens.id_token) profile = decodeJwtPayload(tokens.id_token);
+  if (!profile) return json({ error: 'no user profile in token response', tokens }, 502);
 
   const tgId = profile.sub || profile.id || profile.user_id;
   if (!tgId) return json({ error: 'profile missing subject', profile }, 502);
@@ -237,8 +260,11 @@ export async function onRequest(context) {
   const method = request.method;
 
   try {
-    if (method === 'GET' && action === 'telegram/start') return handleTelegramStart(request, env);
-    if (method === 'GET' && action === 'telegram/callback') return handleTelegramCallback(request, env);
+    // Classic widget (hash-verified): primary, guaranteed to work.
+    if (method === 'POST' && action === 'telegram') return handleTelegramLogin(request, env);
+    // OAuth 2.0 / OIDC: alternative, for when Telegram rolls out reliably.
+    if (method === 'GET' && action === 'telegram/start') return handleTelegramOauthStart(request, env);
+    if (method === 'GET' && action === 'telegram/callback') return handleTelegramOauthCallback(request, env);
     if (method === 'GET' && action === 'me') return handleMe(request, env);
     if (method === 'POST' && action === 'logout') return handleLogout(request, env);
     return json({ error: 'not found', action, method }, 404);

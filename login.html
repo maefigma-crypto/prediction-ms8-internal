@@ -14,24 +14,31 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
 .logo{font-family:var(--ff);font-size:26px;font-weight:700;letter-spacing:0.06em;text-align:center;margin-bottom:0.5rem;}
 .logo .hl{color:var(--accent);}
 .sub{color:var(--text2);text-align:center;font-size:14px;margin-bottom:2rem;}
-.btn-tg{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px 20px;border-radius:8px;border:none;background:#229ED9;color:#fff;font-family:var(--fb);font-size:15px;font-weight:600;cursor:pointer;text-decoration:none;transition:background .2s;}
-.btn-tg:hover{background:#1a8bbf;}
-.btn-tg svg{width:22px;height:22px;}
+#tg-widget{display:flex;justify-content:center;margin:1.5rem 0;min-height:48px;}
+.divider{text-align:center;color:var(--text2);font-size:11px;margin:1rem 0;position:relative;letter-spacing:.1em;}
+.divider::before,.divider::after{content:'';position:absolute;top:50%;width:35%;height:1px;background:var(--border);}
+.divider::before{left:0;}.divider::after{right:0;}
+.btn-alt{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:10px 16px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:var(--fb);font-size:12px;font-weight:500;cursor:pointer;text-decoration:none;transition:all .2s;}
+.btn-alt:hover{border-color:#229ED9;color:#229ED9;}
 .trial{background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.25);border-radius:4px;padding:12px;font-size:12px;color:var(--text2);text-align:center;margin-top:1.5rem;}
 .trial strong{color:var(--accent);}
 .note{font-size:11px;color:var(--text2);text-align:center;margin-top:1rem;opacity:0.7;}
 #status{margin-top:1rem;font-size:13px;text-align:center;min-height:20px;}
 #status.err{color:#ff4757;}#status.ok{color:#00e5a0;}
 </style>
+<script>window.TG_BOT_USERNAME = 'loginscorebot';</script>
 </head>
 <body>
 <div class="card">
   <div class="logo">Score<span class="hl">Ocs8</span></div>
   <div class="sub">Sign in with Telegram to unlock AI predictions</div>
 
-  <a href="/api/auth/telegram/start" class="btn-tg">
-    <svg viewBox="0 0 24 24" fill="#fff"><path d="M21.944 2.506a1.5 1.5 0 0 0-1.521-.234L2.43 9.288a1.5 1.5 0 0 0 .09 2.813l4.193 1.398 1.638 5.113a1.5 1.5 0 0 0 2.567.515l2.33-2.803 4.573 3.37a1.5 1.5 0 0 0 2.352-1.01l2.25-14.25a1.5 1.5 0 0 0-.479-1.928Z"/></svg>
-    Continue with Telegram
+  <div id="tg-widget"></div>
+
+  <div class="divider">OR</div>
+
+  <a href="/api/auth/telegram/start" class="btn-alt">
+    Try new OAuth login (beta · turn off VPN if it hangs)
   </a>
 
   <div id="status"></div>
@@ -41,13 +48,45 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
 </div>
 
 <script>
+const TG_BOT_USERNAME = window.TG_BOT_USERNAME || '';
+
 function setStatus(msg, kind) {
   const el = document.getElementById('status');
   el.textContent = msg;
   el.className = kind || '';
 }
 
-// If already signed in, redirect to homepage.
+if (TG_BOT_USERNAME) {
+  const s = document.createElement('script');
+  s.async = true;
+  s.src = 'https://telegram.org/js/telegram-widget.js?22';
+  s.setAttribute('data-telegram-login', TG_BOT_USERNAME);
+  s.setAttribute('data-size', 'large');
+  s.setAttribute('data-radius', '8');
+  s.setAttribute('data-onauth', 'onTelegramAuth(user)');
+  s.setAttribute('data-request-access', 'write');
+  document.getElementById('tg-widget').appendChild(s);
+} else {
+  setStatus('Login bot not configured.', 'err');
+}
+
+window.onTelegramAuth = async function(user) {
+  setStatus('Signing in…');
+  try {
+    const res = await fetch('/api/auth/telegram', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(user),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'login failed');
+    setStatus('Signed in. Redirecting…', 'ok');
+    setTimeout(() => { window.location.href = '/'; }, 500);
+  } catch (e) {
+    setStatus('Error: ' + e.message, 'err');
+  }
+};
+
 fetch('/api/auth/me').then(r => r.json()).then(d => {
   if (d.authenticated) {
     setStatus('Already signed in as ' + (d.user.name || d.user.email || 'user') + '. Redirecting…', 'ok');
