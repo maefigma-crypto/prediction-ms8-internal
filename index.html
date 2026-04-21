@@ -743,7 +743,31 @@ function closeModal(){document.getElementById('auth-modal').style.display='none'
 function authWith(provider){document.getElementById('auth-modal').style.display='none';document.getElementById('auth-logged-out').style.display='none';document.getElementById('auth-logged-in').style.display='block';const name=provider==='google'?'Google User':'Telegram User';document.getElementById('nav-username').textContent=name;document.getElementById('nav-avatar').textContent=name[0];document.getElementById('profile-name').textContent=name;document.getElementById('profile-email').textContent=provider==='google'?'user@gmail.com':'via @livebad';document.querySelectorAll('.pc[data-league]').forEach(c=>{const o=c.querySelector('div[style*="position:absolute"]');if(o)o.style.display='none';});}
 function toggleProfile(){const d=document.getElementById('profile-dropdown');d.style.display=d.style.display==='none'?'block':'none';}
 function goProfile(){document.getElementById('profile-dropdown').style.display='none';alert('Profile page coming soon!');}
-function logout(){document.getElementById('auth-logged-in').style.display='none';document.getElementById('auth-logged-out').style.display='flex';document.getElementById('profile-dropdown').style.display='none';}
+function logout(){fetch('/api/auth/logout',{method:'POST'}).finally(()=>{document.getElementById('auth-logged-in').style.display='none';document.getElementById('auth-logged-out').style.display='flex';document.getElementById('profile-dropdown').style.display='none';});}
+// Check session on load — if authenticated, swap nav state and unlock prediction overlays
+fetch('/api/auth/me').then(r=>r.json()).then(d=>{
+  if(!d||!d.authenticated)return;
+  const u=d.user||{};
+  const name=u.name||u.email||'User';
+  document.getElementById('auth-logged-out').style.display='none';
+  document.getElementById('auth-logged-in').style.display='block';
+  const avatarEl=document.getElementById('nav-avatar');if(avatarEl)avatarEl.textContent=(name[0]||'U').toUpperCase();
+  const unEl=document.getElementById('nav-username');if(unEl)unEl.textContent=name;
+  const pnEl=document.getElementById('profile-name');if(pnEl)pnEl.textContent=name;
+  const peEl=document.getElementById('profile-email');if(peEl)peEl.textContent=u.email||('via @'+(u.provider||'telegram'));
+  if(u.trialEndsAt){
+    const days=Math.max(0,Math.ceil((u.trialEndsAt-Date.now())/86400000));
+    const label=u.paid?'Paid member':(days+' day'+(days===1?'':'s')+' left in trial');
+    const tn=document.getElementById('nav-trial');if(tn)tn.textContent=label;
+    const tb=document.getElementById('trial-badge');if(tb)tb.textContent=label;
+  }
+  // Unlock member-only prediction cards when signed in
+  if(u.hasAccess){
+    document.querySelectorAll('.pc[data-league]').forEach(c=>{
+      const o=c.querySelector('div[style*="position:absolute"]');if(o)o.style.display='none';
+    });
+  }
+}).catch(()=>{});
 function toggleLangMenu(){const m=document.getElementById('lang-menu');m.style.display=m.style.display==='none'?'block':'none';}
 document.addEventListener('click',e=>{const li=document.getElementById('auth-logged-in');const lw=document.getElementById('lang-wrap');const am=document.getElementById('auth-modal');if(li&&!li.contains(e.target))document.getElementById('profile-dropdown').style.display='none';if(lw&&!lw.contains(e.target)){const lm=document.getElementById('lang-menu');if(lm)lm.style.display='none';}if(e.target===am)closeModal();});
 function setLang(lang,flag){document.getElementById('lang-current').textContent='🌐 '+lang;document.getElementById('lang-menu').style.display='none';
