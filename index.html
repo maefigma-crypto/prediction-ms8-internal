@@ -244,8 +244,72 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:3r
 .seob p{font-size:12px;color:var(--text3);line-height:1.7;}
 .fu{opacity:0;transform:translateY(20px);transition:opacity .55s ease,transform .55s ease;}
 .fu.v{opacity:1;transform:translateY(0);}
-@media(max-width:900px){.hero-inner,.ftop{grid-template-columns:1fr;}.hero h1{font-size:44px;}.hcard{display:none;}.nav-links{display:none;}.wgrid,.cgrid{grid-template-columns:1fr 1fr;}.bgrid{grid-template-columns:1fr;}}
-@media(max-width:600px){.hstats{grid-template-columns:repeat(2,1fr);}.agrid{grid-template-columns:repeat(2,1fr);}.wgrid{grid-template-columns:1fr;}.steps{grid-template-columns:1fr;}}
+html,body{overflow-x:hidden;max-width:100vw;}
+@media(max-width:900px){
+  .hero-inner,.ftop{grid-template-columns:1fr;}
+  .hero h1{font-size:44px;}
+  .hcard{display:none;}
+  .nav-links{display:none;}
+  .nav-hiw{display:none;}
+  .wgrid,.cgrid{grid-template-columns:1fr 1fr;}
+  .bgrid{grid-template-columns:1fr;}
+  .sec{padding:48px 1.25rem;}
+}
+@media(max-width:600px){
+  nav{padding:0 1rem;}
+  .nav-logo{font-size:19px;}
+  .nav-right{gap:6px;}
+  .nav-signin{padding:6px 11px;font-size:12px;letter-spacing:.03em;}
+  .nav-signup{padding:6px 11px;font-size:12px;letter-spacing:.03em;}
+  .lang-btn{padding:5px 9px;font-size:11px;}
+  .hero{padding:36px 1rem;min-height:auto;}
+  .hero h1{font-size:34px;line-height:1;letter-spacing:.01em;}
+  .hero-sub{font-size:14px;margin-bottom:1.5rem;}
+  .hero-btns{flex-direction:column;align-items:stretch;gap:10px;margin-bottom:2rem;}
+  .hero-btns .btn-p,.hero-btns .btn-o{justify-content:center;width:100%;padding:12px 20px;font-size:14px;}
+  .hstats{grid-template-columns:repeat(2,1fr);}
+  .hscv{font-size:22px;}
+  .sec{padding:36px 1rem;}
+  .stitle{font-size:26px;}
+  .wgrid{grid-template-columns:1fr;}
+  .cgrid{grid-template-columns:1fr;}
+  .agrid{grid-template-columns:repeat(2,1fr);}
+  .steps{grid-template-columns:1fr;}
+  .bgrid{grid-template-columns:1fr;}
+  .subcta{padding:2rem 1rem;}
+  .sct{font-size:22px;}
+  .fbar{gap:8px;}
+  .fg{min-width:100%;}
+  .pgrid{grid-template-columns:1fr;}
+  .mtabs{width:100%;}
+  .mtab{flex:1;padding:8px 12px;font-size:12px;}
+  .sptabs{width:100%;}
+  .sptab{flex:1;padding:8px 12px;font-size:12px;}
+  .motd-row{padding:12px 14px !important;}
+  .tgcta{flex-direction:column;text-align:center;gap:1rem;}
+  .ftop{gap:1.5rem;}
+  .tg-bar{padding:8px 12px;font-size:12px;}
+  .tg-bar svg{width:16px;height:16px;}
+  .tg-bar .nav-hiw,.tg-bar > div:last-child span{display:none;}
+  /* Predictions landing pages */
+  .main{grid-template-columns:1fr !important;}
+  .sidebar{display:block;}
+  .league-hero{padding:32px 1rem 28px;}
+  .league-hero h1{font-size:30px !important;}
+  .league-hero-inner{gap:1.5rem;}
+  .league-stats{display:none;}
+  .how-steps{grid-template-columns:1fr;}
+  .seo-inner{grid-template-columns:1fr;}
+  .cat-pills{gap:6px;}
+  .cat-pill{font-size:11px;padding:7px 11px;}
+  /* SCOREBAT tabs wrap nicely */
+  #sb-tabs{width:100%;justify-content:flex-start;}
+}
+@media(max-width:400px){
+  .nav-signin{display:none;}
+  .nav-logo{font-size:17px;}
+  .hero h1{font-size:30px;}
+}
 </style>
 </head>
 <body>
