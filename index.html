@@ -288,10 +288,10 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:3r
       </div>
     </li>
     <li><a href="/blog/">📝 Blog</a></li>
-    <li><a href="#" onclick="event.preventDefault();openHiw();">❓ How It Works</a></li>
     <li><a href="#faq">❔ FAQ</a></li>
   </ul>
   <div class="nav-right">
+    <a href="#" onclick="event.preventDefault();openHiw();" class="nav-hiw" style="font-family:var(--ff);font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--text2);padding:6px 12px;border-radius:4px;border:1px solid var(--border2);text-decoration:none;transition:all .2s;white-space:nowrap;" onmouseover="this.style.color='var(--accent)';this.style.borderColor='rgba(249,115,22,.4)';" onmouseout="this.style.color='var(--text2)';this.style.borderColor='var(--border2)';">❓ How It Works</a>
     <div style="position:relative;" id="lang-wrap">
       <button class="lang-btn" onclick="toggleLangMenu()" id="lang-current">🌐 EN</button>
       <div id="lang-menu" style="display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--card2);border:1px solid var(--border2);border-radius:6px;overflow:hidden;z-index:300;min-width:120px;">
