@@ -242,8 +242,7 @@ function renderHtml({ displayDate, picks, accuracy, debug }) {
 
   /* Brand row */
   .brand{display:flex;justify-content:space-between;align-items:center;}
-  .logo{font-family:var(--ff);font-size:58px;font-weight:700;letter-spacing:.05em;color:var(--text);}
-  .logo span{color:var(--accent);}
+  .logo{height:70px;width:auto;display:block;}
   .date{font-family:var(--fm);font-size:26px;font-weight:600;color:var(--text3);letter-spacing:.12em;}
 
   /* Hero */
@@ -309,7 +308,7 @@ function renderHtml({ displayDate, picks, accuracy, debug }) {
 <body>
   <div class="card">
     <div class="brand">
-      <div class="logo">Score<span>Ocs8</span></div>
+      <img class="logo" src="https://scoreocs8.pages.dev/logo.png" alt="ScoreOcs8">
       <div class="date">${esc(fmtDisplayDate(displayDate))} · MYT</div>
     </div>
 

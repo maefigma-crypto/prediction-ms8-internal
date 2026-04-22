@@ -223,7 +223,7 @@ ${schemaBlocks}
 </head>
 <body>
 <nav>
-  <a href="/" class="nav-logo">Score<span class="hl">Ocs8</span></a>
+  <a href="/" class="nav-logo"><img src="/logo.png" alt="ScoreOcs8" style="height:34px;width:auto;display:block;"></a>
   <ul class="nav-links">
     <li><a href="/">🏠 Home</a></li>
     <li><a href="/#predictions">📊 Predictions</a></li>

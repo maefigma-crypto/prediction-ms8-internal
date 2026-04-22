@@ -218,8 +218,7 @@ body::before{
 
 /* Brand bar */
 .brand{display:flex;justify-content:space-between;align-items:center;padding-bottom:14px;border-bottom:1px solid var(--border);}
-.logo{font-family:var(--ff);font-size:52px;font-weight:700;letter-spacing:.05em;}
-.logo span{color:var(--accent);}
+.logo{height:60px;width:auto;display:block;}
 .disclaimer{font-family:var(--fm);font-size:16px;font-weight:600;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;}
 
 /* Slip tabs (cosmetic) */
@@ -273,7 +272,7 @@ body::before{
 <body>
   <div class="wrap">
     <div class="brand">
-      <div class="logo">Score<span>Ocs8</span></div>
+      <img class="logo" src="https://scoreocs8.pages.dev/logo.png" alt="ScoreOcs8">
       <div class="disclaimer">Virtual · For Demonstration</div>
     </div>
 

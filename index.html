@@ -18,7 +18,7 @@
 body{background:var(--bg);color:var(--text);font-family:var(--fb);font-size:15px;line-height:1.6;overflow-x:hidden;}
 body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(249,115,22,0.012) 1px,transparent 1px),linear-gradient(90deg,rgba(249,115,22,0.012) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;}
 body > nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:62px;background:rgba(8,11,16,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
-.nav-logo{font-family:var(--ff);font-size:22px;font-weight:700;letter-spacing:0.06em;color:var(--text);text-decoration:none;}.nav-logo .hl{color:var(--accent);}
+.nav-logo{display:flex;align-items:center;text-decoration:none;height:42px;}.nav-logo img{height:34px;width:auto;display:block;}
 .nav-links{display:flex;align-items:center;gap:2px;list-style:none;}
 .nav-links a{font-size:13px;font-weight:500;color:var(--text2);text-decoration:none;padding:6px 11px;border-radius:4px;transition:all .2s;display:flex;align-items:center;gap:5px;}
 .nav-links a:hover,.nav-links a.active{color:var(--accent);background:rgba(249,115,22,0.07);}
@@ -338,7 +338,7 @@ html,body{overflow-x:hidden;max-width:100vw;}
 </div>
 
 <nav>
-  <a href="#" class="nav-logo">Score<span class="hl">Ocs8</span></a>
+  <a href="#" class="nav-logo"><img src="/logo.png" alt="ScoreOcs8"></a>
   <ul class="nav-links">
     <li><a href="#" class="active">🏠 Home</a></li>
     <li><a href="#predictions">📊 Match Prediction</a></li>
@@ -824,7 +824,7 @@ html,body{overflow-x:hidden;max-width:100vw;}
 <footer>
   <div class="fi">
     <div class="ftop">
-      <div><div class="fbn">Score<span class="hl">Ocs8</span></div><div class="fbd">AI-powered football and badminton predictions. Malaysia's #1 sports prediction platform.</div><div style="display:flex;gap:10px"><a href="https://t.me/livebad" target="_blank" style="color:var(--text3);font-size:18px;text-decoration:none" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">✈️</a></div></div>
+      <div><div class="fbn"><img src="/logo.png" alt="ScoreOcs8" style="height:40px;width:auto;display:block;margin-bottom:4px;"></div><div class="fbd">AI-powered football and badminton predictions. Malaysia's #1 sports prediction platform.</div><div style="display:flex;gap:10px"><a href="https://t.me/livebad" target="_blank" style="color:var(--text3);font-size:18px;text-decoration:none" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">✈️</a></div></div>
       <div class="fcol"><div class="fct">Quick Links</div><ul><li><a href="/">Home</a></li><li><a href="#predictions">Match Prediction</a></li><li><a href="#motd">Match of the Day</a></li><li><a href="/blog/">Blog</a></li><li><a href="#faq">FAQ</a></li></ul></div>
       <div class="fcol"><div class="fct">Resources</div><ul><li><a href="/blog/">Latest Articles</a></li><li><a href="#history">Accuracy Stats</a></li><li><a href="#highlights">Highlights</a></li><li><a href="#" onclick="event.preventDefault();openHiw();">How It Works</a></li></ul></div>
       <div class="fcol"><div class="fct">Connect</div><ul><li><a href="https://t.me/livebad" target="_blank">Telegram @livebad</a></li><li><a href="#">Support</a></li><li><a href="#">About Us</a></li></ul></div>
