@@ -35,3 +35,17 @@ id = "4c1cb47552044d7fb27e582a77b02962"
 # Optional affiliate CTAs in caption footer:
 #   AFFILIATE_URL_MY     e.g. https://tinyurl.com/scoreocs8-my
 #   AFFILIATE_URL_SG     e.g. https://tinyurl.com/scoreocs8-sg
+#
+# X / Twitter (optional — skipped if not set):
+#   X_API_KEY            consumer key from developer.x.com
+#   X_API_KEY_SECRET     consumer secret
+#   X_ACCESS_TOKEN       user access token
+#   X_ACCESS_TOKEN_SECRET
+#
+# Instagram Graph API (optional):
+#   IG_USER_ID           18-digit IG Business Account ID
+#   IG_ACCESS_TOKEN      long-lived Page token w/ instagram_content_publish
+#
+# Threads API (optional):
+#   THREADS_USER_ID      Threads user id
+#   THREADS_ACCESS_TOKEN long-lived Threads token

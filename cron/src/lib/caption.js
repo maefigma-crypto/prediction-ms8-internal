@@ -115,6 +115,63 @@ export function buildDailyCaption({
   return out.length > 1020 ? out.slice(0, 1017) + '...' : out;
 }
 
+// Compact variant for X / Twitter — 280 char hard limit, URLs count as 23.
+export function buildDailyCaptionX({
+  date,
+  picks = [],
+  accuracy = null,
+  siteUrl = 'https://scoreocs8.pages.dev',
+}) {
+  const d = new Date(date + 'T12:00:00Z').toLocaleDateString('en-GB', {
+    timeZone: 'Asia/Kuala_Lumpur',
+    day: 'numeric', month: 'short',
+  });
+  const lines = [];
+  lines.push(`📢 ScoreOcs8 Top AI Picks · ${d}`);
+  lines.push('');
+  for (const p of picks.slice(0, 3)) {
+    const leagueId = p.fx?.league?.id;
+    const flag = LEAGUE_EMOJI[leagueId] || '⚽';
+    const short = LEAGUE_SHORT[leagueId] || '';
+    const home = p.fx?.teams?.home?.name || 'Home';
+    const away = p.fx?.teams?.away?.name || 'Away';
+    const pickLabel = p.pick?.pickLabel || p.pick?.pick || '—';
+    const conf = p.pick?.confidence != null ? ` (${p.pick.confidence}%)` : '';
+    lines.push(`${flag} ${short} · ${home} vs ${away} → ${pickLabel}${conf}`);
+  }
+  if (accuracy && accuracy.total > 0) {
+    lines.push('');
+    lines.push(`📊 Weekly: ${accuracy.hits}/${accuracy.total} (${accuracy.pct}%)`);
+  }
+  lines.push('');
+  lines.push(`🔗 ${siteUrl}/`);
+  lines.push('#football #AIpicks');
+
+  let out = lines.join('\n');
+  // X counts URLs as 23 chars regardless of length; approximate by subtracting
+  // real URL length then adding 23 when checking budget.
+  const urlCount = (out.match(/https?:\/\/[^\s]+/g) || []).length;
+  const effective = out.length - (urlCount > 0 ? 27 - 23 : 0); // scoreocs8.pages.dev/ = ~27 → 23
+  if (effective > 275) {
+    // Drop the 3rd pick first, then hashtags, then accuracy line
+    const trimmed = out.split('\n').filter((l, i, arr) => {
+      if (i === arr.findIndex(x => x.startsWith('#'))) return false;
+      return true;
+    }).join('\n');
+    out = trimmed.length > 275 ? trimmed.slice(0, 275) : trimmed;
+  }
+  return out;
+}
+
+// Threads variant — 500 char limit, between X and full caption.
+export function buildDailyCaptionThreads(opts) {
+  const full = buildDailyCaption(opts);
+  return full.length > 495 ? full.slice(0, 492) + '...' : full;
+}
+
+// Instagram variant — reuse full caption, IG allows 2200 chars so ours fits.
+export const buildDailyCaptionIG = buildDailyCaption;
+
 // Caption for match result posts: "FT · Team A 2-1 Team B"
 export function buildResultCaption({ fixture, pickCorrect = null, weekAcc = null, siteUrl = 'https://scoreocs8.pages.dev' }) {
   const home = fixture?.teams?.home?.name || 'Home';

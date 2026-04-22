@@ -1,6 +1,16 @@
 import { screenshot } from './lib/screenshot.js';
 import { sendPhoto, sendMessage } from './lib/telegram.js';
-import { buildDailyCaption, buildResultCaption } from './lib/caption.js';
+import {
+  buildDailyCaption,
+  buildDailyCaptionX,
+  buildDailyCaptionThreads,
+  buildDailyCaptionIG,
+  buildResultCaption,
+} from './lib/caption.js';
+import { saveSnap } from './lib/snap.js';
+import * as X from './lib/x.js';
+import * as IG from './lib/instagram.js';
+import * as Threads from './lib/threads.js';
 
 const API_FOOTBALL_BASE = 'https://v3.football.api-sports.io';
 const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
@@ -326,13 +336,15 @@ async function loadWeeklyAccuracy(env) {
   } catch { return null; }
 }
 
-// Main daily post flow. Returns a JSON-serialisable report.
-async function postDailyToTelegram(env) {
+// Fan out one daily post to every configured platform. Each platform is
+// independent — one failure doesn't block others. Report collects per-
+// platform outcomes so you can see at a glance what worked.
+async function postDailyToAll(env) {
   const started = Date.now();
-  const report = { stage: 'init', startedAt: started };
+  const report = { stage: 'init', startedAt: started, platforms: {} };
 
   try {
-    // 1. Gather data for the caption.
+    // 1. Gather featured picks.
     report.stage = 'load-featured';
     const { date, picks, sourceKey } = await loadFeaturedWithPicks(env);
     report.date = date;
@@ -348,7 +360,7 @@ async function postDailyToTelegram(env) {
     const accuracy = await loadWeeklyAccuracy(env);
     report.accuracy = accuracy;
 
-    // 2. Screenshot /daily/ (always pass ?v= to bust any stale CDN cache).
+    // 2. Screenshot /daily/.
     report.stage = 'screenshot';
     const pngBytes = await screenshot(env, {
       url: `${SITE_URL}/daily/?v=${Date.now()}`,
@@ -358,40 +370,34 @@ async function postDailyToTelegram(env) {
     });
     report.screenshotBytes = pngBytes.byteLength;
 
-    // 3. Build caption from template.
-    report.stage = 'build-caption';
+    // 3. Host the PNG publicly so IG + Threads can fetch it by URL.
+    report.stage = 'snap';
+    const snap = await saveSnap(env, pngBytes);
+    report.snapUrl = snap.url;
+
+    // 4. Build platform-specific captions.
     const affiliates = [];
     if (env.AFFILIATE_URL_MY) affiliates.push({ flag: '🇲🇾', url: env.AFFILIATE_URL_MY });
     if (env.AFFILIATE_URL_SG) affiliates.push({ flag: '🇸🇬', url: env.AFFILIATE_URL_SG });
-    const caption = buildDailyCaption({
-      date,
-      picks,
-      accuracy,
-      siteUrl: SITE_URL,
-      affiliates,
-    });
-    report.captionChars = caption.length;
+    const captions = {
+      telegram: buildDailyCaption({ date, picks, accuracy, siteUrl: SITE_URL, affiliates }),
+      x: buildDailyCaptionX({ date, picks, accuracy, siteUrl: SITE_URL }),
+      ig: buildDailyCaptionIG({ date, picks, accuracy, siteUrl: SITE_URL, affiliates }),
+      threads: buildDailyCaptionThreads({ date, picks, accuracy, siteUrl: SITE_URL, affiliates }),
+    };
 
-    // 4. Post to Telegram.
-    report.stage = 'telegram';
-    const msg = await sendPhoto(env, { photoBytes: pngBytes, caption });
-    report.messageId = msg.message_id;
-    report.chatId = msg.chat?.id;
-
-    // 5. Cache the post record so downstream flows can reference it.
-    report.stage = 'cache';
-    await env.CACHE.put(
-      `post:telegram:daily:${date}`,
-      JSON.stringify({
-        date,
-        chatId: msg.chat?.id,
-        messageId: msg.message_id,
-        postedAt: Date.now(),
-        captionChars: caption.length,
-        pickCount: picks.length,
-      }),
-      { expirationTtl: 14 * 24 * 3600 }
-    );
+    // 5. Fan out in parallel — each platform is isolated.
+    report.stage = 'fanout';
+    const results = await Promise.allSettled([
+      postToTelegram(env, pngBytes, captions.telegram, date),
+      postToX(env, pngBytes, captions.x, date),
+      postToIG(env, snap.url, captions.ig, date),
+      postToThreads(env, snap.url, captions.threads, date),
+    ]);
+    report.platforms.telegram = unwrap(results[0]);
+    report.platforms.x = unwrap(results[1]);
+    report.platforms.instagram = unwrap(results[2]);
+    report.platforms.threads = unwrap(results[3]);
 
     report.stage = 'done';
     report.status = 'ok';
@@ -402,6 +408,74 @@ async function postDailyToTelegram(env) {
     report.error = String(err.message || err);
     report.durationMs = Date.now() - started;
     return report;
+  }
+}
+
+function unwrap(settled) {
+  if (settled.status === 'fulfilled') return settled.value;
+  return { status: 'error', error: String(settled.reason?.message || settled.reason) };
+}
+
+// Each platform gets its own thin wrapper so loadFeaturedWithPicks +
+// snap + caption building aren't duplicated.
+
+async function postToTelegram(env, photoBytes, caption, date) {
+  if (!env.TG_BOT_TOKEN || !env.TG_CHANNEL_ID) return { status: 'skipped', reason: 'not configured' };
+  try {
+    const msg = await sendPhoto(env, { photoBytes, caption });
+    await env.CACHE.put(
+      `post:telegram:daily:${date}`,
+      JSON.stringify({ date, chatId: msg.chat?.id, messageId: msg.message_id, postedAt: Date.now() }),
+      { expirationTtl: 14 * 24 * 3600 }
+    );
+    return { status: 'ok', messageId: msg.message_id };
+  } catch (e) {
+    return { status: 'error', error: String(e.message || e) };
+  }
+}
+
+async function postToX(env, photoBytes, text, date) {
+  if (!env.X_API_KEY) return { status: 'skipped', reason: 'not configured' };
+  try {
+    const res = await X.postPhoto(env, { photoBytes, text });
+    await env.CACHE.put(
+      `post:x:daily:${date}`,
+      JSON.stringify({ date, tweetId: res.tweetId, postedAt: Date.now() }),
+      { expirationTtl: 14 * 24 * 3600 }
+    );
+    return { status: 'ok', tweetId: res.tweetId };
+  } catch (e) {
+    return { status: 'error', error: String(e.message || e) };
+  }
+}
+
+async function postToIG(env, imageUrl, caption, date) {
+  if (!env.IG_USER_ID || !env.IG_ACCESS_TOKEN) return { status: 'skipped', reason: 'not configured' };
+  try {
+    const res = await IG.postPhoto(env, { imageUrl, caption });
+    await env.CACHE.put(
+      `post:ig:daily:${date}`,
+      JSON.stringify({ date, mediaId: res.mediaId, postedAt: Date.now() }),
+      { expirationTtl: 14 * 24 * 3600 }
+    );
+    return { status: 'ok', mediaId: res.mediaId, retried: !!res.retried };
+  } catch (e) {
+    return { status: 'error', error: String(e.message || e) };
+  }
+}
+
+async function postToThreads(env, imageUrl, text, date) {
+  if (!env.THREADS_USER_ID || !env.THREADS_ACCESS_TOKEN) return { status: 'skipped', reason: 'not configured' };
+  try {
+    const res = await Threads.postPhoto(env, { imageUrl, text });
+    await env.CACHE.put(
+      `post:threads:daily:${date}`,
+      JSON.stringify({ date, threadId: res.threadId, postedAt: Date.now() }),
+      { expirationTtl: 14 * 24 * 3600 }
+    );
+    return { status: 'ok', threadId: res.threadId, retried: !!res.retried };
+  } catch (e) {
+    return { status: 'error', error: String(e.message || e) };
   }
 }
 
@@ -541,7 +615,7 @@ export default {
     //   */15 * UTC → check FT queue and post result slips
     const cron = event.cron || '';
     if (cron.startsWith('0 2 ')) {
-      ctx.waitUntil(postDailyToTelegram(env));
+      ctx.waitUntil(postDailyToAll(env));
     } else if (cron.startsWith('*/15 ')) {
       ctx.waitUntil(checkFinishedMatches(env));
     } else {
@@ -556,7 +630,7 @@ export default {
     // Manual triggers: &task=generate | post | check
     const task = url.searchParams.get('task') || 'generate';
     let result;
-    if (task === 'post') result = await postDailyToTelegram(env);
+    if (task === 'post') result = await postDailyToAll(env);
     else if (task === 'check') result = await checkFinishedMatches(env);
     else result = await generateDaily(env);
     return new Response(JSON.stringify(result, null, 2), {
