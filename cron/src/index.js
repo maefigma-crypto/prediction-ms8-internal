@@ -1,6 +1,6 @@
 import { screenshot } from './lib/screenshot.js';
 import { sendPhoto, sendMessage } from './lib/telegram.js';
-import { buildDailyCaption } from './lib/caption.js';
+import { buildDailyCaption, buildResultCaption } from './lib/caption.js';
 
 const API_FOOTBALL_BASE = 'https://v3.football.api-sports.io';
 const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
@@ -405,14 +405,145 @@ async function postDailyToTelegram(env) {
   }
 }
 
+// --- FT checker + virtual bet slip poster (Step 5) --------------------------
+//
+// Runs every 15 min via cron. Reads ft-queue:YYYY-MM-DD, picks up entries
+// whose check_at_ms is in the past and posted=false. Hits API-Football for
+// live status. If FT, screenshots /slip/?fixture_id=X&status=won|lost and
+// sends it to the Telegram channel with a bilingual result caption. Also
+// updates the weekly accuracy counter.
+
+const LIVE_UNFINISHED = new Set(['1H', '2H', 'HT', 'ET', 'BT', 'P', 'LIVE']);
+const FINISHED = new Set(['FT', 'AET', 'PEN', 'AWD', 'WO']);
+
+function todayMYT() {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' });
+}
+
+function isoWeekKey(d = new Date()) {
+  const tgt = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = tgt.getUTCDay() || 7;
+  tgt.setUTCDate(tgt.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(tgt.getUTCFullYear(), 0, 1));
+  const weekNum = Math.ceil((((tgt - yearStart) / 86400000) + 1) / 7);
+  return `${tgt.getUTCFullYear()}-W${String(weekNum).padStart(2, '0')}`;
+}
+
+// Decide if an AI pick was correct given the final score.
+// Covers HOME/DRAW/AWAY (1X2). Over/under and BTTS markets will be added
+// when the prediction schema expands.
+function pickWasCorrect(pick, goalsHome, goalsAway) {
+  if (!pick || !pick.pick) return null;
+  if (goalsHome == null || goalsAway == null) return null;
+  const p = String(pick.pick).toUpperCase();
+  if (p === 'HOME') return goalsHome > goalsAway;
+  if (p === 'AWAY') return goalsAway > goalsHome;
+  if (p === 'DRAW') return goalsHome === goalsAway;
+  return null;
+}
+
+async function bumpAccuracy(env, correct) {
+  const weekKey = `accuracy:week:${isoWeekKey()}`;
+  const curKey = `accuracy:week:current`;
+  const raw = await env.CACHE.get(weekKey);
+  let data = { hits: 0, total: 0 };
+  if (raw) { try { data = JSON.parse(raw); } catch {} }
+  data.total += 1;
+  if (correct === true) data.hits += 1;
+  const payload = JSON.stringify(data);
+  await env.CACHE.put(weekKey, payload, { expirationTtl: 45 * 24 * 3600 });
+  await env.CACHE.put(curKey, payload, { expirationTtl: 10 * 24 * 3600 });
+  return data;
+}
+
+async function checkFinishedMatches(env) {
+  const date = todayMYT();
+  const raw = await env.CACHE.get(`ft-queue:${date}`);
+  if (!raw) return { status: 'skipped', reason: 'no queue for today', date };
+
+  let queue;
+  try { queue = JSON.parse(raw); } catch { return { status: 'error', reason: 'bad queue json', date }; }
+
+  const now = Date.now();
+  const due = queue.filter(q => !q.posted && q.check_at_ms <= now);
+  if (!due.length) return { status: 'ok', due: 0, date, total: queue.length };
+
+  const report = { date, checked: due.length, posted: 0, still_live: 0, errors: [] };
+
+  for (const item of due) {
+    try {
+      const fxData = await afGet(env, '/fixtures', { id: item.fixture_id });
+      const fx = fxData.response?.[0];
+      const short = fx?.fixture?.status?.short;
+      item.attempts = (item.attempts || 0) + 1;
+
+      if (!short || LIVE_UNFINISHED.has(short)) {
+        // Match still ongoing — retry in 15 min
+        item.check_at_ms = now + 15 * 60 * 1000;
+        report.still_live += 1;
+        continue;
+      }
+      if (!FINISHED.has(short)) {
+        // Postponed / cancelled / unknown — mark posted to stop retries
+        item.posted = true;
+        item.note = `non-terminal status ${short}`;
+        continue;
+      }
+
+      // FT reached — post the virtual bet slip.
+      const pick = await env.CACHE.get(`prediction:${item.fixture_id}`, 'json').catch(() => null);
+      const goalsHome = fx.goals?.home;
+      const goalsAway = fx.goals?.away;
+      const correct = pickWasCorrect(pick, goalsHome, goalsAway);
+      const accAfter = correct === null ? null : await bumpAccuracy(env, correct);
+
+      const slipStatus = correct === true ? 'won' : (correct === false ? 'lost' : 'running');
+      const slipUrl = `${SITE_URL}/slip/?fixture_id=${item.fixture_id}&status=${slipStatus}&stake=100&v=${Date.now()}`;
+      const png = await screenshot(env, {
+        url: slipUrl,
+        viewport: { width: 1080, height: 1350 },
+        waitUntil: 'networkidle0',
+      });
+
+      const weekAcc = accAfter
+        ? { hits: accAfter.hits, total: accAfter.total, pct: Math.round((accAfter.hits / accAfter.total) * 100) }
+        : null;
+      const caption = buildResultCaption({
+        fixture: fx,
+        pickCorrect: correct,
+        weekAcc,
+        siteUrl: SITE_URL,
+      });
+
+      const msg = await sendPhoto(env, { photoBytes: png, caption });
+      item.posted = true;
+      item.posted_at = Date.now();
+      item.message_id = msg.message_id;
+      item.correct = correct;
+      report.posted += 1;
+    } catch (e) {
+      report.errors.push({ fixture_id: item.fixture_id, error: String(e.message || e) });
+      // Retry in 30 min on transient error
+      item.check_at_ms = Date.now() + 30 * 60 * 1000;
+    }
+  }
+
+  // Persist queue with updated states
+  await env.CACHE.put(`ft-queue:${date}`, JSON.stringify(queue), { expirationTtl: 48 * 3600 });
+  return { status: 'ok', ...report, total: queue.length };
+}
+
 export default {
   async scheduled(event, env, ctx) {
-    // Dispatch by cron pattern so one worker handles multiple schedules.
-    //   23:00 UTC = 07:00 MYT → generate tomorrow's content
-    //   02:00 UTC = 10:00 MYT → post today's predictions to Telegram
+    // Dispatch by cron pattern:
+    //   23:00 UTC  = 07:00 MYT → generate tomorrow's content
+    //   02:00 UTC  = 10:00 MYT → post today's predictions to Telegram
+    //   */15 * UTC → check FT queue and post result slips
     const cron = event.cron || '';
     if (cron.startsWith('0 2 ')) {
       ctx.waitUntil(postDailyToTelegram(env));
+    } else if (cron.startsWith('*/15 ')) {
+      ctx.waitUntil(checkFinishedMatches(env));
     } else {
       ctx.waitUntil(generateDaily(env));
     }
@@ -422,11 +553,12 @@ export default {
     if (url.searchParams.get('key') !== env.CRON_SECRET) {
       return new Response('unauthorized', { status: 401 });
     }
-    // Manual triggers: /?key=...&task=post   or   /?key=...&task=generate
+    // Manual triggers: &task=generate | post | check
     const task = url.searchParams.get('task') || 'generate';
-    const result = task === 'post'
-      ? await postDailyToTelegram(env)
-      : await generateDaily(env);
+    let result;
+    if (task === 'post') result = await postDailyToTelegram(env);
+    else if (task === 'check') result = await checkFinishedMatches(env);
+    else result = await generateDaily(env);
     return new Response(JSON.stringify(result, null, 2), {
       headers: { 'content-type': 'application/json; charset=utf-8' },
     });

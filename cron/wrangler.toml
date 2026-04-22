@@ -5,8 +5,11 @@ compatibility_date = "2025-09-01"
 # Cron schedule:
 #   23:00 UTC = 07:00 MYT → generateDaily() writes content:YYYY-MM-DD
 #   02:00 UTC = 10:00 MYT → postDailyToTelegram() screenshots + posts
+#   */15 * * * * → checkFinishedMatches() posts virtual bet slip at FT.
+#                  Early-returns when the queue is empty so idle days
+#                  consume zero API-Football quota.
 [triggers]
-crons = ["0 23 * * *", "0 2 * * *"]
+crons = ["0 23 * * *", "0 2 * * *", "*/15 * * * *"]
 
 # KV binding — MUST point to the SAME namespace the Pages project uses
 # so Pages can read what this Worker writes.
