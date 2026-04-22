@@ -163,6 +163,15 @@ async function generateDaily(env) {
 
   await env.CACHE.put(`content:${date}`, JSON.stringify(output), { expirationTtl: 48 * 3600 });
 
+  // Warm the /api/predictions cache for each featured fixture so the
+  // /daily/ screenshot page always shows real AI picks (not "analysing").
+  // Each hit populates prediction:<fixture_id> in KV via the Pages Function.
+  const warmerReport = await warmPredictions(output).catch(e => ({ error: String(e.message || e) }));
+
+  // Queue FT checks — one scheduled lookup per featured fixture at
+  // kickoff + 100 min. Drives step 5 (result posting + virtual bet slip).
+  const queueReport = await queueFtChecks(env, output, date).catch(e => ({ error: String(e.message || e) }));
+
   // Ping IndexNow (Bing/Yandex) so fresh posts get crawled fast. Google
   // removed their sitemap ping in 2023; IndexNow is the modern equivalent.
   const indexNowResult = await pingIndexNow(output, date).catch(e => ({ error: String(e.message || e) }));
@@ -172,6 +181,8 @@ async function generateDaily(env) {
     date,
     tokensUsed: output.tokensUsed,
     items: 1 + output.previews.length,
+    warmed: warmerReport,
+    ftQueue: queueReport,
     indexnow: indexNowResult,
   };
 }
@@ -200,6 +211,67 @@ async function pingIndexNow(bundle, date) {
     }),
   });
   return { submitted: urls.length, status: res.status };
+}
+
+// --- Prediction cache warmer ------------------------------------------------
+//
+// /api/predictions?fixture_id=X is cached on-demand for 12h. We proactively
+// call it for each featured fixture so the /daily/ screenshot page always
+// shows the actual AI pick instead of the "AI analysing" placeholder.
+
+async function warmPredictions(output) {
+  const ids = [];
+  if (output.top?.fixture?.fixture?.id) ids.push(output.top.fixture.fixture.id);
+  if (Array.isArray(output.previews)) {
+    for (const p of output.previews) {
+      if (p.fixture?.fixture?.id) ids.push(p.fixture.fixture.id);
+    }
+  }
+  const results = await Promise.all(
+    ids.map(async id => {
+      try {
+        const res = await fetch(`${SITE_URL}/api/predictions?fixture_id=${id}`);
+        return { id, ok: res.ok, status: res.status };
+      } catch (e) {
+        return { id, ok: false, error: String(e.message || e) };
+      }
+    })
+  );
+  return { count: results.length, results };
+}
+
+// --- FT-check queue (step 5 foundation) -------------------------------------
+//
+// Writes ft-queue:YYYY-MM-DD holding one entry per featured fixture with
+// the computed check_at timestamp (kickoff + 100 min). The checker cron
+// scans this queue every 15 min and only hits API-Football for entries
+// whose check_at is in the past AND which haven't been posted yet.
+//
+// Cost: ~0 API-Football calls on match-less days; 3-10/day on busy days.
+
+async function queueFtChecks(env, output, date) {
+  const fixtures = [];
+  if (output.top?.fixture) fixtures.push(output.top.fixture);
+  if (Array.isArray(output.previews)) {
+    for (const p of output.previews) if (p.fixture) fixtures.push(p.fixture);
+  }
+
+  const queue = fixtures.map(fx => {
+    const kickoffMs = new Date(fx.fixture.date).getTime();
+    return {
+      fixture_id: fx.fixture.id,
+      home: fx.teams?.home?.name,
+      away: fx.teams?.away?.name,
+      league_id: fx.league?.id,
+      kickoff_iso: fx.fixture.date,
+      check_at_ms: kickoffMs + 100 * 60 * 1000,  // FT typically ~100 min after KO
+      attempts: 0,
+      posted: false,
+    };
+  });
+
+  await env.CACHE.put(`ft-queue:${date}`, JSON.stringify(queue), { expirationTtl: 48 * 3600 });
+  return { count: queue.length };
 }
 
 // --- Daily social posting pipeline (Step 2 + 3) -----------------------------
