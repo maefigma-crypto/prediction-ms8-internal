@@ -1,8 +1,13 @@
+import { screenshot } from './lib/screenshot.js';
+import { sendPhoto, sendMessage } from './lib/telegram.js';
+import { buildDailyCaption } from './lib/caption.js';
+
 const API_FOOTBALL_BASE = 'https://v3.football.api-sports.io';
 const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
 const CLAUDE_MODEL = 'claude-haiku-4-5-20251001';
 const MAX_TOKENS_PER_REQ = 2000;
 const DAILY_TOKEN_BUDGET = 8000;
+const SITE_URL = 'https://scoreocs8.pages.dev';
 
 const LEAGUE_PRIORITY = [
   { key: 'UCL', id: 2 },
@@ -197,16 +202,159 @@ async function pingIndexNow(bundle, date) {
   return { submitted: urls.length, status: res.status };
 }
 
+// --- Daily social posting pipeline (Step 2 + 3) -----------------------------
+//
+// 1. Screenshot the /daily/ page via CF Browser Rendering REST API
+// 2. Load the 3 featured picks from KV (content + prediction caches)
+// 3. Build bilingual caption from template
+// 4. sendPhoto to the configured Telegram channel
+// 5. Cache the message_id + photo so later steps (result reconcile, cross-
+//    posting) can reference the same post.
+
+async function loadFeaturedWithPicks(env) {
+  // Try MYT today, then UTC today (handles cron running in UTC window).
+  const mytDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' });
+  const utcDate = today();
+  const keys = [`content:${mytDate}`, `content:${utcDate}`];
+  let content = null;
+  let usedKey = null;
+  for (const k of keys) {
+    content = await env.CACHE.get(k, 'json');
+    if (content) { usedKey = k; break; }
+  }
+  if (!content) return { date: mytDate, picks: [], sourceKey: null };
+
+  const fixtures = [];
+  if (content.top?.fixture) fixtures.push(content.top.fixture);
+  if (Array.isArray(content.previews)) {
+    for (const p of content.previews) if (p.fixture) fixtures.push(p.fixture);
+  }
+
+  const picks = await Promise.all(
+    fixtures.slice(0, 3).map(async fx => ({
+      fx,
+      pick: await env.CACHE.get(`prediction:${fx.fixture?.id}`, 'json').catch(() => null),
+    }))
+  );
+
+  return { date: mytDate, picks, sourceKey: usedKey };
+}
+
+async function loadWeeklyAccuracy(env) {
+  try {
+    const raw = await env.CACHE.get('accuracy:week:current');
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!data.total) return null;
+    return {
+      hits: data.hits,
+      total: data.total,
+      pct: Math.round((data.hits / data.total) * 100),
+    };
+  } catch { return null; }
+}
+
+// Main daily post flow. Returns a JSON-serialisable report.
+async function postDailyToTelegram(env) {
+  const started = Date.now();
+  const report = { stage: 'init', startedAt: started };
+
+  try {
+    // 1. Gather data for the caption.
+    report.stage = 'load-featured';
+    const { date, picks, sourceKey } = await loadFeaturedWithPicks(env);
+    report.date = date;
+    report.sourceKey = sourceKey;
+    report.pickCount = picks.length;
+
+    if (!picks.length) {
+      report.status = 'skipped';
+      report.reason = 'no featured picks in KV yet';
+      return report;
+    }
+
+    const accuracy = await loadWeeklyAccuracy(env);
+    report.accuracy = accuracy;
+
+    // 2. Screenshot /daily/ (always pass ?v= to bust any stale CDN cache).
+    report.stage = 'screenshot';
+    const pngBytes = await screenshot(env, {
+      url: `${SITE_URL}/daily/?v=${Date.now()}`,
+      viewport: { width: 1080, height: 1920 },
+      waitUntil: 'networkidle0',
+      timeoutMs: 30000,
+    });
+    report.screenshotBytes = pngBytes.byteLength;
+
+    // 3. Build caption from template.
+    report.stage = 'build-caption';
+    const affiliates = [];
+    if (env.AFFILIATE_URL_MY) affiliates.push({ flag: '🇲🇾', url: env.AFFILIATE_URL_MY });
+    if (env.AFFILIATE_URL_SG) affiliates.push({ flag: '🇸🇬', url: env.AFFILIATE_URL_SG });
+    const caption = buildDailyCaption({
+      date,
+      picks,
+      accuracy,
+      siteUrl: SITE_URL,
+      affiliates,
+    });
+    report.captionChars = caption.length;
+
+    // 4. Post to Telegram.
+    report.stage = 'telegram';
+    const msg = await sendPhoto(env, { photoBytes: pngBytes, caption });
+    report.messageId = msg.message_id;
+    report.chatId = msg.chat?.id;
+
+    // 5. Cache the post record so downstream flows can reference it.
+    report.stage = 'cache';
+    await env.CACHE.put(
+      `post:telegram:daily:${date}`,
+      JSON.stringify({
+        date,
+        chatId: msg.chat?.id,
+        messageId: msg.message_id,
+        postedAt: Date.now(),
+        captionChars: caption.length,
+        pickCount: picks.length,
+      }),
+      { expirationTtl: 14 * 24 * 3600 }
+    );
+
+    report.stage = 'done';
+    report.status = 'ok';
+    report.durationMs = Date.now() - started;
+    return report;
+  } catch (err) {
+    report.status = 'error';
+    report.error = String(err.message || err);
+    report.durationMs = Date.now() - started;
+    return report;
+  }
+}
+
 export default {
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(generateDaily(env));
+    // Dispatch by cron pattern so one worker handles multiple schedules.
+    //   23:00 UTC = 07:00 MYT → generate tomorrow's content
+    //   02:00 UTC = 10:00 MYT → post today's predictions to Telegram
+    const cron = event.cron || '';
+    if (cron.startsWith('0 2 ')) {
+      ctx.waitUntil(postDailyToTelegram(env));
+    } else {
+      ctx.waitUntil(generateDaily(env));
+    }
   },
   async fetch(request, env) {
     const url = new URL(request.url);
     if (url.searchParams.get('key') !== env.CRON_SECRET) {
       return new Response('unauthorized', { status: 401 });
     }
-    const result = await generateDaily(env);
+    // Manual triggers: /?key=...&task=post   or   /?key=...&task=generate
+    const task = url.searchParams.get('task') || 'generate';
+    const result = task === 'post'
+      ? await postDailyToTelegram(env)
+      : await generateDaily(env);
     return new Response(JSON.stringify(result, null, 2), {
       headers: { 'content-type': 'application/json; charset=utf-8' },
     });

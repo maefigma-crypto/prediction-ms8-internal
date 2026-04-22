@@ -2,9 +2,11 @@ name = "prediction-ms8-internal-cron"
 main = "src/index.js"
 compatibility_date = "2025-09-01"
 
-# Daily at 23:00 UTC = 07:00 MYT (UTC+8)
+# Cron schedule:
+#   23:00 UTC = 07:00 MYT → generateDaily() writes content:YYYY-MM-DD
+#   02:00 UTC = 10:00 MYT → postDailyToTelegram() screenshots + posts
 [triggers]
-crons = ["0 23 * * *"]
+crons = ["0 23 * * *", "0 2 * * *"]
 
 # KV binding — MUST point to the SAME namespace the Pages project uses
 # so Pages can read what this Worker writes.
@@ -13,6 +15,20 @@ binding = "CACHE"
 id = "4c1cb47552044d7fb27e582a77b02962"
 
 # Secrets to set in dashboard or via `wrangler secret put`:
-#   API_FOOTBALL_KEY     (same as Pages)
-#   ANTHROPIC_API_KEY    (same as Pages)
-#   CRON_SECRET          (random string; gates the manual /?key=... trigger)
+#
+# Content generation (already configured):
+#   API_FOOTBALL_KEY     same as Pages
+#   ANTHROPIC_API_KEY    same as Pages
+#   CRON_SECRET          random string; gates the manual /?key=... trigger
+#
+# Screenshot (CF Browser Rendering REST API):
+#   CF_ACCOUNT_ID        your Cloudflare account id (dashboard URL)
+#   CF_API_TOKEN         API token with "Browser Rendering" edit permission
+#
+# Telegram posting:
+#   TG_BOT_TOKEN         bot token from BotFather; bot MUST be admin of channel
+#   TG_CHANNEL_ID        @public_username or numeric -100... id
+#
+# Optional affiliate CTAs in caption footer:
+#   AFFILIATE_URL_MY     e.g. https://tinyurl.com/scoreocs8-my
+#   AFFILIATE_URL_SG     e.g. https://tinyurl.com/scoreocs8-sg
