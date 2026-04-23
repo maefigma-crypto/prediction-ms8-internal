@@ -268,13 +268,15 @@ export async function onRequest(context) {
         });
       }
       case 'content/today': {
-        const date = new Date().toISOString().slice(0, 10);
+        // MYT date so reads match cron's writes (cron runs at 23:00 UTC =
+        // 07:00 MYT next day; storing by UTC would write under yesterday).
+        const date = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' });
         const cached = await env.CACHE.get(`content:${date}`, 'json');
         if (!cached) return json({ status: 'empty', date, message: 'no content generated yet today' }, 200);
         return json(cached);
       }
       case 'content/usage': {
-        const date = new Date().toISOString().slice(0, 10);
+        const date = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' });
         const used = parseInt(await env.CACHE.get(`usage:tokens:${date}`) || '0', 10);
         return json({ date, used, budget: 8000, remaining: 8000 - used });
       }

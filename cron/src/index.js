@@ -27,7 +27,12 @@ const LEAGUE_PRIORITY = [
 ];
 const DEFAULT_SEASON = '2025';
 
-function today() { return new Date().toISOString().slice(0, 10); }
+// Today's date in MYT (Asia/Kuala_Lumpur, UTC+8). Cron fires at 23:00 UTC
+// which is 07:00 MYT next day — using UTC here would write content under
+// yesterday's key and /daily/ would never find it.
+function today() {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' });
+}
 
 async function afGet(env, path, params = {}) {
   const qs = new URLSearchParams(params);
