@@ -710,12 +710,20 @@ html,body{overflow-x:hidden;max-width:100vw;}
         </div>
         <span class="bpred">SCOREBAT</span>
       </div>
-      <iframe id="sb-iframe" src="https://www.scorebat.com/embed/competition/england-premier-league/" frameborder="0" width="100%" height="480" allowfullscreen allow="autoplay; fullscreen" style="display:block;background:var(--bg2);"></iframe>
+      <div class="sb-frame">
+        <iframe id="sb-iframe" src="https://www.scorebat.com/embed/competition/england-premier-league/" frameborder="0" width="100%" height="520" allowfullscreen allow="autoplay; fullscreen" style="display:block;background:#fff;"></iframe>
+      </div>
     </div>
     <style>
       #sb-tabs .sbtab{font-family:var(--fm);font-size:11px;letter-spacing:.04em;padding:6px 12px;border:1px solid var(--border);color:var(--text2);border-radius:4px;background:var(--card);cursor:pointer;transition:all .2s;white-space:nowrap;}
       #sb-tabs .sbtab:hover{border-color:rgba(249,115,22,.4);color:var(--text);}
       #sb-tabs .sbtab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+      /* Dark wrapper around ScoreBat's white iframe so it reads as an
+         intentional "broadcast viewer" frame instead of a clashing
+         white rectangle. Inner padding/bevel + accent top-stripe. */
+      .sb-frame{margin-top:12px;padding:10px;background:linear-gradient(180deg,var(--card) 0%,var(--card2) 100%);border:1px solid var(--border2);border-radius:8px;box-shadow:inset 0 0 0 1px rgba(249,115,22,.08),0 8px 24px rgba(0,0,0,.25);position:relative;overflow:hidden;}
+      .sb-frame::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent 0%,var(--accent) 20%,var(--accent) 80%,transparent 100%);opacity:.5;}
+      .sb-frame iframe{border-radius:4px;overflow:hidden;}
     </style>
     <script>
     (function(){
@@ -739,25 +747,63 @@ html,body{overflow-x:hidden;max-width:100vw;}
     <div class="stag">Transparency</div>
     <h2 class="stitle">Our Track Record</h2>
     <p class="ssub">Every prediction logged. Every result shown. Zero hiding.</p>
-    <div class="agrid fu">
-      <div class="ac"><div class="acv">87%</div><div class="acl">Overall</div><div class="act">↑ 3% this month</div></div>
-      <div class="ac"><div class="acv">82%</div><div class="acl">Football</div><div class="act">↑ 1% this week</div></div>
-      <div class="ac"><div class="acv">74%</div><div class="acl">Badminton</div><div class="act">↑ 2% this month</div></div>
-      <div class="ac"><div class="acv">21</div><div class="acl">Win Streak</div><div class="act">Current</div></div>
+    <div class="agrid fu" id="tr-stats">
+      <!-- populated from /api/track-record -->
+      <div class="ac"><div class="acv">—</div><div class="acl">Overall</div><div class="act">Loading</div></div>
+      <div class="ac"><div class="acv">—</div><div class="acl">Football</div><div class="act">Loading</div></div>
+      <div class="ac"><div class="acv">—</div><div class="acl">Badminton</div><div class="act">Coming soon</div></div>
+      <div class="ac"><div class="acv">0</div><div class="acl">Win Streak</div><div class="act">Current</div></div>
     </div>
     <div class="twrap fu">
       <table class="ht">
         <thead><tr><th>Date (MYT)</th><th>Sport</th><th>Match</th><th>Our Pick</th><th>Result</th><th>Outcome</th></tr></thead>
-        <tbody>
-          <tr><td style="font-family:var(--fm);font-size:10px;color:var(--text3)">Today</td><td>⚽</td><td>Johor DT vs Selangor</td><td>Johor Win</td><td style="font-family:var(--fm)">2–1</td><td><span class="rlive">IN PLAY</span></td></tr>
-          <tr><td style="font-family:var(--fm);font-size:10px;color:var(--text3)">Apr 19</td><td>⚽</td><td>Penang vs Terengganu</td><td>Penang Win</td><td style="font-family:var(--fm)">3–2</td><td><span class="rwin">WIN ✓</span></td></tr>
-          <tr><td style="font-family:var(--fm);font-size:10px;color:var(--text3)">Apr 19</td><td>🏸</td><td>Lee ZJ vs Antonsen</td><td>Lee ZJ Win</td><td style="font-family:var(--fm)">2–1</td><td><span class="rwin">WIN ✓</span></td></div></tr>
-          <tr><td style="font-family:var(--fm);font-size:10px;color:var(--text3)">Apr 18</td><td>⚽</td><td>Liverpool vs Arsenal</td><td>Liverpool Win</td><td style="font-family:var(--fm)">2–0</td><td><span class="rwin">WIN ✓</span></td></tr>
-          <tr><td style="font-family:var(--fm);font-size:10px;color:var(--text3)">Apr 18</td><td>⚽</td><td>KL City vs Negeri 9</td><td>KL City Win</td><td style="font-family:var(--fm)">1–1</td><td><span class="rloss">LOSS ✗</span></td></tr>
-          <tr><td style="font-family:var(--fm);font-size:10px;color:var(--text3)">Apr 17</td><td>🏸</td><td>Ng/Tan vs Fajar/Alfian</td><td>Ng/Tan Win</td><td style="font-family:var(--fm)">2–0</td><td><span class="rwin">WIN ✓</span></td></tr>
+        <tbody id="tr-rows">
+          <tr><td colspan="6" style="text-align:center;padding:28px;color:var(--text3);font-family:var(--fm);font-size:11px;letter-spacing:.05em;">Loading track record…</td></tr>
         </tbody>
       </table>
     </div>
+    <script>
+    (function(){
+      fetch('/api/track-record').then(r => r.ok ? r.json() : null).then(d => {
+        if (!d) return;
+        const pctOrDash = p => p == null ? '—' : p + '%';
+        const stats = [
+          { v: pctOrDash(d.overall.pct), l: 'Overall', t: d.overall.count ? `${d.overall.count} picks logged` : 'Building record' },
+          { v: pctOrDash(d.football.pct), l: 'Football', t: d.football.count ? `${d.football.count} picks` : 'No data yet' },
+          { v: pctOrDash(d.badminton.pct), l: 'Badminton', t: d.badminton.count ? `${d.badminton.count} picks` : 'Coming soon' },
+          { v: String(d.winStreak || 0), l: 'Win Streak', t: 'Current' },
+        ];
+        const statsEl = document.getElementById('tr-stats');
+        if (statsEl) statsEl.innerHTML = stats.map(s =>
+          `<div class="ac"><div class="acv">${s.v}</div><div class="acl">${s.l}</div><div class="act">${s.t}</div></div>`
+        ).join('');
+
+        const rowsEl = document.getElementById('tr-rows');
+        if (!rowsEl) return;
+        if (!d.recent || !d.recent.length) {
+          rowsEl.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:28px;color:var(--text3);font-family:var(--fm);font-size:11px;letter-spacing:.05em;">Building record — first result lands after today's match finishes.</td></tr>`;
+          return;
+        }
+        const esc = s => String(s ?? '').replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
+        rowsEl.innerHTML = d.recent.map(m => {
+          const emoji = m.sport === 'badminton' ? '🏸' : '⚽';
+          const outcome = m.correct === true
+            ? '<span class="rwin">WIN ✓</span>'
+            : m.correct === false
+              ? '<span class="rloss">LOSS ✗</span>'
+              : '<span class="rlive">PENDING</span>';
+          return `<tr>
+            <td style="font-family:var(--fm);font-size:10px;color:var(--text3)">${esc(m.date)}</td>
+            <td>${emoji}</td>
+            <td>${esc(m.match)}</td>
+            <td>${esc(m.pick)}</td>
+            <td style="font-family:var(--fm)">${esc(m.score)}</td>
+            <td>${outcome}</td>
+          </tr>`;
+        }).join('');
+      }).catch(()=>{});
+    })();
+    </script>
   </div>
 </section>
 

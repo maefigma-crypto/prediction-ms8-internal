@@ -6,6 +6,7 @@ import {
   buildDailyCaptionThreads,
   buildDailyCaptionIG,
   buildResultCaption,
+  buildPreMatchMotdCaption,
 } from './lib/caption.js';
 import { saveSnap } from './lib/snap.js';
 import * as X from './lib/x.js';
@@ -271,7 +272,11 @@ async function queueFtChecks(env, output, date) {
     for (const p of output.previews) if (p.fixture) fixtures.push(p.fixture);
   }
 
-  const queue = fixtures.map(fx => {
+  // First fixture in the generated set is the "Match of the Day" — it
+  // gets the prominent pre-match + post-match virtual bet slip posts.
+  // The other featured fixtures only track silently (accuracy + history)
+  // so the channel isn't flooded with 3 result posts per day.
+  const queue = fixtures.map((fx, i) => {
     const kickoffMs = new Date(fx.fixture.date).getTime();
     return {
       fixture_id: fx.fixture.id,
@@ -282,6 +287,7 @@ async function queueFtChecks(env, output, date) {
       check_at_ms: kickoffMs + 100 * 60 * 1000,  // FT typically ~100 min after KO
       attempts: 0,
       posted: false,
+      is_motd: i === 0,
     };
   });
 
@@ -391,7 +397,7 @@ async function postDailyToAll(env) {
       threads: buildDailyCaptionThreads({ date, picks, accuracy, siteUrl: SITE_URL, affiliates }),
     };
 
-    // 5. Fan out in parallel — each platform is isolated.
+    // 5. Fan out daily predictions in parallel — each platform isolated.
     report.stage = 'fanout';
     const results = await Promise.allSettled([
       postToTelegram(env, pngBytes, captions.telegram, date),
@@ -403,6 +409,36 @@ async function postDailyToAll(env) {
     report.platforms.x = unwrap(results[1]);
     report.platforms.instagram = unwrap(results[2]);
     report.platforms.threads = unwrap(results[3]);
+
+    // 6. Match of the Day pre-match virtual bet slip. Posted right after
+    // the daily list so the channel has: (a) list of today's 3 picks,
+    // (b) the featured bet slip with RM100 virtual stake for the top
+    // match. Only goes to Telegram for now — a single slip per day on
+    // the loudest channel is enough. IG/X/Threads can be wired later.
+    try {
+      report.stage = 'motd-prematch';
+      const motd = picks[0];
+      if (motd?.fx?.fixture?.id) {
+        const slipUrl = `${SITE_URL}/slip/?fixture_id=${motd.fx.fixture.id}&status=running&stake=100&v=${Date.now()}`;
+        const slipPng = await screenshot(env, {
+          url: slipUrl,
+          viewport: { width: 1080, height: 1350 },
+          waitUntil: 'networkidle0',
+        });
+        const motdCaption = buildPreMatchMotdCaption({
+          fixture: motd.fx,
+          pick: motd.pick,
+          stake: 100,
+          siteUrl: SITE_URL,
+        });
+        const motdMsg = await sendPhoto(env, { photoBytes: slipPng, caption: motdCaption });
+        report.motd = { status: 'ok', messageId: motdMsg.message_id, fixtureId: motd.fx.fixture.id };
+      } else {
+        report.motd = { status: 'skipped', reason: 'no MOTD fixture' };
+      }
+    } catch (e) {
+      report.motd = { status: 'error', error: String(e.message || e) };
+    }
 
     report.stage = 'done';
     report.status = 'ok';
@@ -521,6 +557,22 @@ function pickWasCorrect(pick, goalsHome, goalsAway) {
   return null;
 }
 
+// Append a reconciled match to history:matches. Keeps newest-first, capped
+// at 60 entries (enough to power the homepage table + weekly/monthly stats
+// without bloating KV values). 90-day TTL.
+async function appendHistory(env, entry) {
+  const raw = await env.CACHE.get('history:matches');
+  let list = [];
+  if (raw) { try { list = JSON.parse(raw); } catch {} }
+  // De-dupe: if same fixture was already logged, replace it (e.g. retry).
+  list = list.filter(m => m.fixture_id !== entry.fixture_id);
+  list.unshift(entry);
+  list = list.slice(0, 60);
+  await env.CACHE.put('history:matches', JSON.stringify(list), {
+    expirationTtl: 90 * 24 * 3600,
+  });
+}
+
 async function bumpAccuracy(env, correct) {
   const weekKey = `accuracy:week:${isoWeekKey()}`;
   const curKey = `accuracy:week:current`;
@@ -569,37 +621,61 @@ async function checkFinishedMatches(env) {
         continue;
       }
 
-      // FT reached — post the virtual bet slip.
+      // FT reached — reconcile pick accuracy + history regardless of MOTD.
       const pick = await env.CACHE.get(`prediction:${item.fixture_id}`, 'json').catch(() => null);
       const goalsHome = fx.goals?.home;
       const goalsAway = fx.goals?.away;
       const correct = pickWasCorrect(pick, goalsHome, goalsAway);
       const accAfter = correct === null ? null : await bumpAccuracy(env, correct);
 
-      const slipStatus = correct === true ? 'won' : (correct === false ? 'lost' : 'running');
-      const slipUrl = `${SITE_URL}/slip/?fixture_id=${item.fixture_id}&status=${slipStatus}&stake=100&v=${Date.now()}`;
-      const png = await screenshot(env, {
-        url: slipUrl,
-        viewport: { width: 1080, height: 1350 },
-        waitUntil: 'networkidle0',
-      });
+      // Only post the virtual bet slip for the Match of the Day. Other
+      // featured fixtures still track silently so the channel isn't
+      // flooded with 3 result posts per day.
+      if (item.is_motd) {
+        const slipStatus = correct === true ? 'won' : (correct === false ? 'lost' : 'running');
+        const slipUrl = `${SITE_URL}/slip/?fixture_id=${item.fixture_id}&status=${slipStatus}&stake=100&v=${Date.now()}`;
+        const png = await screenshot(env, {
+          url: slipUrl,
+          viewport: { width: 1080, height: 1350 },
+          waitUntil: 'networkidle0',
+        });
 
-      const weekAcc = accAfter
-        ? { hits: accAfter.hits, total: accAfter.total, pct: Math.round((accAfter.hits / accAfter.total) * 100) }
-        : null;
-      const caption = buildResultCaption({
-        fixture: fx,
-        pickCorrect: correct,
-        weekAcc,
-        siteUrl: SITE_URL,
-      });
+        const weekAcc = accAfter
+          ? { hits: accAfter.hits, total: accAfter.total, pct: Math.round((accAfter.hits / accAfter.total) * 100) }
+          : null;
+        const caption = buildResultCaption({
+          fixture: fx,
+          pickCorrect: correct,
+          weekAcc,
+          siteUrl: SITE_URL,
+        });
 
-      const msg = await sendPhoto(env, { photoBytes: png, caption });
+        const msg = await sendPhoto(env, { photoBytes: png, caption });
+        item.message_id = msg.message_id;
+        report.posted += 1;
+      } else {
+        report.silent = (report.silent || 0) + 1;
+      }
       item.posted = true;
       item.posted_at = Date.now();
-      item.message_id = msg.message_id;
       item.correct = correct;
-      report.posted += 1;
+
+      // Always append to rolling history list so the homepage
+      // track-record section can render live stats even for non-MOTD picks.
+      await appendHistory(env, {
+        fixture_id: item.fixture_id,
+        kickoff_iso: fx.fixture.date,
+        sport: 'football',
+        league_id: item.league_id,
+        home: item.home,
+        away: item.away,
+        score_home: goalsHome,
+        score_away: goalsAway,
+        pick: pick?.pickLabel || pick?.pick || null,
+        confidence: pick?.confidence ?? null,
+        correct,
+        ts: Date.now(),
+      });
     } catch (e) {
       report.errors.push({ fixture_id: item.fixture_id, error: String(e.message || e) });
       // Retry in 30 min on transient error

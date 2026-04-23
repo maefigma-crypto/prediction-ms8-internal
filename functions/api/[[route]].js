@@ -267,6 +267,54 @@ export async function onRequest(context) {
           })),
         });
       }
+      case 'track-record': {
+        // Live track-record: overall / football / badminton % + current
+        // win streak + last 6 matches. Reads from history:matches which
+        // the cron's checkFinishedMatches() appends to at each FT.
+        const raw = await env.CACHE.get('history:matches');
+        let list = [];
+        if (raw) { try { list = JSON.parse(raw); } catch {} }
+
+        const reconciled = list.filter(m => m.correct === true || m.correct === false);
+        const pct = arr => {
+          if (!arr.length) return null;
+          const wins = arr.filter(m => m.correct === true).length;
+          return Math.round((wins / arr.length) * 100);
+        };
+
+        const football = reconciled.filter(m => m.sport === 'football');
+        const badminton = reconciled.filter(m => m.sport === 'badminton');
+
+        let streak = 0;
+        for (const m of reconciled) {
+          if (m.correct === true) streak += 1;
+          else break;
+        }
+
+        const fmtDate = iso => {
+          try {
+            return new Date(iso).toLocaleDateString('en-GB', {
+              timeZone: 'Asia/Kuala_Lumpur', day: '2-digit', month: 'short',
+            });
+          } catch { return ''; }
+        };
+
+        return json({
+          updated: Date.now(),
+          overall: { pct: pct(reconciled), count: reconciled.length },
+          football: { pct: pct(football), count: football.length },
+          badminton: { pct: pct(badminton), count: badminton.length },
+          winStreak: streak,
+          recent: list.slice(0, 6).map(m => ({
+            date: fmtDate(m.kickoff_iso),
+            sport: m.sport,
+            match: `${m.home} vs ${m.away}`,
+            pick: m.pick || '—',
+            score: m.score_home != null ? `${m.score_home}–${m.score_away}` : '—',
+            correct: m.correct,
+          })),
+        });
+      }
       case 'content/today': {
         // MYT date so reads match cron's writes (cron runs at 23:00 UTC =
         // 07:00 MYT next day; storing by UTC would write under yesterday).

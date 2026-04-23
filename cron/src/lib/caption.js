@@ -172,6 +172,52 @@ export function buildDailyCaptionThreads(opts) {
 // Instagram variant — reuse full caption, IG allows 2200 chars so ours fits.
 export const buildDailyCaptionIG = buildDailyCaption;
 
+// Pre-match caption for the Match of the Day virtual bet slip. Posted
+// shortly after the daily predictions fan-out so the channel gets:
+//   1) the list of 3 picks (daily),
+//   2) the featured bet slip for the top match with RM100 virtual stake.
+export function buildPreMatchMotdCaption({
+  fixture,
+  pick,
+  stake = 100,
+  siteUrl = 'https://scoreocs8.pages.dev',
+}) {
+  const home = fixture?.teams?.home?.name || 'Home';
+  const away = fixture?.teams?.away?.name || 'Away';
+  const leagueId = fixture?.league?.id;
+  const flag = LEAGUE_EMOJI[leagueId] || '⚽';
+  const league = LEAGUE_SHORT[leagueId] || fixture?.league?.name || '';
+  const conf = pick?.confidence ?? 50;
+  // Same odds curve as the /slip/ page so caption matches the graphic.
+  const odds = +(1 + (1 - conf / 100) * 2.5).toFixed(2);
+  const payout = +(stake * odds).toFixed(2);
+  const selection = pick?.pickLabel || pick?.pick || 'AI analysing';
+
+  let kickoff = '—';
+  try {
+    kickoff = new Date(fixture.fixture.date).toLocaleTimeString('en-MY', {
+      timeZone: 'Asia/Kuala_Lumpur', hour: '2-digit', minute: '2-digit', hour12: false,
+    });
+  } catch {}
+
+  const lines = [];
+  lines.push(`🎫 <b>Match of the Day</b> · 今日重点推介`);
+  lines.push(`${flag} <b>${esc(league)}</b>`);
+  lines.push('');
+  lines.push(`⚽ <b>${esc(home)} vs ${esc(away)}</b>`);
+  lines.push(`⏰ Kickoff: ${esc(kickoff)} MYT`);
+  lines.push('');
+  lines.push(`⚡ <b>AI Pick</b>: ${esc(selection)} (${conf}%)`);
+  lines.push(`💰 Virtual stake · 虚拟注码: <b>RM${esc(stake)}</b>`);
+  lines.push(`💵 Potential payout · 潜在回报: <b>RM${esc(payout.toFixed(2))}</b> @${esc(odds)}`);
+  lines.push('');
+  lines.push(`🔗 Live tracking: ${siteUrl}/`);
+  lines.push('');
+  lines.push(`⚠ 18+ · Virtual currency · Not betting advice`);
+  lines.push(`#MatchOfTheDay #ScoreOcs8 #足球预测`);
+  return lines.join('\n');
+}
+
 // Caption for match result posts: "FT · Team A 2-1 Team B"
 export function buildResultCaption({ fixture, pickCorrect = null, weekAcc = null, siteUrl = 'https://scoreocs8.pages.dev' }) {
   const home = fixture?.teams?.home?.name || 'Home';
