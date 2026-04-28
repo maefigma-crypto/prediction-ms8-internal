@@ -328,6 +328,80 @@ export async function onRequest(context) {
         const used = parseInt(await env.CACHE.get(`usage:tokens:${date}`) || '0', 10);
         return json({ date, used, budget: 8000, remaining: 8000 - used });
       }
+      case 'slips': {
+        // Unified feed for the homepage "Recent Virtual Picks" section:
+        //   running — today's MOTD (if a featured fixture exists for today)
+        //   recent  — last reconciled fixtures from history:matches
+        // Same data sources used by /slip/?fixture_id=... so card → slip
+        // page navigation always agrees on stake/odds/payout.
+        const date = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' });
+
+        const buildCard = (d) => {
+          const conf = d.confidence ?? 50;
+          const odds = +(1 + (1 - conf / 100) * 2.5).toFixed(2);
+          const stake = 100;
+          const payout = +(stake * odds).toFixed(2);
+          let selection = d.pick_label || '—';
+          if (selection === 'HOME') selection = d.home;
+          else if (selection === 'AWAY') selection = d.away;
+          else if (selection === 'DRAW') selection = 'Draw';
+          return {
+            fixture_id: d.fixture_id,
+            league_id: d.league_id || null,
+            home: d.home,
+            away: d.away,
+            kickoff_iso: d.kickoff_iso,
+            selection,
+            odds,
+            stake,
+            payout,
+            score_home: d.score_home ?? null,
+            score_away: d.score_away ?? null,
+            status: d.status,
+          };
+        };
+
+        const running = [];
+        try {
+          const todayContent = await env.CACHE.get(`content:${date}`, 'json');
+          const fx = todayContent?.top?.fixture;
+          const fixtureId = fx?.fixture?.id;
+          if (fixtureId) {
+            const pick = await env.CACHE.get(`prediction:${fixtureId}`, 'json').catch(() => null);
+            running.push(buildCard({
+              fixture_id: fixtureId,
+              league_id: fx.league?.id,
+              home: fx.teams?.home?.name,
+              away: fx.teams?.away?.name,
+              kickoff_iso: fx.fixture?.date,
+              pick_label: pick?.pickLabel || pick?.pick || null,
+              confidence: pick?.confidence ?? null,
+              status: 'running',
+            }));
+          }
+        } catch {}
+
+        let hist = [];
+        try {
+          const raw = await env.CACHE.get('history:matches');
+          if (raw) hist = JSON.parse(raw);
+        } catch {}
+
+        const recent = hist.slice(0, 6).map(h => buildCard({
+          fixture_id: h.fixture_id,
+          league_id: h.league_id,
+          home: h.home,
+          away: h.away,
+          kickoff_iso: h.kickoff_iso,
+          pick_label: h.pick,
+          confidence: h.confidence,
+          score_home: h.score_home,
+          score_away: h.score_away,
+          status: h.correct === true ? 'won' : (h.correct === false ? 'lost' : 'running'),
+        }));
+
+        return json({ updated: Date.now(), running, recent });
+      }
       default:
         return json({
           error: 'not found',

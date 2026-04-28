@@ -742,6 +742,85 @@ html,body{overflow-x:hidden;max-width:100vw;}
   </div>
 </section>
 
+<!-- ── RECENT VIRTUAL PICKS ── -->
+<section id="slips" style="position:relative;z-index:1;">
+  <div class="sec">
+    <div class="stag">Virtual</div>
+    <h2 class="stitle">Recent Virtual Picks</h2>
+    <p class="ssub">Same slips posted to our Telegram channel · Tap any card for the full slip view · Virtual currency, no real betting</p>
+    <div id="slips-row" style="display:flex;gap:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:6px 2px 14px;scroll-snap-type:x proximity;">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:40px;text-align:center;color:var(--text3);font-family:var(--fm);font-size:12px;flex:1;min-width:280px;">Loading virtual picks…</div>
+    </div>
+    <style>
+      #slips-row::-webkit-scrollbar{height:6px;}
+      #slips-row::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+      .scard{flex:0 0 280px;background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;text-decoration:none;color:inherit;display:flex;flex-direction:column;scroll-snap-align:start;transition:border-color .2s,transform .15s;}
+      .scard:hover{border-color:rgba(249,115,22,.4);transform:translateY(-2px);}
+      .scard-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--card2);border-bottom:1px solid var(--border);}
+      .scard-stake{font-family:var(--ff);font-size:14px;font-weight:700;color:var(--text);}
+      .scard-stake .sn{color:var(--accent);margin-right:4px;}
+      .scard-badge{font-family:var(--ff);font-size:10px;font-weight:700;letter-spacing:.06em;padding:3px 8px;border-radius:3px;}
+      .scard-badge.running{background:rgba(249,115,22,.12);color:var(--accent);border:1px solid rgba(249,115,22,.3);}
+      .scard-badge.won{background:rgba(0,229,160,.14);color:var(--green);border:1px solid rgba(0,229,160,.34);}
+      .scard-badge.lost{background:rgba(255,71,87,.14);color:var(--red);border:1px solid rgba(255,71,87,.34);}
+      .scard-body{padding:14px;display:flex;flex-direction:column;gap:8px;flex:1;}
+      .scard-pick{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+      .scard-sel{font-family:var(--ff);font-size:18px;font-weight:700;color:var(--text);line-height:1.2;flex:1;min-width:0;word-break:break-word;}
+      .scard-odds{font-family:var(--ff);font-size:18px;font-weight:700;color:var(--accent);flex-shrink:0;}
+      .scard-market{font-family:var(--fm);font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.04em;text-transform:uppercase;}
+      .scard-match{font-family:var(--ff);font-size:13px;font-weight:600;color:var(--accent);background:rgba(249,115,22,.06);border:1px solid rgba(249,115,22,.18);border-radius:4px;padding:8px 10px;line-height:1.3;}
+      .scard-score{font-family:var(--ff);font-size:13px;font-weight:700;color:var(--text);text-align:center;padding:6px;background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.18);border-radius:4px;}
+      .scard-foot{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--border);padding:10px 14px;}
+      .scard-fl{font-family:var(--fm);font-size:9px;font-weight:600;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;}
+      .scard-fv{font-family:var(--ff);font-size:18px;font-weight:700;color:var(--text);margin-top:2px;}
+      .scard-fv.pay{color:var(--green);}
+      .scard-fv.pay-run{color:var(--amber);}
+      .scard-fv.pay-lost{color:var(--red);text-decoration:line-through;}
+    </style>
+    <script>
+    (function(){
+      const LEAGUE_EMOJI = {39:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',2:'⭐',1:'🏆',278:'🇲🇾',140:'🇪🇸',78:'🇩🇪',135:'🇮🇹',61:'🇫🇷'};
+      const LEAGUE_SHORT = {39:'EPL',2:'UCL',1:'World Cup',278:'MSL',140:'La Liga',78:'Bundesliga',135:'Serie A',61:'Ligue 1'};
+      const esc = s => String(s ?? '').replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
+      const row = document.getElementById('slips-row');
+      const empty = msg => `<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:40px;text-align:center;color:var(--text3);font-family:var(--fm);font-size:12px;flex:1;min-width:280px;">${esc(msg)}</div>`;
+
+      fetch('/api/slips').then(r => r.ok ? r.json() : null).then(d => {
+        if (!d) { row.innerHTML = empty('Picks will appear once today’s match is featured.'); return; }
+        const all = [...(d.running || []), ...(d.recent || [])];
+        if (!all.length) { row.innerHTML = empty('No virtual picks yet — check back after 10:00 MYT when today’s slip is published.'); return; }
+        row.innerHTML = all.map(c => {
+          const flag = LEAGUE_EMOJI[c.league_id] || '⚽';
+          const lg = LEAGUE_SHORT[c.league_id] || 'Football';
+          const hasScore = c.score_home != null && c.score_away != null;
+          const payClass = c.status === 'lost' ? 'pay-lost' : (c.status === 'running' ? 'pay-run' : 'pay');
+          return `
+            <a class="scard" href="/slip/?fixture_id=${encodeURIComponent(c.fixture_id)}&status=${esc(c.status)}&stake=${c.stake}" target="_blank" rel="noopener">
+              <div class="scard-head">
+                <div class="scard-stake"><span class="sn">RM</span>${c.stake}</div>
+                <div class="scard-badge ${esc(c.status)}">${esc(c.status.toUpperCase())}</div>
+              </div>
+              <div class="scard-body">
+                <div class="scard-pick">
+                  <div class="scard-sel">${esc(c.selection)}</div>
+                  <div class="scard-odds">${esc(c.odds)}</div>
+                </div>
+                <div class="scard-market">FT.1X2 · ${flag} ${esc(lg)}</div>
+                <div class="scard-match">${esc(c.home)} vs ${esc(c.away)}</div>
+                ${hasScore ? `<div class="scard-score">FT&nbsp;&nbsp;${esc(c.score_home)} — ${esc(c.score_away)}</div>` : ''}
+              </div>
+              <div class="scard-foot">
+                <div><div class="scard-fl">Stake</div><div class="scard-fv">${c.stake}</div></div>
+                <div><div class="scard-fl">Payout</div><div class="scard-fv ${payClass}">${esc(c.payout.toFixed(2))}</div></div>
+              </div>
+            </a>`;
+        }).join('');
+      }).catch(() => { row.innerHTML = empty('Picks temporarily unavailable. Try again in a minute.'); });
+    })();
+    </script>
+  </div>
+</section>
+
 <section id="history" style="position:relative;z-index:1;">
   <div class="sec">
     <div class="stag">Transparency</div>
