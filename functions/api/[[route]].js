@@ -352,6 +352,7 @@ export async function onRequest(context) {
             away: d.away,
             kickoff_iso: d.kickoff_iso,
             selection,
+            confidence: d.confidence ?? null,
             odds,
             stake,
             payout,

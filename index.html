@@ -169,6 +169,26 @@ body > nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-it
 .easy-details summary{font-family:var(--ff);font-size:13px;font-weight:700;color:var(--accent);cursor:pointer;letter-spacing:.04em;list-style:none;}
 .easy-details summary::-webkit-details-marker{display:none;}
 .easy-details p{font-size:12px;color:var(--text2);line-height:1.65;margin-top:8px;}
+.result-strip{margin:-2px 0 12px;padding:9px 11px;border-radius:6px;font-family:var(--ff);font-size:18px;font-weight:700;letter-spacing:.06em;text-align:center;}
+.result-strip.won{background:rgba(0,229,160,.14);border:1px solid rgba(0,229,160,.34);color:var(--green);}
+.result-strip.lost{background:rgba(255,71,87,.14);border:1px solid rgba(255,71,87,.34);color:var(--red);}
+.result-strip.final{background:rgba(255,255,255,.06);border:1px solid var(--border2);color:var(--text2);}
+.proof-panel{display:grid;grid-template-columns:1.1fr 1fr;gap:12px;margin:0 0 18px;}
+.proof-box{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px 16px;}
+.proof-kicker{font-family:var(--fm);font-size:9px;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;}
+.proof-title{font-family:var(--ff);font-size:20px;font-weight:700;letter-spacing:.03em;line-height:1.15;}
+.proof-sub{font-size:12px;color:var(--text2);line-height:1.55;margin-top:5px;}
+.proof-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.proof-stat{background:rgba(255,255,255,.035);border:1px solid var(--border);border-radius:6px;padding:9px;text-align:center;}
+.proof-stat strong{display:block;font-family:var(--ff);font-size:22px;line-height:1;color:var(--accent);}
+.proof-stat span{display:block;font-family:var(--fm);font-size:8px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-top:4px;}
+.proof-list{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;}
+.proof-pick{flex:0 0 210px;background:rgba(8,11,16,.35);border:1px solid var(--border);border-radius:6px;padding:10px;}
+.proof-pick .out{font-family:var(--fm);font-size:9px;font-weight:700;letter-spacing:.08em;margin-bottom:6px;}
+.proof-pick.won .out{color:var(--green);}
+.proof-pick.lost .out{color:var(--red);}
+.proof-pick .match{font-family:var(--ff);font-size:13px;font-weight:700;line-height:1.2;color:var(--text);}
+.proof-pick .sel{font-size:12px;color:var(--text2);margin-top:6px;line-height:1.35;}
 .podds{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.05);border-top:1px solid var(--border);}
 .podds-cell{background:var(--card);padding:12px 8px;text-align:center;}
 .podds-cell.best{background:rgba(249,115,22,.06);}
@@ -306,6 +326,8 @@ html,body{overflow-x:hidden;max-width:100vw;}
   .fbar{gap:8px;}
   .fg{min-width:100%;}
   .pgrid{grid-template-columns:1fr;}
+  .proof-panel{grid-template-columns:1fr;}
+  .proof-stats{grid-template-columns:repeat(3,1fr);}
   .easy-top{grid-template-columns:1fr;}
   .easy-conf{display:flex;align-items:center;justify-content:space-between;text-align:left;min-width:0;}
   .easy-conf span{margin-top:0;}
@@ -525,9 +547,9 @@ html,body{overflow-x:hidden;max-width:100vw;}
     <h2 class="stitle" id="hl-predtitle">Match Predictions</h2>
     <p class="ssub" id="hl-predsub">Updated daily 08:00 MYT · Major leagues & international only · Powered by ScoreOcs8 AI</p>
     <div class="mtabs">
-      <button class="mtab active" onclick="switchMTab(this)">⏰ Upcoming</button>
-      <button class="mtab" onclick="switchMTab(this)">📅 Today</button>
-      <button class="mtab" onclick="switchMTab(this)">✅ Completed</button>
+      <button class="mtab active" data-mode="upcoming" onclick="switchMTab(this)">⏰ Upcoming</button>
+      <button class="mtab" data-mode="today" onclick="switchMTab(this)">📅 Today</button>
+      <button class="mtab" data-mode="completed" onclick="switchMTab(this)">✅ Completed</button>
     </div>
     <div class="fbar fu">
       <div class="fsrch"><span style="color:var(--text3);font-size:14px">🔍</span><input type="text" placeholder="Search team or league..." id="si" oninput="filterM()"></div>
@@ -540,6 +562,25 @@ html,body{overflow-x:hidden;max-width:100vw;}
     <div class="sptabs">
       <button class="sptab active" onclick="switchSp(this,'f')">⚽ Football</button>
       <button class="sptab" onclick="switchSp(this,'b')">🏸 Badminton</button>
+    </div>
+    <div class="proof-panel fu v">
+      <div class="proof-box">
+        <div class="proof-kicker">Customer proof</div>
+        <div class="proof-title">Yesterday results and winning virtual picks</div>
+        <div class="proof-sub">Show customers the settled slip outcome, final score, and whether the prediction won or lost before they read today's picks.</div>
+      </div>
+      <div class="proof-box">
+        <div class="proof-stats" id="pred-proof-stats">
+          <div class="proof-stat"><strong>--</strong><span>Accuracy</span></div>
+          <div class="proof-stat"><strong>--</strong><span>Football</span></div>
+          <div class="proof-stat"><strong>--</strong><span>Streak</span></div>
+        </div>
+      </div>
+      <div class="proof-box" style="grid-column:1/-1;">
+        <div class="proof-list" id="pred-proof-list">
+          <div class="proof-pick"><div class="out">LOADING</div><div class="match">Virtual picks record</div><div class="sel">Loading latest settled slips...</div></div>
+        </div>
+      </div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px;">
       <div style="display:flex;align-items:center;gap:10px;">
@@ -1000,7 +1041,7 @@ function updateKLTime(){const n=new Date().toLocaleString('en-MY',{timeZone:'Asi
 updateKLTime();setInterval(updateKLTime,1000);
 function switchSp(btn,s){document.querySelectorAll('.sptab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');document.getElementById('spf').style.display=s==='f'?'block':'none';document.getElementById('spb').style.display=s==='b'?'block':'none';setTimeout(()=>{document.querySelectorAll('#sp'+s+' .fu').forEach((el,i)=>{setTimeout(()=>el.classList.add('v'),i*80);});},10);}
 function switchMotd(btn,tab){document.querySelectorAll('#motd .mtab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');['today','tomorrow','table'].forEach(t=>{const el=document.getElementById('motd-'+t);if(el)el.style.display=t===tab?'block':'none';});}
-function switchMTab(btn){document.querySelectorAll('.mtab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');}
+function switchMTab(btn){document.querySelectorAll('#predictions .mtab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');window.predictionMode=btn.dataset.mode||'upcoming';if(window.renderPredictionMode)window.renderPredictionMode();}
 function filterM(){const s=document.getElementById('si').value.toLowerCase();const l=document.getElementById('lf').value;document.querySelectorAll('.pc').forEach(c=>{const tx=c.textContent.toLowerCase();const cl=c.dataset.league||'';c.style.display=(!s||tx.includes(s))&&(!l||cl===l)?'block':'none';});}
 function resetF(){document.getElementById('si').value='';document.getElementById('lf').value='';document.getElementById('fd').value='';document.getElementById('td').value='';document.querySelectorAll('.pc').forEach(c=>c.style.display='block');}
 function openModal(){const m=document.getElementById('auth-modal');m.style.display='flex';}
@@ -1180,6 +1221,41 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     return map;
   }
 
+  async function loadSlipMap() {
+    const data = await getJSON(API + '/slips');
+    const map = {};
+    const items = [...(data?.running || []), ...(data?.recent || [])];
+    for (const it of items) if (it?.fixture_id) map[it.fixture_id] = it;
+    return { data, map };
+  }
+
+  function renderProof(data) {
+    const statsEl = document.getElementById('pred-proof-stats');
+    const listEl = document.getElementById('pred-proof-list');
+    if (!statsEl && !listEl) return;
+    const settled = (data?.recent || []).filter(x => x.status === 'won' || x.status === 'lost');
+    const wins = settled.filter(x => x.status === 'won').length;
+    const acc = settled.length ? Math.round((wins / settled.length) * 100) + '%' : '--';
+    if (statsEl) {
+      statsEl.innerHTML = [
+        ['Accuracy', acc],
+        ['Settled', String(settled.length || '--')],
+        ['Wins', String(wins || '--')],
+      ].map(([label, value]) => `<div class="proof-stat"><strong>${esc(value)}</strong><span>${esc(label)}</span></div>`).join('');
+    }
+    if (!listEl) return;
+    if (!settled.length) {
+      listEl.innerHTML = `<div class="proof-pick"><div class="out">BUILDING</div><div class="match">No settled virtual picks yet</div><div class="sel">Results will appear after finished matches are checked.</div></div>`;
+      return;
+    }
+    listEl.innerHTML = settled.slice(0, 5).map(x => `
+      <div class="proof-pick ${esc(x.status)}">
+        <div class="out">${x.status === 'won' ? 'WIN' : 'LOSS'} · FT ${esc(x.score_home)}-${esc(x.score_away)}</div>
+        <div class="match">${esc(x.home)} vs ${esc(x.away)}</div>
+        <div class="sel">Pick: ${esc(x.selection)} · Odds ${esc(x.odds)}</div>
+      </div>`).join('');
+  }
+
   function plainText(s) {
     return String(s || '')
       .replace(/[#*_`>]/g, '')
@@ -1229,14 +1305,16 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
   }
 
   /* ───── Prediction cards (#pred-grid) ───── */
-  function predCard(fx, idx, aiMap) {
+  function predCard(fx, idx, aiMap, slipMap = {}) {
     const m = metaOf(fx);
     const live_ = isLive(fx);
     const homeScore = fx.goals?.home ?? '–', awayScore = fx.goals?.away ?? '–';
     const kickoff = mytTime(fx.fixture.date);
     const status = fx.fixture?.status?.short;
     const ai = aiMap[fx.fixture.id];
-    const members = idx >= 2;                  /* first 2 cards free, rest members */
+    const slip = slipMap[fx.fixture.id];
+    const completed = status === 'FT';
+    const members = !completed && idx >= 2;    /* first 2 upcoming cards free, rest members */
     const kickoffOrScore = live_
       ? `<div class="vs-score">${homeScore} — ${awayScore}</div><div class="vs-label" style="color:var(--red)">● ${fx.fixture.status.elapsed||''}'</div>`
       : status === 'FT'
@@ -1261,19 +1339,26 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     const homeName = fx.teams.home.name || 'Home';
     const awayName = fx.teams.away.name || 'Away';
     const fullAnalysis = ai?.body_en ? plainText(ai.body_en) : '';
-    const shortReason = firstSentence(fullAnalysis, 'AI preview generates daily at 07:00 MYT. Check the kickoff time and come back before the match starts.');
-    const pickLabel = pickOf(ai, homeName, awayName);
-    const confValue = confidenceOf(ai);
+    const completedReason = slip
+      ? `Final score ${slip.score_home}-${slip.score_away}. This virtual pick was marked ${slip.status === 'won' ? 'WIN' : slip.status === 'lost' ? 'LOSS' : 'PENDING'} in the public record.`
+      : 'Completed match. Result is shown for customer reference.';
+    const shortReason = completed ? completedReason : firstSentence(fullAnalysis, 'AI preview generates daily at 07:00 MYT. Check the kickoff time and come back before the match starts.');
+    const pickLabel = slip?.selection || pickOf(ai, homeName, awayName);
+    const confValue = slip?.confidence ?? confidenceOf(ai);
     const confText = confValue == null ? '--' : `${confValue}%`;
     const riskText = riskOf(confValue);
     const details = fullAnalysis
       ? `<details class="easy-details"><summary>Read full AI note</summary><p>${esc(fullAnalysis.slice(0, 520))}${fullAnalysis.length > 520 ? '...' : ''}</p></details>`
+      : '';
+    const resultStrip = completed
+      ? `<div class="result-strip ${slip?.status === 'won' ? 'won' : slip?.status === 'lost' ? 'lost' : 'final'}">${slip?.status === 'won' ? 'WIN' : slip?.status === 'lost' ? 'LOSS' : 'FINAL'} · FT ${esc(homeScore)}-${esc(awayScore)}</div>`
       : '';
 
     return `<div class="pc fu v" data-league="${m.code}" data-fixture-id="${fx.fixture.id}"${members?' style="position:relative;"':''}>
       ${membersOverlay}
       <div class="pch"><span class="pcl"><span class="lbadge" style="background:${m.swatch}">${m.flag}</span>${esc(m.name)} · ${esc(dateStr)} · ${esc(kickoff)}</span><div class="pcmeta">${badge}${freeTag}</div></div>
       <div class="pcb">
+        ${resultStrip}
         <div class="pct">
           <div class="team-side"><div class="tlogo"><img src="${esc(fx.teams.home.logo||'')}" onerror="this.style.display='none';this.parentElement.textContent='⚽'"></div><div class="tname">${esc(fx.teams.home.name)}</div></div>
           <div class="vs-mid">${kickoffOrScore}</div>
@@ -1314,15 +1399,20 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     return out;
   }
 
-  function renderPreds(all, aiMap) {
+  function renderPreds(all, aiMap, slipMap = {}) {
     const grid = document.getElementById('pred-grid'); if (!grid) return;
     const now = Date.now();
-    const upcoming = all.filter(fx => new Date(fx.fixture.date).getTime() > now || isLive(fx)).slice(0, 6);
-    if (!upcoming.length) {
-      grid.innerHTML = `<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--text3);background:var(--card);border:1px solid var(--border);border-radius:8px;">No upcoming fixtures in covered leagues. Check back later.</div>`;
+    const mode = window.predictionMode || 'upcoming';
+    let list = all.filter(fx => new Date(fx.fixture.date).getTime() > now || isLive(fx));
+    if (mode === 'today') list = all.filter(fx => klDateKey(fx.fixture.date) === klToday());
+    if (mode === 'completed') list = all.filter(fx => fx.fixture?.status?.short === 'FT');
+    list = list.slice(0, 6);
+    if (!list.length) {
+      const msg = mode === 'completed' ? 'No completed fixtures in this feed yet.' : mode === 'today' ? 'No matches scheduled today.' : 'No upcoming fixtures in covered leagues. Check back later.';
+      grid.innerHTML = `<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--text3);background:var(--card);border:1px solid var(--border);border-radius:8px;">${msg}</div>`;
       return;
     }
-    grid.innerHTML = upcoming.map((fx,i) => predCard(fx, i, aiMap)).join('');
+    grid.innerHTML = list.map((fx,i) => predCard(fx, i, aiMap, slipMap)).join('');
   }
 
   /* ───── MOTD rows ───── */
@@ -1397,19 +1487,24 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     // If any live match appears, re-render with fresh fixtures
     const fresh = await getJSON(API + '/fixtures');
     const all = flattenFixtures(fresh);
-    renderPreds(all, state.aiMap);
+    state.all = all;
+    renderPreds(all, state.aiMap, state.slipMap);
     renderMotd(all);
   }
 
   async function main() {
-    const [fixtures, standings, aiMap] = await Promise.all([
+    const [fixtures, standings, aiMap, slipBundle] = await Promise.all([
       getJSON(API + '/fixtures'),
       getJSON(API + '/standings'),
       loadAIMap(),
+      loadSlipMap(),
     ]);
     const all = flattenFixtures(fixtures);
-    const state = { aiMap };
-    renderPreds(all, aiMap);
+    const state = { all, aiMap, slipMap: slipBundle.map };
+    window.predictionState = state;
+    window.renderPredictionMode = () => renderPreds(state.all || [], state.aiMap || {}, state.slipMap || {});
+    renderProof(slipBundle.data);
+    renderPreds(all, aiMap, state.slipMap);
     renderMotd(all);
     renderStandings(standings);
 
