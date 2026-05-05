@@ -153,6 +153,22 @@ body > nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-it
 .ppred-clbl{font-family:var(--fm);font-size:9px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;}
 .ppred-cval{font-family:var(--ff);font-size:26px;font-weight:700;color:var(--green);line-height:1;}
 .ppred-analysis{font-size:12px;color:var(--text2);line-height:1.65;border-top:1px solid rgba(249,115,22,.15);padding-top:10px;}
+.easy-read{margin-top:14px;background:linear-gradient(180deg,rgba(0,229,160,.08),rgba(249,115,22,.06));border:1px solid rgba(0,229,160,.18);border-radius:8px;padding:13px;}
+.easy-top{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start;margin-bottom:11px;}
+.easy-label{font-family:var(--fm);font-size:9px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px;}
+.easy-pick{font-family:var(--ff);font-size:19px;font-weight:700;line-height:1.12;color:var(--text);letter-spacing:.02em;}
+.easy-conf{min-width:72px;text-align:center;background:rgba(8,11,16,.45);border:1px solid var(--border2);border-radius:6px;padding:7px 8px;}
+.easy-conf strong{display:block;font-family:var(--ff);font-size:24px;line-height:1;color:var(--green);}
+.easy-conf span{display:block;font-family:var(--fm);font-size:8px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-top:3px;}
+.easy-why{font-size:13px;color:var(--text2);line-height:1.55;border-top:1px solid rgba(255,255,255,.08);padding-top:10px;}
+.easy-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px;}
+.easy-stat{background:rgba(8,11,16,.35);border:1px solid rgba(255,255,255,.07);border-radius:5px;padding:7px 8px;}
+.easy-stat span{display:block;font-family:var(--fm);font-size:8px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px;}
+.easy-stat strong{display:block;font-family:var(--ff);font-size:13px;font-weight:700;color:var(--text);line-height:1.15;}
+.easy-details{margin-top:10px;border-top:1px solid rgba(255,255,255,.08);padding-top:8px;}
+.easy-details summary{font-family:var(--ff);font-size:13px;font-weight:700;color:var(--accent);cursor:pointer;letter-spacing:.04em;list-style:none;}
+.easy-details summary::-webkit-details-marker{display:none;}
+.easy-details p{font-size:12px;color:var(--text2);line-height:1.65;margin-top:8px;}
 .podds{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.05);border-top:1px solid var(--border);}
 .podds-cell{background:var(--card);padding:12px 8px;text-align:center;}
 .podds-cell.best{background:rgba(249,115,22,.06);}
@@ -290,6 +306,10 @@ html,body{overflow-x:hidden;max-width:100vw;}
   .fbar{gap:8px;}
   .fg{min-width:100%;}
   .pgrid{grid-template-columns:1fr;}
+  .easy-top{grid-template-columns:1fr;}
+  .easy-conf{display:flex;align-items:center;justify-content:space-between;text-align:left;min-width:0;}
+  .easy-conf span{margin-top:0;}
+  .easy-meta{grid-template-columns:1fr;}
   .mtabs{width:100%;}
   .mtab{flex:1;padding:8px 12px;font-size:12px;}
   .sptabs{width:100%;}
@@ -1159,6 +1179,54 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     return map;
   }
 
+  function plainText(s) {
+    return String(s || '')
+      .replace(/[#*_`>]/g, '')
+      .replace(/\[[^\]]+\]\([^)]+\)/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function firstSentence(s, fallback) {
+    const text = plainText(s);
+    if (!text) return fallback;
+    const parts = text.match(/[^.!?]+[.!?]+/g);
+    return (parts?.[0] || text).slice(0, 185).trim();
+  }
+
+  function confidenceOf(ai) {
+    const joined = `${ai?.confidence || ''} ${ai?.title_en || ''} ${ai?.body_en || ''}`;
+    const match = joined.match(/(\d{2,3})\s*%/);
+    if (!match) return null;
+    const value = Math.max(0, Math.min(100, Number(match[1])));
+    return Number.isFinite(value) ? value : null;
+  }
+
+  function riskOf(conf) {
+    if (conf == null) return 'Pending';
+    if (conf >= 70) return 'Lower risk';
+    if (conf >= 55) return 'Medium risk';
+    return 'High risk';
+  }
+
+  function escapeRegExp(s) {
+    return String(s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  function pickOf(ai, home, away) {
+    const direct = ai?.pickLabel || ai?.pick || '';
+    if (direct) return direct;
+    const title = plainText(ai?.title_en);
+    if (!title) return 'AI analysing';
+    return title
+      .replace(/\b(prediction|preview|betting tips?|odds)\b/gi, '')
+      .replace(new RegExp(`${escapeRegExp(home)}\\s+vs\\s+${escapeRegExp(away)}`, 'i'), '')
+      .replace(/\s*[:|-]\s*/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 72) || title.slice(0, 72);
+  }
+
   /* ───── Prediction cards (#pred-grid) ───── */
   function predCard(fx, idx, aiMap) {
     const m = metaOf(fx);
@@ -1189,9 +1257,17 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
         <a href="#subscribe" style="background:var(--accent);color:#fff;font-family:var(--ff);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:8px 20px;border-radius:4px;text-decoration:none;">Get Free Trial</a>
       </div>` : '';
     const dateStr = mytDate(fx.fixture.date);
-    const analysis = ai?.body_en ? esc(ai.body_en.replace(/[#*`]/g,'').slice(0, 220)) + '…' : 'AI preview generates daily at 07:00 MYT. Full analysis unlocks after sign-up.';
-    const pickLabel = ai?.title_en ? esc(ai.title_en.slice(0, 60)) : 'Pending';
-    const conf = ai ? `<div class="ppred-clbl">Confidence</div><div class="ppred-cval" style="color:var(--accent)">—</div>` : `<div class="ppred-clbl">Status</div><div class="ppred-cval" style="color:var(--text2);font-size:14px;">${status || 'NS'}</div>`;
+    const homeName = fx.teams.home.name || 'Home';
+    const awayName = fx.teams.away.name || 'Away';
+    const fullAnalysis = ai?.body_en ? plainText(ai.body_en) : '';
+    const shortReason = firstSentence(fullAnalysis, 'AI preview generates daily at 07:00 MYT. Check the kickoff time and come back before the match starts.');
+    const pickLabel = pickOf(ai, homeName, awayName);
+    const confValue = confidenceOf(ai);
+    const confText = confValue == null ? '--' : `${confValue}%`;
+    const riskText = riskOf(confValue);
+    const details = fullAnalysis
+      ? `<details class="easy-details"><summary>Read full AI note</summary><p>${esc(fullAnalysis.slice(0, 520))}${fullAnalysis.length > 520 ? '...' : ''}</p></details>`
+      : '';
 
     return `<div class="pc fu v" data-league="${m.code}" data-fixture-id="${fx.fixture.id}"${members?' style="position:relative;"':''}>
       ${membersOverlay}
@@ -1202,9 +1278,21 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
           <div class="vs-mid">${kickoffOrScore}</div>
           <div class="team-side"><div class="tlogo"><img src="${esc(fx.teams.away.logo||'')}" onerror="this.style.display='none';this.parentElement.textContent='⚽'"></div><div class="tname">${esc(fx.teams.away.name)}</div></div>
         </div>
-        <div class="ppred">
-          <div class="ppred-head"><div class="ppred-left"><div class="ppred-icon">🎯</div><div><div class="ppred-lbl">AI Prediction</div><div class="ppred-pick">${pickLabel}</div></div></div><div class="ppred-conf">${conf}</div></div>
-          <div class="ppred-analysis">${analysis}</div>
+        <div class="easy-read">
+          <div class="easy-top">
+            <div>
+              <div class="easy-label">Quick pick</div>
+              <div class="easy-pick">${esc(pickLabel)}</div>
+            </div>
+            <div class="easy-conf"><strong>${esc(confText)}</strong><span>Confidence</span></div>
+          </div>
+          <div class="easy-why">${esc(shortReason)}</div>
+          <div class="easy-meta">
+            <div class="easy-stat"><span>Risk</span><strong>${esc(riskText)}</strong></div>
+            <div class="easy-stat"><span>Kickoff</span><strong>${esc(kickoff)}</strong></div>
+            <div class="easy-stat"><span>Market</span><strong>1X2 result</strong></div>
+          </div>
+          ${details}
         </div>
       </div>
     </div>`;
