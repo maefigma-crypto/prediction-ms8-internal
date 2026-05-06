@@ -173,12 +173,13 @@ body > nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-it
 .detail-btn:hover{background:var(--accent2);transform:translateY(-1px);}
 .pick-help-btn{margin-top:8px;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:transparent;color:var(--amber);border:1px solid rgba(245,166,35,.35);border-radius:6px;padding:10px 12px;font-family:var(--ff);font-size:15px;font-weight:700;letter-spacing:.04em;cursor:pointer;transition:border-color .2s,color .2s;}
 .pick-help-btn:hover{border-color:var(--amber);color:#ffd166;}
-.help-example{background:#333;color:#fff;border-radius:8px;overflow:hidden;margin:16px 0;}
-.help-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;border-top:1px solid rgba(255,255,255,.35);}
-.help-row:first-child{border-top:none;background:#444;font-weight:700;}
+.pick-meaning{font-size:14px;color:var(--green);line-height:1.45;margin-top:7px;font-weight:600;}
+.help-example{background:var(--bg3);color:var(--text);border:1px solid var(--border2);border-radius:8px;overflow:hidden;margin:16px 0;}
+.help-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;border-top:1px solid var(--border);}
+.help-row:first-child{border-top:none;background:var(--card2);font-weight:700;color:var(--text);}
 .help-cell{padding:10px 12px;text-align:center;}
-.help-win{color:#ffd400;font-weight:800;}
-.help-lose{color:#fff;font-weight:800;}
+.help-win{color:var(--green);font-weight:800;}
+.help-lose{color:var(--red);font-weight:800;}
 .result-strip{margin:-2px 0 12px;padding:9px 11px;border-radius:6px;font-family:var(--ff);font-size:18px;font-weight:700;letter-spacing:.06em;text-align:center;}
 .result-strip.won{background:rgba(0,229,160,.14);border:1px solid rgba(0,229,160,.34);color:var(--green);}
 .result-strip.lost{background:rgba(255,71,87,.14);border:1px solid rgba(255,71,87,.34);color:var(--red);}
@@ -450,10 +451,10 @@ html,body{overflow-x:hidden;max-width:100vw;}
 
 <!-- PICK EXPLAINER MODAL -->
 <div id="pick-help-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:700;align-items:center;justify-content:center;padding:18px;">
-  <div style="width:min(560px,94vw);background:#fff;color:#111;border-radius:12px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.55);">
-    <div style="background:#ffd400;padding:15px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
-      <div style="font-family:var(--ff);font-size:26px;font-weight:700;color:#000;">What does this pick mean?</div>
-      <button onclick="closePickHelp()" style="background:transparent;border:none;color:#111;font-size:32px;line-height:1;cursor:pointer;font-weight:700;">×</button>
+  <div style="width:min(560px,94vw);background:var(--card);color:var(--text);border:1px solid rgba(249,115,22,.35);border-radius:12px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.55);">
+    <div style="background:var(--card2);padding:15px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--border);">
+      <div style="font-family:var(--ff);font-size:26px;font-weight:700;color:var(--text);">What does this pick mean?</div>
+      <button onclick="closePickHelp()" style="background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--text2);font-size:28px;line-height:1;cursor:pointer;font-weight:700;width:38px;height:38px;">×</button>
     </div>
     <div id="pick-help-body" style="padding:22px 24px 24px;font-family:var(--fb);font-size:16px;line-height:1.55;"></div>
   </div>
@@ -1200,7 +1201,7 @@ function openPickHelp(home,away,pick){
     intro=`<p><strong>${esc(pickedTeam)} win</strong> means the pick wins if ${esc(pickedTeam)} has more goals at full-time.</p><p>This is the simple 1X2 result market: Home win, Draw, or Away win.</p>`;
     rows=`<div class="help-example"><div class="help-row"><div class="help-cell">Result</div><div class="help-cell">Example</div><div class="help-cell">Outcome</div></div><div class="help-row"><div class="help-cell">${esc(pickedTeam)} win</div><div class="help-cell">2 - 1</div><div class="help-cell help-win">WIN</div></div><div class="help-row"><div class="help-cell">Draw</div><div class="help-cell">1 - 1</div><div class="help-cell help-lose">LOSE</div></div><div class="help-row"><div class="help-cell">${esc(pickedTeam)} lose</div><div class="help-cell">0 - 1</div><div class="help-cell help-lose">LOSE</div></div></div>`;
   }
-  body.innerHTML=`${intro}${rows}<p style="font-size:13px;color:#555;margin-top:14px;">Beginner note: this is an explanation of the prediction market, not a guarantee. Always treat predictions as information, not certainty.</p><button onclick="closePickHelp()" style="width:100%;margin-top:12px;background:#ffd400;border:none;border-radius:20px;padding:12px;font-family:var(--ff);font-size:18px;font-weight:700;cursor:pointer;">Close</button>`;
+  body.innerHTML=`${intro}${rows}<p style="font-size:13px;color:var(--text2);margin-top:14px;">Beginner note: this is an explanation of the prediction market, not a guarantee. Always treat predictions as information, not certainty.</p><button onclick="closePickHelp()" style="width:100%;margin-top:12px;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:12px;font-family:var(--ff);font-size:18px;font-weight:700;cursor:pointer;">Close</button>`;
   modal.style.display='flex';
 }
 function closeMatchDetail(){const m=document.getElementById('match-detail-modal');if(m)m.style.display='none';}
@@ -1505,15 +1506,40 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
   function pickOf(ai, home, away) {
     const direct = ai?.pickLabel || ai?.pick || '';
     if (direct) return direct;
+    const body = plainText(ai?.body_en);
+    const scorePattern = new RegExp(`${escapeRegExp(home)}\\s+(\\d+)\\s*[-–]\\s*(\\d+)\\s+${escapeRegExp(away)}|${escapeRegExp(away)}\\s+(\\d+)\\s*[-–]\\s*(\\d+)\\s+${escapeRegExp(home)}`, 'i');
+    const scoreMatch = body.match(scorePattern);
+    if (scoreMatch) {
+      const homeFirst = scoreMatch[1] != null;
+      const firstScore = Number(homeFirst ? scoreMatch[1] : scoreMatch[3]);
+      const secondScore = Number(homeFirst ? scoreMatch[2] : scoreMatch[4]);
+      if (firstScore === secondScore) return 'Draw';
+      const firstTeam = homeFirst ? home : away;
+      const secondTeam = homeFirst ? away : home;
+      return `${firstScore > secondScore ? firstTeam : secondTeam} win`;
+    }
     const title = plainText(ai?.title_en);
     if (!title) return 'AI analysing';
-    return title
+    const cleaned = title
       .replace(/\b(prediction|preview|betting tips?|odds)\b/gi, '')
       .replace(new RegExp(`${escapeRegExp(home)}\\s+vs\\s+${escapeRegExp(away)}`, 'i'), '')
       .replace(/\s*[:|-]\s*/g, ' ')
       .replace(/\s+/g, ' ')
       .trim()
       .slice(0, 72) || title.slice(0, 72);
+    if (cleaned && cleaned.toLowerCase() !== home.toLowerCase() && cleaned.toLowerCase() !== away.toLowerCase()) return cleaned;
+    return cleaned ? `${cleaned} win` : 'AI analysing';
+  }
+
+  function pickMeaning(pick, home, away) {
+    const text = String(pick || '').toLowerCase();
+    if (text.includes('draw')) return `This pick wins only if ${home} and ${away} finish level.`;
+    const team = text.includes(String(away).toLowerCase()) ? away : text.includes(String(home).toLowerCase()) ? home : '';
+    const handicap = text.match(/([+-]\d+(?:\.\d+)?)/)?.[1];
+    if (team && (handicap === '-0.50' || handicap === '-0.5')) return `${team} must win at full-time. Draw or loss means this pick loses.`;
+    if (team && (handicap === '+0.50' || handicap === '+0.5')) return `${team} can win or draw. It only loses if ${team} loses.`;
+    if (team) return `${team} must win at full-time for this 1X2 pick to win.`;
+    return 'Confidence shows how strong the AI rates this pick, not a guaranteed result.';
   }
 
   function renderLiveCenter(all, aiMap, slipMap = {}) {
@@ -1642,6 +1668,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
             <div class="easy-conf"><strong>${esc(confText)}</strong><span>Confidence</span></div>
           </div>
           <div class="easy-why">${esc(shortReason)}</div>
+          <div class="pick-meaning">${esc(pickMeaning(pickLabel, homeName, awayName))}</div>
           <div class="easy-meta">
             <div class="easy-stat"><span>Risk</span><strong>${esc(riskText)}</strong></div>
             <div class="easy-stat"><span>Kickoff</span><strong>${esc(kickoff)}</strong></div>
