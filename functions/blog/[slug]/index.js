@@ -118,7 +118,7 @@ function renderPost(post, settings, url) {
   <textarea id="raw" style="display:none">${escHtml(contentSource)}</textarea>
   <div class="tg-cta">
     <div><strong>Free daily picks on Telegram</strong><br><span style="font-size:13px;color:var(--text2);">Auto-posted before every match. No spam.</span></div>
-    <a href="https://t.me/livebad" target="_blank" rel="noopener" class="tg-btn">Join @livebad</a>
+    <a href="https://t.me/scoreocs8" target="_blank" rel="noopener" class="tg-btn">Join @scoreocs8</a>
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>

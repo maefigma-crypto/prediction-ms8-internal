@@ -8,5 +8,5 @@
   "search_console_verify": "",
   "auto_sitemap": true,
   "robots_txt": "User-agent: *\nAllow: /\nDisallow: /admin/\nSitemap: https://scoreocs8.pages.dev/sitemap.xml",
-  "organisation_schema": "{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"SportsOrganization\",\n  \"name\": \"ScoreOcs8\",\n  \"url\": \"https://scoreocs8.pages.dev\",\n  \"logo\": \"https://scoreocs8.pages.dev/images/logo.png\",\n  \"sameAs\": [\"https://t.me/livebad\"]\n}"
+  "organisation_schema": "{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"SportsOrganization\",\n  \"name\": \"ScoreOcs8\",\n  \"url\": \"https://scoreocs8.pages.dev\",\n  \"logo\": \"https://scoreocs8.pages.dev/images/logo.png\",\n  \"sameAs\": [\"https://t.me/scoreocs8\"]\n}"
 }
