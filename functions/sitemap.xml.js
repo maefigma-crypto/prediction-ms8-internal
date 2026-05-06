@@ -8,9 +8,17 @@ export async function onRequestGet({ env }) {
   ]);
   const posts = [...kvPosts, ...githubPosts];
 
+  const today = new Date().toISOString().slice(0, 10);
   const urls = [
-    { loc: `${SITE_URL}/`, priority: '1.0', changefreq: 'daily' },
-    { loc: `${SITE_URL}/blog/`, priority: '0.9', changefreq: 'daily' },
+    { loc: `${SITE_URL}/`,                                priority: '1.0', changefreq: 'daily',  lastmod: today },
+    { loc: `${SITE_URL}/blog/`,                           priority: '0.9', changefreq: 'daily',  lastmod: today },
+    { loc: `${SITE_URL}/predictions/premier-league/`,     priority: '0.9', changefreq: 'daily',  lastmod: today },
+    { loc: `${SITE_URL}/predictions/champions-league/`,   priority: '0.9', changefreq: 'daily',  lastmod: today },
+    { loc: `${SITE_URL}/predictions/la-liga/`,            priority: '0.9', changefreq: 'daily',  lastmod: today },
+    { loc: `${SITE_URL}/predictions/serie-a/`,            priority: '0.9', changefreq: 'daily',  lastmod: today },
+    { loc: `${SITE_URL}/predictions/bundesliga/`,         priority: '0.9', changefreq: 'daily',  lastmod: today },
+    { loc: `${SITE_URL}/predictions/ligue-1/`,            priority: '0.9', changefreq: 'daily',  lastmod: today },
+    { loc: `${SITE_URL}/predictions/fifa-world-cup/`,     priority: '0.9', changefreq: 'weekly', lastmod: today },
   ];
 
   for (const p of posts) {
