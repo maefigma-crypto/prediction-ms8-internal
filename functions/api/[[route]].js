@@ -3,9 +3,9 @@ const ODDS_API_BASE = 'https://api.the-odds-api.com/v4';
 const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
 const CLAUDE_MODEL = 'claude-sonnet-4-6';
 
-const LEAGUES = { MSL: 278, EPL: 39, UCL: 2, WC: 1 };
+const LEAGUES = { EPL: 39, UCL: 2, WC: 1 };
 const DEFAULT_SEASON = '2025';
-const ODDS_SPORT = 'soccer_malaysia_super_league';
+const ODDS_SPORT = 'soccer_epl';
 
 const TTL = {
   live: 60,
@@ -110,8 +110,7 @@ async function handleFixtures(env, url) {
 async function handleStandings(env, url) {
   const season = url.searchParams.get('season') || DEFAULT_SEASON;
   const refresh = url.searchParams.get('refresh') === '1';
-  // Default to MSL for backwards compat, but accept any league id.
-  const leagueId = parseInt(url.searchParams.get('league') || String(LEAGUES.MSL), 10);
+  const leagueId = parseInt(url.searchParams.get('league') || String(LEAGUES.EPL), 10);
   return cached(env, `standings:${leagueId}:${season}`, TTL.standings, async () => {
     try {
       const data = await afGet(env, '/standings', { league: leagueId, season });

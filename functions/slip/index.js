@@ -14,13 +14,13 @@
 // works across Telegram, IG feed, X, Threads without cropping.
 
 const LEAGUE_EMOJI = {
-  39: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 2: '⭐', 1: '🏆', 278: '🇲🇾',
+  39: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 2: '⭐', 1: '🏆',
   140: '🇪🇸', 78: '🇩🇪', 135: '🇮🇹', 61: '🇫🇷',
 };
 
 const LEAGUE_SHORT = {
   39: 'PREMIER LEAGUE', 2: 'UEFA CHAMPIONS LEAGUE',
-  1: 'FIFA WORLD CUP', 278: 'MALAYSIA SUPER LEAGUE',
+  1: 'FIFA WORLD CUP',
   140: 'LA LIGA', 78: 'BUNDESLIGA',
   135: 'SERIE A', 61: 'LIGUE 1',
 };
