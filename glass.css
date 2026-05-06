@@ -337,7 +337,19 @@ body > .card::before {
 }
 
 /* --- MOBILE TWEAKS --- */
+@media (max-width: 900px) {
+  nav { padding: 0 1rem !important; }
+  .nav-logo img { height: 28px !important; }
+}
 @media (max-width: 600px) {
   .league-hero h1 { font-size: 32px !important; }
   .page-title { font-size: 32px !important; }
+  nav { padding: 0 12px !important; }
+  .nav-logo img { height: 24px !important; }
+  .nav-right { gap: 6px !important; }
+  .btn-nav { padding: 7px 14px !important; font-size: 12px !important; letter-spacing: .04em !important; }
+}
+@media (max-width: 380px) {
+  .nav-logo img { height: 22px !important; }
+  .btn-nav { padding: 6px 11px !important; font-size: 11px !important; }
 }

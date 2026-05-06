@@ -746,15 +746,25 @@ footer{
 
 /* MOBILE ADJUSTMENTS */
 @media(max-width:900px){
-  body > nav{left:10px;right:10px;border-radius:24px;padding:8px 10px;}
-  .ticker-wrap{margin-top:88px;}
+  body > nav{left:10px;right:10px;border-radius:24px;padding:6px 8px;}
+  .nav-logo img{height:28px !important;}
+  .ticker-wrap{margin-top:84px;}
   .hero h1{font-size:44px;}
 }
 @media(max-width:600px){
-  body > nav{left:8px;right:8px;border-radius:20px;}
-  .ticker-wrap{margin-top:84px;}
+  body > nav{left:8px;right:8px;border-radius:20px;padding:6px 6px 6px 8px;}
+  .nav-logo img{height:24px !important;}
+  .nav-right{gap:6px !important;}
+  .lang-btn{padding:5px 8px !important;font-size:11px !important;}
+  .nav-signup{padding:7px 14px !important;font-size:12px !important;letter-spacing:.04em !important;}
+  .ticker-wrap{margin-top:80px;}
   .hero h1{font-size:34px;}
   .hcard{display:block !important;}
+}
+@media(max-width:380px){
+  .nav-logo img{height:22px !important;}
+  .lang-btn{padding:4px 7px !important;font-size:10px !important;}
+  .nav-signup{padding:6px 11px !important;font-size:11px !important;}
 }
 </style>
 </head>
