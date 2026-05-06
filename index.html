@@ -269,7 +269,8 @@ body > nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-it
 .intro-points div{background:rgba(8,11,16,.44);border:1px solid var(--border);border-radius:8px;padding:12px;}
 .intro-points strong{display:block;font-family:var(--ff);font-size:26px;color:var(--accent);line-height:1;}
 .intro-points span{display:block;font-size:13px;color:var(--text2);margin-top:5px;line-height:1.35;}
-.banner-slot{min-height:250px;border:1px dashed rgba(249,115,22,.42);border-radius:10px;background:linear-gradient(135deg,rgba(249,115,22,.16),rgba(20,30,42,.88));display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:24px;}
+.banner-slot{min-height:250px;border:1px solid rgba(249,115,22,.32);border-radius:10px;background:var(--card);overflow:hidden;display:block;padding:0;box-shadow:0 18px 46px rgba(0,0,0,.28);}
+.banner-slot img{width:100%;height:100%;min-height:250px;object-fit:cover;display:block;}
 .banner-tag{font-family:var(--fm);font-size:10px;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;}
 .banner-title{font-family:var(--ff);font-size:30px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;line-height:1.05;}
 .banner-sub{font-size:14px;color:var(--text2);max-width:360px;margin-top:10px;}
@@ -464,7 +465,7 @@ html,body{overflow-x:hidden;max-width:100vw;}
   .intro-inner{grid-template-columns:1fr;padding-top:34px;padding-bottom:34px;}
   .intro-copy{padding:18px;}
   .intro-points{grid-template-columns:1fr;}
-  .banner-slot{min-height:190px;}
+  .banner-slot,.banner-slot img{min-height:190px;}
   .banner-title{font-size:24px;}
   .easy-top{grid-template-columns:1fr;}
   .easy-conf{display:flex;align-items:center;justify-content:space-between;text-align:left;min-width:0;}
@@ -699,9 +700,7 @@ html,body{overflow-x:hidden;max-width:100vw;}
       </div>
     </div>
     <div class="banner-slot fu v">
-      <div class="banner-tag">Banner Space</div>
-      <div class="banner-title">Add your promotion banner here</div>
-      <div class="banner-sub">Best for trial offer, Telegram channel, or big-match campaign.</div>
+      <img src="/images/promotion-banner-pro-picks.png" alt="ScoreOcs8 big match picks promotion banner">
     </div>
   </div>
 </section>
