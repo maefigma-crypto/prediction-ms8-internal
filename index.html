@@ -6,9 +6,9 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ScoreOcs8 - Pro Sports Predictions | Football & Badminton</title>
-<meta name="description" content="ScoreOcs8 delivers pro football and badminton predictions for EPL, UCL, FIFA World Cup 2026 and BWF. Telegram member access available.">
-<meta name="keywords" content="football prediction Malaysia, badminton prediction BWF, sports prediction Malaysia, EPL prediction MYT, FIFA World Cup 2026 Malaysia, ScoreOcs8, Lee Zii Jia prediction, Asian handicap guide Malaysia">
+<title>ScoreOcs8 — Best Malaysia Online Casino Soccer Prediction</title>
+<meta name="description" content="ScoreOcs8 is Malaysia's best online casino soccer prediction site — pro picks for EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup 2026. Free Telegram tips, daily updates in MYT.">
+<meta name="keywords" content="Malaysia online casino soccer prediction, Malaysia football prediction, EPL prediction Malaysia, UCL prediction Malaysia, FIFA World Cup 2026 Malaysia, Asian handicap Malaysia, ScoreOcs8, soccer betting tips Malaysia, online casino football pick">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -329,7 +329,7 @@ body > nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-it
 .csumv{background:var(--bg3);border-radius:4px;padding:10px;text-align:center;}
 .csvv{font-family:var(--ff);font-size:18px;font-weight:700;color:var(--accent);}
 .csvl{font-family:var(--fm);font-size:9px;color:var(--text3);letter-spacing:.06em;margin-top:2px;}
-.agrid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:1.75rem;}
+.agrid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:1.75rem;}
 .ac{background:var(--card);padding:1.5rem;text-align:center;}
 .acv{font-family:var(--ff);font-size:38px;font-weight:700;color:var(--accent);line-height:1;}
 .acl{font-family:var(--fm);font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-top:4px;}
@@ -823,8 +823,11 @@ footer{
       <div class="dm">
         <a href="/predictions/premier-league/">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</a>
         <a href="/predictions/champions-league/">⭐ Champions League</a>
+        <a href="/predictions/la-liga/">🇪🇸 La Liga</a>
+        <a href="/predictions/serie-a/">🇮🇹 Serie A</a>
+        <a href="/predictions/bundesliga/">🇩🇪 Bundesliga</a>
+        <a href="/predictions/ligue-1/">🇫🇷 Ligue 1</a>
         <a href="/predictions/fifa-world-cup/">🏆 FIFA World Cup 2026</a>
-        <a href="/predictions/badminton/">🏸 BWF Badminton</a>
       </div>
     </li>
   </ul>
@@ -934,7 +937,7 @@ footer{
     <div class="intro-copy fu v">
       <div class="stag">Member Access</div>
       <h2 class="stitle">Big Match Predictions, Simple To Read</h2>
-      <p class="ssub">ScoreOcs8 focuses on major football and badminton matches only. Login with Telegram, join our channel, then enter your Telegram channel member ID to unlock the full prediction page.</p>
+      <p class="ssub">ScoreOcs8 focuses on major soccer leagues only — EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup. Login with Telegram, join our channel, then enter your Telegram channel member ID to unlock the full prediction page.</p>
       <div class="intro-points">
         <div><strong>1</strong><span>Login with Telegram</span></div>
         <div><strong>2</strong><span>Join @livebad channel</span></div>
@@ -969,10 +972,6 @@ footer{
       <button class="mtab active" data-mode="upcoming" onclick="switchMTab(this)">⏰ Upcoming</button>
       <button class="mtab" data-mode="today" onclick="switchMTab(this)">📅 Today</button>
       <button class="mtab" data-mode="completed" onclick="switchMTab(this)">✅ Completed</button>
-    </div>
-    <div class="sptabs">
-      <button class="sptab active" onclick="switchSp(this,'f')">⚽ Football</button>
-      <button class="sptab" onclick="switchSp(this,'b')">🏸 Badminton</button>
     </div>
     <div class="live-center fu v" id="live-center">
       <div class="live-head">
@@ -1022,70 +1021,7 @@ footer{
       </div>
       <a href="#subscribe" style="font-family:var(--fm);font-size:11px;color:var(--accent);text-decoration:none;border:1px solid rgba(249,115,22,.3);padding:4px 12px;border-radius:3px;transition:all .2s;">Unlock all 6 → Free trial</a>
     </div>
-    <div id="spf">
-      <div class="pgrid" id="pred-grid"><div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--text3);background:var(--card);border:1px solid var(--border);border-radius:8px;font-family:var(--fm);font-size:12px;">Loading predictions…</div></div>
-    </div>
-    <div id="spb" style="display:none">
-      <div class="badminton-note fu v">
-        <div>
-          <strong>Badminton is a focused board</strong>
-          <span>Because there are fewer daily badminton matches, show only the best singles, doubles, or team tie picks instead of filling the page with low-quality volume.</span>
-        </div>
-        <div class="mini"><b>Best format</b><span>Match winner, current set score, player form, ranking gap, and H2H record.</span></div>
-        <div class="mini"><b>Customer view</b><span>Fewer cards, larger text, clearer risk, and one reason why the pick makes sense.</span></div>
-      </div>
-      <div class="pgrid">
-
-        <div class="pc fu" data-league="bwf">
-          <div class="pch"><span class="pcl"><span class="lbadge" style="background:#1a1a20">🏸</span>BWF World Tour Finals · Today 15:00 MYT</span><div class="pcmeta"><span class="bpred">PRO PICK</span><span class="badge-low">Low Risk</span></div></div>
-          <div class="pcb">
-            <div class="pct">
-              <div class="team-side"><div class="tlogo" style="font-size:28px">🇲🇾</div><div class="tname">Lee Zii Jia</div><div class="tform"><span class="fd fw">W</span><span class="fd fw">W</span><span class="fd fl">L</span><span class="fd fw">W</span><span class="fd fw">W</span></div><span class="fstreak good">3 Wins</span></div>
-              <div class="vs-mid"><div class="vs-score" style="font-size:24px;color:var(--text2)">VS</div><div class="vs-time">15:00 MYT</div></div>
-              <div class="team-side"><div class="tlogo" style="font-size:28px">🇩🇰</div><div class="tname">V. Axelsen</div><div class="tform"><span class="fd fw">W</span><span class="fd fw">W</span><span class="fd fw">W</span><span class="fd fdraw">D</span><span class="fd fw">W</span></div><span class="fstreak good">4 Wins</span></div>
-            </div>
-            <div class="ppred">
-              <div class="ppred-head"><div class="ppred-left"><div class="ppred-icon">🎯</div><div><div class="ppred-lbl">Pro Analysis</div><div class="ppred-pick">Lee Zii Jia Win</div></div></div><div class="ppred-conf"><div class="ppred-clbl">Confidence</div><div class="ppred-cval">54%</div></div></div>
-              <div class="ppred-analysis">Lee Zii Jia on a strong home run and comfortable on fast courts. Axelsen dominant globally but Lee ZJ's head-to-head record improved significantly in 2025. Narrow pick for the Malaysian.</div>
-            </div>
-          </div>
-          <div class="podds"><div class="podds-cell best"><div class="podds-lbl">Lee Zii Jia</div><div class="podds-val">1.95</div><div class="podds-prob">51% implied</div></div><div class="podds-cell"><div class="podds-lbl">Axelsen</div><div class="podds-val">1.85</div><div class="podds-prob">54% implied</div></div></div>
-        </div>
-
-        <div class="pc fu" data-league="bwf" style="transition-delay:.1s">
-          <div class="pch"><span class="pcl"><span class="lbadge" style="background:#1a1a20">🏸</span>BWF Thomas Cup · Group Stage</span><div class="pcmeta"><span class="blive"><span class="ldot"></span>LIVE Match 4</span><span class="badge-high">High Risk</span></div></div>
-          <div class="pcb">
-            <div class="pct">
-              <div class="team-side"><div class="tlogo" style="font-size:28px">🇲🇾</div><div class="tname">Malaysia</div><div class="tform"><span class="fd fw">W</span><span class="fd fl">L</span><span class="fd fw">W</span><span class="fd fl">L</span><span class="fd fw">W</span></div><span class="fstreak good">2 Wins</span></div>
-              <div class="vs-mid"><div class="vs-score">2 — 1</div><div class="vs-label" style="color:var(--red)">● Match 4</div></div>
-              <div class="team-side"><div class="tlogo" style="font-size:28px">🇨🇳</div><div class="tname">China</div><div class="tform"><span class="fd fw">W</span><span class="fd fw">W</span><span class="fd fw">W</span><span class="fd fw">W</span><span class="fd fw">W</span></div><span class="fstreak good">5 Wins</span></div>
-            </div>
-            <div class="ppred">
-              <div class="ppred-head"><div class="ppred-left"><div class="ppred-icon">🎯</div><div><div class="ppred-lbl">Pro Analysis</div><div class="ppred-pick">China Win (3-2)</div></div></div><div class="ppred-conf"><div class="ppred-clbl">Confidence</div><div class="ppred-cval">62%</div></div></div>
-              <div class="ppred-analysis">China's depth is exceptional — even trailing 1-2 they have strong singles options. Malaysia putting up a fight but China expected to close out in singles. Historic record strongly favours China.</div>
-            </div>
-          </div>
-          <div class="podds"><div class="podds-cell"><div class="podds-lbl">Malaysia</div><div class="podds-val">3.20</div><div class="podds-prob">31% implied</div></div><div class="podds-cell best"><div class="podds-lbl">China</div><div class="podds-val">1.40</div><div class="podds-prob">71% implied</div></div></div>
-        </div>
-
-        <div class="pc fu" data-league="bwf" style="transition-delay:.2s">
-          <div class="pch"><span class="pcl"><span class="lbadge" style="background:#1a1a20">🏸</span>BWF World Tour · Today 17:30 MYT</span><div class="pcmeta"><span class="bpred">PRO PICK</span><span class="badge-med">Med Risk</span></div></div>
-          <div class="pcb">
-            <div class="pct">
-              <div class="team-side"><div class="tlogo" style="font-size:28px">🇲🇾</div><div class="tname">Ng/Tan</div><div class="tform"><span class="fd fw">W</span><span class="fd fl">L</span><span class="fd fw">W</span><span class="fd fw">W</span><span class="fd fl">L</span></div><span class="fstreak good">2 Wins</span></div>
-              <div class="vs-mid"><div class="vs-score" style="font-size:24px;color:var(--text2)">VS</div><div class="vs-time">17:30 MYT</div></div>
-              <div class="team-side"><div class="tlogo" style="font-size:28px">🇮🇳</div><div class="tname">Satwik/Chirag</div><div class="tform"><span class="fd fw">W</span><span class="fd fw">W</span><span class="fd fw">W</span><span class="fd fl">L</span><span class="fd fw">W</span></div><span class="fstreak good">3 Wins</span></div>
-            </div>
-            <div class="ppred">
-              <div class="ppred-head"><div class="ppred-left"><div class="ppred-icon">🎯</div><div><div class="ppred-lbl">Pro Analysis</div><div class="ppred-pick">India Pair Win</div></div></div><div class="ppred-conf"><div class="ppred-clbl">Confidence</div><div class="ppred-cval">56%</div></div></div>
-              <div class="ppred-analysis">Satwik/Chirag on a 3-match win streak and ranked higher. Ng/Tan competitive but head-to-head record in 2025 favours India 3-1. Expect a close 3-game encounter.</div>
-            </div>
-          </div>
-          <div class="podds"><div class="podds-cell"><div class="podds-lbl">Ng/Tan</div><div class="podds-val">2.10</div><div class="podds-prob">48% implied</div></div><div class="podds-cell best"><div class="podds-lbl">Satwik/Chirag</div><div class="podds-val">1.75</div><div class="podds-prob">57% implied</div></div></div>
-        </div>
-
-      </div>
-    </div>
+    <div class="pgrid" id="pred-grid"><div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--text3);background:var(--card);border:1px solid var(--border);border-radius:8px;font-family:var(--fm);font-size:12px;">Loading predictions…</div></div>
   </div>
 </section>
 
@@ -1097,7 +1033,7 @@ footer{
     <div class="wgrid fu">
       <div class="wc"><div class="wci">🎯</div><div class="wct">Pro Match Analysis</div><div class="wcd">Advanced ML models analyse thousands of data points per match — form, H2H, injuries, odds movements.</div></div>
       <div class="wc"><div class="wci">⚡</div><div class="wct">Real-time Updates</div><div class="wcd">Instant updates on matches, odds and predictions. Live scores every 30s. All times in MYT (Asia/KL).</div></div>
-      <div class="wc"><div class="wci">🛡️</div><div class="wct">Comprehensive Data</div><div class="wcd">Football, Badminton, FIFA World Cup, EPL, UCL — major leagues only. No small competition noise.</div></div>
+      <div class="wc"><div class="wci">🛡️</div><div class="wct">Comprehensive Data</div><div class="wcd">EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1, FIFA World Cup — major leagues only. No small competition noise.</div></div>
       <div class="wc"><div class="wci">📈</div><div class="wct">87% Accuracy</div><div class="wcd">Prediction accuracy backed by historical data. Full transparency — every result logged publicly.</div></div>
     </div>
   </div>
@@ -1493,8 +1429,7 @@ footer{
     <div class="agrid fu" id="tr-stats">
       <!-- populated from /api/track-record -->
       <div class="ac"><div class="acv">—</div><div class="acl">Overall</div><div class="act">Loading</div></div>
-      <div class="ac"><div class="acv">—</div><div class="acl">Football</div><div class="act">Loading</div></div>
-      <div class="ac"><div class="acv">—</div><div class="acl">Badminton</div><div class="act">Coming soon</div></div>
+      <div class="ac"><div class="acv">—</div><div class="acl">Soccer Picks</div><div class="act">Loading</div></div>
       <div class="ac"><div class="acv">0</div><div class="acl">Win Streak</div><div class="act">Current</div></div>
     </div>
     <div class="twrap fu">
@@ -1512,8 +1447,7 @@ footer{
         const pctOrDash = p => p == null ? '—' : p + '%';
         const stats = [
           { v: pctOrDash(d.overall.pct), l: 'Overall', t: d.overall.count ? `${d.overall.count} picks logged` : 'Building record' },
-          { v: pctOrDash(d.football.pct), l: 'Football', t: d.football.count ? `${d.football.count} picks` : 'No data yet' },
-          { v: pctOrDash(d.badminton.pct), l: 'Badminton', t: d.badminton.count ? `${d.badminton.count} picks` : 'Coming soon' },
+          { v: pctOrDash(d.football.pct), l: 'Soccer Picks', t: d.football.count ? `${d.football.count} picks` : 'No data yet' },
           { v: String(d.winStreak || 0), l: 'Win Streak', t: 'Current' },
         ];
         const statsEl = document.getElementById('tr-stats');
@@ -1529,7 +1463,7 @@ footer{
         }
         const esc = s => String(s ?? '').replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
         rowsEl.innerHTML = d.recent.map(m => {
-          const emoji = m.sport === 'badminton' ? '🏸' : '⚽';
+          const emoji = '⚽';
           const outcome = m.correct === true
             ? '<span class="rwin">WIN ✓</span>'
             : m.correct === false
@@ -1595,8 +1529,8 @@ footer{
     <h2 class="stitle">Frequently Asked Questions</h2>
     <p class="ssub">Everything you need to know about ScoreOcs8</p>
     <div class="faqlist fu">
-      <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">How accurate are ScoreOcs8 predictions? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">Our pro analysis record shows 87% overall accuracy. All predictions are logged and results published publicly in our Track Record section. We only cover major leagues — English Premier League, UEFA Champions League, FIFA World Cup, and BWF international badminton tournaments.</div></div></div>
-      <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">What leagues and sports does ScoreOcs8 cover? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">Football: English Premier League, UEFA Champions League, FIFA World Cup qualifying and finals. Badminton: BWF World Tour, Thomas Cup, Uber Cup, Sudirman Cup. We do not cover small or lower-league competitions.</div></div></div>
+      <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">How accurate are ScoreOcs8 predictions? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">Our pro analysis record shows 87% overall accuracy. All predictions are logged and results published publicly in our Track Record section. We only cover major soccer leagues — English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup.</div></div></div>
+      <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">What leagues does ScoreOcs8 cover? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup qualifying and finals. We do not cover small or lower-league competitions.</div></div></div>
       <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">How does the 2-day free trial work? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">Sign up free and get full access for 2 days. After the trial, a minimum RM50 deposit at our partner platform is required to continue. No hidden fees — cancel any time.</div></div></div>
       <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">What timezone are all match times shown in? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">All times on ScoreOcs8 are displayed in Asia/Kuala Lumpur time (MYT, UTC+8). The live clock in the nav bar always shows current MYT time so you never miss a kick-off.</div></div></div>
       <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">How do I get started with ScoreOcs8 for free? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">Simply sign up for a free account — no credit card required. You get a 2-day free trial with full access to all pro predictions, live scores and match analysis. After the trial, a minimum RM50 deposit at our platform unlocks continued access.</div></div></div>
@@ -1617,7 +1551,7 @@ footer{
 <footer>
   <div class="fi">
     <div class="ftop">
-      <div><div class="fbn"><img src="/logo.png" alt="ScoreOcs8" style="height:40px;width:auto;display:block;margin-bottom:4px;"></div><div class="fbd">Pro football and badminton predictions. Malaysia's #1 sports prediction platform.</div><div class="fsocial">
+      <div><div class="fbn"><img src="/logo.png" alt="ScoreOcs8" style="height:40px;width:auto;display:block;margin-bottom:4px;"></div><div class="fbd">Malaysia's best online casino soccer prediction platform — pro picks for EPL, UCL and Europe's top leagues.</div><div class="fsocial">
 <a href="https://t.me/livebad" target="_blank" rel="noopener" class="fsi" aria-label="Telegram @livebad" title="Telegram @livebad"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg></a>
 <a href="#" class="fsi" aria-label="WhatsApp Channel (coming soon)" title="WhatsApp Channel — coming soon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.297-.497.099-.198.05-.371-.025-.52-.074-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/></svg></a>
 <a href="https://instagram.com/scoreocs8" target="_blank" rel="noopener" class="fsi" aria-label="Instagram" title="Instagram @scoreocs8"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>
@@ -1631,8 +1565,8 @@ footer{
       <div class="fcol"><div class="fct">Connect</div><ul><li><a href="https://t.me/livebad" target="_blank" rel="noopener">Telegram @livebad</a></li><li><a href="https://instagram.com/scoreocs8" target="_blank" rel="noopener">Instagram</a></li><li><a href="https://x.com/scoreocs8" target="_blank" rel="noopener">X / Twitter</a></li><li><a href="https://threads.net/@scoreocs8" target="_blank" rel="noopener">Threads</a></li><li><a href="https://tiktok.com/@scoreocs8" target="_blank" rel="noopener">TikTok</a></li></ul></div>
     </div>
     <div class="seob">
-      <h3>Malaysia's #1 Sports Prediction Platform — Football & Badminton</h3>
-      <p>ScoreOcs8 delivers pro match predictions for the English Premier League, UEFA Champions League and FIFA World Cup 2026 qualifying and finals — all displayed in MYT (Asia/Kuala Lumpur, UTC+8) timezone. Our analysis team reviews head-to-head records, team form, injury data and live betting odds to generate daily predictions with confidence percentages. Badminton coverage includes BWF World Tour, Thomas Cup, Uber Cup and Sudirman Cup international tournaments. New users receive a 2-day free trial — no deposit required to start. ScoreOcs8 predictions are also auto-broadcast daily to our free Telegram channel @livebad before every match kick-off.</p>
+      <h3>Best Malaysia Online Casino Soccer Prediction — Major Leagues Only</h3>
+      <p>ScoreOcs8 delivers pro match predictions for the English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup 2026 qualifying and finals — all displayed in MYT (Asia/Kuala Lumpur, UTC+8) timezone. Our analysis team reviews head-to-head records, team form, injury data and live betting odds to generate daily soccer predictions with confidence percentages. Built for Malaysia's online casino punters who want disciplined picks instead of small-league noise. New users receive a 2-day free trial — no deposit required to start. ScoreOcs8 predictions are also auto-broadcast daily to our free Telegram channel @livebad before every match kick-off.</p>
     </div>
     <div class="fbot"><div class="fcp">© 2025 ScoreOcs8. All rights reserved.</div><div class="fpl"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Cookie Policy</a></div></div>
   </div>
@@ -1641,7 +1575,6 @@ footer{
 <script>
 function updateKLTime(){const n=new Date().toLocaleString('en-MY',{timeZone:'Asia/Kuala_Lumpur',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});const e=document.getElementById('klt');if(e)e.textContent='🕐 MYT '+n;}
 updateKLTime();setInterval(updateKLTime,1000);
-function switchSp(btn,s){document.querySelectorAll('.sptab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');document.getElementById('spf').style.display=s==='f'?'block':'none';document.getElementById('spb').style.display=s==='b'?'block':'none';setTimeout(()=>{document.querySelectorAll('#sp'+s+' .fu').forEach((el,i)=>{setTimeout(()=>el.classList.add('v'),i*80);});},10);}
 function switchMotd(btn,tab){document.querySelectorAll('#motd .mtab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');['today','tomorrow','table'].forEach(t=>{const el=document.getElementById('motd-'+t);if(el)el.style.display=t===tab?'block':'none';});}
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1817,7 +1750,7 @@ window.addEventListener('load',()=>{
         <div style="display:flex;gap:6px;justify-content:center;margin-bottom:14px;"><div style="width:22px;height:8px;border-radius:4px;background:var(--accent);"></div><div style="width:8px;height:8px;border-radius:50%;background:var(--border2);"></div><div style="width:8px;height:8px;border-radius:50%;background:var(--border2);"></div></div>
         <div style="font-family:var(--fm);font-size:10px;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Step 1 of 3</div>
         <div style="font-family:var(--ff);font-size:20px;font-weight:700;color:var(--text);margin-bottom:6px;">Pick a Match</div>
-        <div style="font-size:13px;color:var(--text2);line-height:1.65;margin-bottom:18px;">Browse today's football and badminton predictions. Every pick is powered by real stats — form, head-to-head, injuries and live odds.</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.65;margin-bottom:18px;">Browse today's soccer predictions across EPL, UCL and Europe's top leagues. Every pick is powered by real stats — form, head-to-head, injuries and live odds.</div>
         <button onclick="gohiw(2)" style="width:100%;background:var(--accent);color:#fff;font-family:var(--ff);font-size:15px;font-weight:700;border:none;border-radius:10px;padding:14px;cursor:pointer;">Next →</button>
       </div>
     </div>
@@ -2384,7 +2317,11 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
   if (!ticker) return;
 
   const LIVE_STATUS = new Set(['1H','2H','HT','ET','BT','P','LIVE']);
-  const LEAGUE_FLAG = { 39:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', 2:'⭐', 1:'🏆', 140:'🇪🇸', 78:'🇩🇪', 135:'🇮🇹', 61:'🇫🇷' };
+  // Whitelist: only show major European leagues + UCL in the ticker. No Malaysian
+  // clubs, no World Cup qualifiers between minor nations, no friendlies, no badminton.
+  const MAJOR_LEAGUES = new Set([39, 2, 140, 78, 135, 61]); // EPL, UCL, LaLiga, Bundesliga, SerieA, Ligue1
+  const LEAGUE_FLAG = { 39:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', 2:'⭐', 140:'🇪🇸', 78:'🇩🇪', 135:'🇮🇹', 61:'🇫🇷' };
+  const isMajor = fx => MAJOR_LEAGUES.has(fx?.league?.id);
   const esc = s => String(s ?? '').replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
 
   const fmtRel = iso => {
@@ -2427,7 +2364,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
 
   const fallbackItems = [
     `<div class="ti"><span class="ticker-tag">Daily picks</span><strong>Pro predictions update at 08:00 MYT</strong></div>`,
-    `<div class="ti"><span class="ticker-tag match">Coverage</span><strong>EPL · UCL · FIFA WC · BWF</strong></div>`,
+    `<div class="ti"><span class="ticker-tag match">Coverage</span><strong>EPL · UCL · La Liga · Serie A · Bundesliga · Ligue 1</strong></div>`,
     `<div class="ti"><span class="ticker-tag result">Track record</span><strong>Wins & losses logged publicly</strong></div>`,
   ];
 
@@ -2441,6 +2378,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
 
       const liveList = (liveRes?.response || [])
         .filter(fx => LIVE_STATUS.has(fx?.fixture?.status?.short))
+        .filter(isMajor)
         .slice(0, 5);
       liveList.forEach(fx => items.push(liveItem(fx)));
 
@@ -2453,6 +2391,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
       });
       const seen = new Set();
       const upcoming = upcomingPool
+        .filter(isMajor)
         .filter(fx => fx?.fixture?.id && !seen.has(fx.fixture.id) && (seen.add(fx.fixture.id), true))
         .filter(fx => fx?.fixture?.date && new Date(fx.fixture.date) > new Date())
         .filter(fx => !LIVE_STATUS.has(fx?.fixture?.status?.short))

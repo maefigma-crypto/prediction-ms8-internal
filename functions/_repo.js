@@ -172,8 +172,7 @@ function toKvPost(dateKey, kind, entry, generatedAt) {
     EPL: 'English Premier League',
     UCL: 'UEFA Champions League',
     FIFA: 'FIFA World Cup',
-    BWF: 'BWF Badminton',
-    General: 'Football Prediction',
+    General: 'Soccer Prediction',
   };
   const slug = `daily-${dateKey}-${kind}`;
   const dateIso = new Date(generatedAt || (dateKey + 'T07:00:00+08:00')).toISOString();
@@ -220,7 +219,7 @@ function toKvPost(dateKey, kind, entry, generatedAt) {
       twitter_card: 'summary_large_image',
       schema_type: 'Article',
       // SportsEvent schema surfaces — populated from fixture for cron posts.
-      sports_sport: leagueKey === 'BWF' ? 'Badminton' : 'Football',
+      sports_sport: 'Football',
       sports_home_name: homeName,
       sports_away_name: awayName,
       sports_start_date: fx.fixture?.date || '',

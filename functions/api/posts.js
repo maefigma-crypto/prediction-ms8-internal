@@ -1,4 +1,4 @@
-const EMOJI = { UCL: '⭐', EPL: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', WC: '🏆', BWF: '🏸' };
+const EMOJI = { UCL: '⭐', EPL: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', WC: '🏆', LaLiga: '🇪🇸', SerieA: '🇮🇹', Bundesliga: '🇩🇪', Ligue1: '🇫🇷' };
 
 function excerptOf(content) {
   if (content?.meta_description) return content.meta_description;
