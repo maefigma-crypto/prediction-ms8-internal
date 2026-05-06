@@ -156,7 +156,8 @@ body > nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-it
 .hero{position:relative;z-index:1;min-height:calc(100vh - 62px);display:flex;align-items:center;padding:60px 2rem;overflow:hidden;}
 .hglow{position:absolute;top:-150px;left:-100px;width:600px;height:600px;background:radial-gradient(circle,rgba(249,115,22,0.07) 0%,transparent 70%);pointer-events:none;}
 .hglow2{position:absolute;bottom:-100px;right:-100px;width:450px;height:450px;background:radial-gradient(circle,rgba(0,229,160,0.04) 0%,transparent 70%);pointer-events:none;}
-.hero-inner{max-width:1200px;margin:0 auto;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;}
+.hero-inner{max-width:1200px;margin:0 auto;width:100%;display:grid;grid-template-columns:1fr;gap:4rem;align-items:center;}
+.hero-inner>div:first-child{max-width:760px;}
 .eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:var(--fm);font-size:11px;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;margin-bottom:1.25rem;padding:5px 12px;border:1px solid rgba(249,115,22,.25);border-radius:2px;background:rgba(249,115,22,.06);}
 .hero h1{font-family:var(--ff);font-size:60px;font-weight:700;line-height:.96;letter-spacing:.02em;text-transform:uppercase;margin-bottom:1.25rem;}
 .hero h1 .hl{color:var(--accent);display:block;}
@@ -380,7 +381,7 @@ body > nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-it
 .banner-slot{border:1px solid rgba(249,115,22,.32);border-radius:10px;background:var(--card);overflow:hidden;display:block;padding:0;box-shadow:0 18px 46px rgba(0,0,0,.28);}
 .banner-slot img{width:100%;height:auto;aspect-ratio:16/9;object-fit:contain;display:block;background:#05080c;}
 .hero-btns,.hstats,.intro-copy,.subcta{display:none!important;}
-.hero{min-height:560px;}
+.hero{min-height:520px;}
 .intro-banner .sec{padding-top:34px;padding-bottom:34px;}
 .banner-slot{max-width:980px;margin:0 auto;width:100%;}
 .proof-panel.trust-bottom{margin-top:18px;margin-bottom:0;}
@@ -1083,8 +1084,8 @@ footer{
   <div class="hero-inner">
     <div>
       <div class="eyebrow">Pro picks · Live scores · Results proof · Malaysia</div>
-      <h1><span id="hl-hero1">Pro Match</span><br><span class="hl" id="hl-hero2">Predictions</span><br><span id="hl-hero3">Live Picks</span></h1>
-      <p class="hero-sub" id="hl-herosub">See the biggest matches first, then read simple pro picks with confidence, H2H history, live score context, and settled result proof.</p>
+      <h1><span id="hl-hero1">Daily Soccer</span><br><span class="hl" id="hl-hero2">Predictions</span><br><span id="hl-hero3">For Big Matches</span></h1>
+      <p class="hero-sub" id="hl-herosub">ScoreOcs8 focuses on major football matches only. Check upcoming fixtures, simple pro picks, H2H context, and settled virtual pick results in one place.</p>
       <div class="hero-btns">
         <a href="#predictions" class="btn-p" id="hl-btn1">📊 View Predictions</a>
         <a href="#highlights" class="btn-o" id="hl-btn2">📅 Match Schedule</a>
@@ -1097,7 +1098,7 @@ footer{
         <div class="hsc"><div class="hscv">94%</div><div class="hscl" id="hl-sat">Satisfaction</div><div class="hsct">↑ 2% this quarter</div></div>
       </div>
     </div>
-    <div>
+    <div style="display:none;">
       <div class="hcard">
         <div class="ch"><span class="cl">⭐ UEFA Champions League</span><span class="bpred">PRO PICK · SEMI-FINAL</span></div>
         <div class="mb">
