@@ -40,6 +40,10 @@ body > nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-it
 .ticker-wrap:hover .ticker-inner{animation-play-state:paused;}
 @keyframes ticker{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
 .ti{display:flex;align-items:center;gap:8px;white-space:nowrap;font-family:var(--fm);font-size:11px;color:var(--text2);}
+.ticker-tag{font-family:var(--fm);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.24);border-radius:3px;padding:2px 6px;}
+.ticker-tag.live{color:var(--red);background:rgba(255,71,87,.1);border-color:rgba(255,71,87,.24);}
+.ticker-tag.result{color:var(--green);background:rgba(0,229,160,.1);border-color:rgba(0,229,160,.24);}
+.ticker-tag.match{color:var(--amber);background:rgba(245,166,35,.1);border-color:rgba(245,166,35,.24);}
 .tlive{color:var(--red);font-size:9px;}.twin{color:var(--green);}
 .hero{position:relative;z-index:1;min-height:calc(100vh - 62px);display:flex;align-items:center;padding:60px 2rem;overflow:hidden;}
 .hglow{position:absolute;top:-150px;left:-100px;width:600px;height:600px;background:radial-gradient(circle,rgba(249,115,22,0.07) 0%,transparent 70%);pointer-events:none;}
@@ -237,6 +241,19 @@ body > nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-it
 #predictions .vs-time,#predictions .vs-label{font-size:12px;}
 #predictions .pc{border-radius:12px;}
 #predictions .pcb{padding:22px 20px 18px;}
+.badminton-note{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:12px;background:rgba(61,143,255,.06);border:1px solid rgba(61,143,255,.22);border-radius:10px;padding:14px 16px;margin-bottom:16px;}
+.badminton-note strong{display:block;font-family:var(--ff);font-size:18px;letter-spacing:.04em;text-transform:uppercase;color:var(--text);margin-bottom:3px;}
+.badminton-note span{display:block;font-size:13px;color:var(--text2);line-height:1.45;}
+.badminton-note .mini{background:rgba(255,255,255,.035);border:1px solid var(--border);border-radius:8px;padding:10px 12px;}
+.badminton-note .mini b{display:block;font-family:var(--fm);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:4px;}
+.insights-section{position:relative;z-index:1;background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.insights-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+#motd{background:linear-gradient(135deg,#101722 0%,#121821 56%,#1a1110 100%);border-top:1px solid rgba(249,115,22,.18);border-bottom:1px solid rgba(249,115,22,.18);}
+#motd .sec{padding-top:56px;padding-bottom:56px;}
+#motd .stitle{font-size:46px;}
+#motd .ssub{font-size:16px;max-width:720px;}
+#motd .motd-row{background:linear-gradient(135deg,rgba(249,115,22,.12),rgba(15,22,32,.98)) !important;border-color:rgba(249,115,22,.32) !important;padding:22px 24px !important;}
+#motd .mtab{font-size:15px !important;padding:10px 24px !important;}
 .detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
 .detail-stat{background:rgba(255,255,255,.035);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;}
 .detail-stat strong{display:block;font-family:var(--ff);font-size:30px;line-height:1;color:var(--accent);}
@@ -412,6 +429,12 @@ html,body{overflow-x:hidden;max-width:100vw;}
   .live-scorebox{order:2;}
   .proof-panel{grid-template-columns:1fr;}
   .proof-stats{grid-template-columns:repeat(3,1fr);}
+  .badminton-note{grid-template-columns:1fr;}
+  .insights-grid{grid-template-columns:1fr;}
+  #motd .sec{padding-top:38px;padding-bottom:38px;}
+  #motd .stitle{font-size:34px;}
+  #motd .mtab{font-size:13px !important;padding:9px 12px !important;}
+  #motd .motd-row{padding:16px 14px !important;}
   .easy-top{grid-template-columns:1fr;}
   .easy-conf{display:flex;align-items:center;justify-content:space-between;text-align:left;min-width:0;}
   .easy-conf span{margin-top:0;}
@@ -558,29 +581,29 @@ html,body{overflow-x:hidden;max-width:100vw;}
 
 <div class="ticker-wrap">
   <div class="ticker-inner">
-    <div class="ti"><span class="tlive">● LIVE</span><strong>Johor DT</strong> 2–1 <strong>Selangor</strong><span style="color:var(--text3);font-size:9px">74'</span></div>
+    <div class="ti"><span class="ticker-tag live">Live</span><strong>Johor DT</strong> 2-1 <strong>Selangor</strong><span style="color:var(--text3);font-size:9px">74'</span></div>
     <span style="color:var(--text3)">|</span>
-    <div class="ti"><span class="tlive">● LIVE</span>🏸 <strong>Lee Zii Jia</strong> 1–0 <strong>Axelsen</strong><span style="color:var(--text3);font-size:9px">Set 2</span></div>
+    <div class="ti"><span class="ticker-tag live">Badminton live</span><strong>Lee Zii Jia</strong> 1-0 <strong>Axelsen</strong><span style="color:var(--text3);font-size:9px">Set 2</span></div>
     <span style="color:var(--text3)">|</span>
-    <div class="ti"><span class="twin">✓</span><strong>Penang</strong> 3–2 <strong>Terengganu</strong><span class="twin" style="font-size:9px">OCS8 CORRECT</span></div>
+    <div class="ti"><span class="ticker-tag result">Result</span><strong>Penang</strong> 3-2 <strong>Terengganu</strong><span class="twin" style="font-size:9px">OCS8 correct</span></div>
     <span style="color:var(--text3)">|</span>
-    <div class="ti">⏰ <strong>PDRM vs Melaka</strong><span style="color:var(--amber);font-size:9px">Today 20:45 MYT</span></div>
+    <div class="ti"><span class="ticker-tag match">Match</span><strong>PDRM vs Melaka</strong><span style="color:var(--amber);font-size:9px">Today 20:45 MYT</span></div>
     <span style="color:var(--text3)">|</span>
-    <div class="ti">🏆 <strong>FIFA World Cup 2026</strong><span style="color:var(--text2);font-size:9px">12 picks today</span></div>
+    <div class="ti"><span class="ticker-tag">Prediction</span><strong>FIFA World Cup 2026</strong><span style="color:var(--text2);font-size:9px">12 picks today</span></div>
     <span style="color:var(--text3)">|</span>
-    <div class="ti">🏸 <strong>BWF Thomas Cup</strong><span style="color:var(--text2);font-size:9px">Live now</span></div>
+    <div class="ti"><span class="ticker-tag match">Badminton</span><strong>BWF Thomas Cup</strong><span style="color:var(--text2);font-size:9px">Few matches, higher focus</span></div>
     <span style="color:var(--text3)">|</span>
-    <div class="ti"><span class="tlive">● LIVE</span><strong>Johor DT</strong> 2–1 <strong>Selangor</strong><span style="color:var(--text3);font-size:9px">74'</span></div>
+    <div class="ti"><span class="ticker-tag live">Live</span><strong>Johor DT</strong> 2-1 <strong>Selangor</strong><span style="color:var(--text3);font-size:9px">74'</span></div>
     <span style="color:var(--text3)">|</span>
-    <div class="ti"><span class="tlive">● LIVE</span>🏸 <strong>Lee Zii Jia</strong> 1–0 <strong>Axelsen</strong><span style="color:var(--text3);font-size:9px">Set 2</span></div>
+    <div class="ti"><span class="ticker-tag live">Badminton live</span><strong>Lee Zii Jia</strong> 1-0 <strong>Axelsen</strong><span style="color:var(--text3);font-size:9px">Set 2</span></div>
     <span style="color:var(--text3)">|</span>
-    <div class="ti"><span class="twin">✓</span><strong>Penang</strong> 3–2 <strong>Terengganu</strong><span class="twin" style="font-size:9px">OCS8 CORRECT</span></div>
+    <div class="ti"><span class="ticker-tag result">Result</span><strong>Penang</strong> 3-2 <strong>Terengganu</strong><span class="twin" style="font-size:9px">OCS8 correct</span></div>
     <span style="color:var(--text3)">|</span>
-    <div class="ti">⏰ <strong>PDRM vs Melaka</strong><span style="color:var(--amber);font-size:9px">Today 20:45 MYT</span></div>
+    <div class="ti"><span class="ticker-tag match">Match</span><strong>PDRM vs Melaka</strong><span style="color:var(--amber);font-size:9px">Today 20:45 MYT</span></div>
     <span style="color:var(--text3)">|</span>
-    <div class="ti">🏆 <strong>FIFA World Cup 2026</strong><span style="color:var(--text2);font-size:9px">12 picks today</span></div>
+    <div class="ti"><span class="ticker-tag">Prediction</span><strong>FIFA World Cup 2026</strong><span style="color:var(--text2);font-size:9px">12 picks today</span></div>
     <span style="color:var(--text3)">|</span>
-    <div class="ti">🏸 <strong>BWF Thomas Cup</strong><span style="color:var(--text2);font-size:9px">Live now</span></div>
+    <div class="ti"><span class="ticker-tag match">Badminton</span><strong>BWF Thomas Cup</strong><span style="color:var(--text2);font-size:9px">Few matches, higher focus</span></div>
   </div>
 </div>
 
@@ -600,9 +623,9 @@ html,body{overflow-x:hidden;max-width:100vw;}
   <div class="hglow"></div><div class="hglow2"></div>
   <div class="hero-inner">
     <div>
-      <div class="eyebrow">⚡ AI-Powered · Football · Badminton · Malaysia</div>
-      <h1>Win Big with<br><span class="hl" id="hl-hero2">AI-Powered</span><br><span id="hl-hero3">Predictions</span></h1>
-      <p class="hero-sub" id="hl-herosub">Get accurate match predictions based on advanced analytics and historical data. Football, Badminton, FIFA World Cup and more. Make smarter decisions today.</p>
+      <div class="eyebrow">AI picks · Live scores · Results proof · Malaysia</div>
+      <h1><span id="hl-hero1">AI Match</span><br><span class="hl" id="hl-hero2">Predictions</span><br><span id="hl-hero3">Live Picks</span></h1>
+      <p class="hero-sub" id="hl-herosub">See today's best match first, then read simple AI picks with confidence, H2H history, live score context, and settled result proof.</p>
       <div class="hero-btns">
         <a href="#predictions" class="btn-p" id="hl-btn1">📊 View Predictions</a>
         <a href="#highlights" class="btn-o" id="hl-btn2">📺 Live Streaming</a>
@@ -724,6 +747,14 @@ html,body{overflow-x:hidden;max-width:100vw;}
       <div class="pgrid" id="pred-grid"><div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--text3);background:var(--card);border:1px solid var(--border);border-radius:8px;font-family:var(--fm);font-size:12px;">Loading predictions…</div></div>
     </div>
     <div id="spb" style="display:none">
+      <div class="badminton-note fu v">
+        <div>
+          <strong>Badminton is a focused board</strong>
+          <span>Because there are fewer daily badminton matches, show only the best singles, doubles, or team tie picks instead of filling the page with low-quality volume.</span>
+        </div>
+        <div class="mini"><b>Best format</b><span>Match winner, current set score, player form, ranking gap, and H2H record.</span></div>
+        <div class="mini"><b>Customer view</b><span>Fewer cards, larger text, clearer risk, and one reason why the pick makes sense.</span></div>
+      </div>
       <div class="pgrid">
 
         <div class="pc fu" data-league="bwf">
@@ -793,12 +824,12 @@ html,body{overflow-x:hidden;max-width:100vw;}
   </div>
 </section>
 
-<section style="position:relative;z-index:1;background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+<section id="insights" class="insights-section">
   <div class="sec" style="padding:40px 2rem;">
     <div class="stag">Performance</div>
     <h2 class="stitle">Prediction Insights</h2>
     <p class="ssub">Real-time accuracy stats · Updated daily</p>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;" class="fu">
+    <div class="fu insights-grid">
       <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
           <div><div style="font-family:var(--ff);font-size:14px;font-weight:600;letter-spacing:.04em;">Accuracy Trend</div><div style="font-size:11px;color:var(--text3);margin-top:2px;">Monthly prediction accuracy</div></div>
@@ -1170,6 +1201,12 @@ function updateKLTime(){const n=new Date().toLocaleString('en-MY',{timeZone:'Asi
 updateKLTime();setInterval(updateKLTime,1000);
 function switchSp(btn,s){document.querySelectorAll('.sptab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');document.getElementById('spf').style.display=s==='f'?'block':'none';document.getElementById('spb').style.display=s==='b'?'block':'none';setTimeout(()=>{document.querySelectorAll('#sp'+s+' .fu').forEach((el,i)=>{setTimeout(()=>el.classList.add('v'),i*80);});},10);}
 function switchMotd(btn,tab){document.querySelectorAll('#motd .mtab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');['today','tomorrow','table'].forEach(t=>{const el=document.getElementById('motd-'+t);if(el)el.style.display=t===tab?'block':'none';});}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const motd = document.getElementById('motd');
+  const subscribe = document.getElementById('subscribe');
+  if (motd && subscribe && subscribe.parentNode) subscribe.parentNode.insertBefore(motd, subscribe);
+});
 function switchMTab(btn){document.querySelectorAll('#predictions .mtab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');window.predictionMode=btn.dataset.mode||'upcoming';if(window.renderPredictionMode)window.renderPredictionMode();}
 function filterM(){const s=document.getElementById('si').value.toLowerCase();const l=document.getElementById('lf').value;document.querySelectorAll('.pc').forEach(c=>{const tx=c.textContent.toLowerCase();const cl=c.dataset.league||'';c.style.display=(!s||tx.includes(s))&&(!l||cl===l)?'block':'none';});}
 function resetF(){document.getElementById('si').value='';document.getElementById('lf').value='';document.getElementById('fd').value='';document.getElementById('td').value='';document.querySelectorAll('.pc').forEach(c=>c.style.display='block');}
@@ -1290,9 +1327,9 @@ fetch('/api/auth/me').then(r=>r.json()).then(d=>{
 function toggleLangMenu(){const m=document.getElementById('lang-menu');m.style.display=m.style.display==='none'?'block':'none';}
 document.addEventListener('click',e=>{const li=document.getElementById('auth-logged-in');const lw=document.getElementById('lang-wrap');const am=document.getElementById('auth-modal');if(li&&!li.contains(e.target))document.getElementById('profile-dropdown').style.display='none';if(lw&&!lw.contains(e.target)){const lm=document.getElementById('lang-menu');if(lm)lm.style.display='none';}if(e.target===am)closeModal();});
 function setLang(lang,flag){document.getElementById('lang-current').textContent='🌐 '+lang;document.getElementById('lang-menu').style.display='none';
-const t={EN:{hero1:'Win Big with',hero2:'AI-Powered',hero3:'Predictions',herosub:'Get accurate match predictions based on advanced analytics. Football, Badminton, FIFA World Cup and more.',btn1:'View Predictions',btn2:'Live Streaming',acc:'Accuracy',users:'Active Users',matches:'Matches Analysed',sat:'Satisfaction',predtitle:'Match Predictions',predsub:'Updated daily 08:00 MYT · Major leagues only · Powered by ScoreOcs8 AI',motdtitle:'Match of the Day',tgtitle:'Get Picks on Telegram',tgsub:'Join @livebad — predictions auto-posted before every match. Free forever.'},
-BM:{hero1:'Menang Besar dengan',hero2:'Ramalan',hero3:'Berkuasa AI',herosub:'Dapatkan ramalan perlawanan tepat berdasarkan analitik canggih. Bola Sepak, Badminton, Piala Dunia FIFA dan lain-lain.',btn1:'Lihat Ramalan',btn2:'Siaran Langsung',acc:'Ketepatan',users:'Pengguna Aktif',matches:'Perlawanan Dianalisa',sat:'Kepuasan',predtitle:'Ramalan Perlawanan',predsub:'Dikemas kini harian 08:00 MYT · Liga utama sahaja · Dikuasakan oleh ScoreOcs8 AI',motdtitle:'Perlawanan Hari Ini',tgtitle:'Dapatkan Pilihan di Telegram',tgsub:'Sertai @livebad — ramalan dipos automatik sebelum setiap perlawanan. Percuma selamanya.'},
-中文:{hero1:'用AI预测',hero2:'赢得更多',hero3:'足球与羽毛球',herosub:'基于先进数据分析获取精准比赛预测。足球、羽毛球、FIFA世界杯等等。',btn1:'查看预测',btn2:'直播',acc:'准确率',users:'活跃用户',matches:'已分析比赛',sat:'满意度',predtitle:'比赛预测',predsub:'每日08:00 MYT更新 · 仅主要联赛 · 由ScoreOcs8 AI驱动',motdtitle:'今日焦点赛事',tgtitle:'在Telegram获取预测',tgsub:'加入@livebad — 每场比赛前自动发布预测。永久免费。'}};
+const t={EN:{hero1:'AI Match',hero2:'Predictions',hero3:'Live Picks',herosub:"See today's best match first, then read simple AI picks with confidence, H2H history, live score context, and settled result proof.",btn1:'View Predictions',btn2:'Live Streaming',acc:'Accuracy',users:'Active Users',matches:'Matches Analysed',sat:'Satisfaction',predtitle:'Match Predictions',predsub:'Updated daily 08:00 MYT · Major leagues only · Powered by ScoreOcs8 AI',motdtitle:'Match of the Day',tgtitle:'Get Picks on Telegram',tgsub:'Join @livebad — predictions auto-posted before every match. Free forever.'},
+BM:{hero1:'Ramalan AI',hero2:'Perlawanan',hero3:'Pilihan Live',herosub:'Lihat perlawanan terbaik hari ini dahulu, kemudian baca pilihan AI ringkas dengan keyakinan, sejarah H2H, skor live dan bukti keputusan.',btn1:'Lihat Ramalan',btn2:'Siaran Langsung',acc:'Ketepatan',users:'Pengguna Aktif',matches:'Perlawanan Dianalisa',sat:'Kepuasan',predtitle:'Ramalan Perlawanan',predsub:'Dikemas kini harian 08:00 MYT · Liga utama sahaja · Dikuasakan oleh ScoreOcs8 AI',motdtitle:'Perlawanan Hari Ini',tgtitle:'Dapatkan Pilihan di Telegram',tgsub:'Sertai @livebad — ramalan dipos automatik sebelum setiap perlawanan. Percuma selamanya.'},
+中文:{hero1:'AI比赛',hero2:'预测',hero3:'实时推荐',herosub:'先看今日焦点赛事，再阅读清楚的AI推荐、信心指数、交手历史、实时比分和赛果证明。',btn1:'查看预测',btn2:'直播',acc:'准确率',users:'活跃用户',matches:'已分析比赛',sat:'满意度',predtitle:'比赛预测',predsub:'每日08:00 MYT更新 · 仅主要联赛 · 由ScoreOcs8 AI驱动',motdtitle:'今日焦点赛事',tgtitle:'在Telegram获取预测',tgsub:'加入@livebad — 每场比赛前自动发布预测。永久免费。'}};
 const d=t[lang]||t['EN'];
 const ids=[['hl-hero1',d.hero1],['hl-hero2',d.hero2],['hl-hero3',d.hero3],['hl-herosub',d.herosub],['hl-btn1',d.btn1],['hl-btn2',d.btn2],['hl-acc',d.acc],['hl-users',d.users],['hl-matches',d.matches],['hl-sat',d.sat],['hl-predtitle',d.predtitle],['hl-predsub',d.predsub],['hl-motdtitle',d.motdtitle],['hl-tgtitle',d.tgtitle],['hl-tgsub',d.tgsub]];
 ids.forEach(([id,val])=>{const el=document.getElementById(id);if(el)el.textContent=val;});
