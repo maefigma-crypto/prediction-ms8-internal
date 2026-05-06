@@ -169,6 +169,8 @@ body > nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-it
 .easy-details summary{font-family:var(--ff);font-size:13px;font-weight:700;color:var(--accent);cursor:pointer;letter-spacing:.04em;list-style:none;}
 .easy-details summary::-webkit-details-marker{display:none;}
 .easy-details p{font-size:12px;color:var(--text2);line-height:1.65;margin-top:8px;}
+.detail-btn{margin-top:12px;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:#fff;border:none;border-radius:6px;padding:12px 14px;font-family:var(--ff);font-size:16px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;transition:background .2s,transform .15s;}
+.detail-btn:hover{background:var(--accent2);transform:translateY(-1px);}
 .result-strip{margin:-2px 0 12px;padding:9px 11px;border-radius:6px;font-family:var(--ff);font-size:18px;font-weight:700;letter-spacing:.06em;text-align:center;}
 .result-strip.won{background:rgba(0,229,160,.14);border:1px solid rgba(0,229,160,.34);color:var(--green);}
 .result-strip.lost{background:rgba(255,71,87,.14);border:1px solid rgba(255,71,87,.34);color:var(--red);}
@@ -1597,6 +1599,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
             <div class="easy-stat"><span>Kickoff</span><strong>${esc(kickoff)}</strong></div>
             <div class="easy-stat"><span>Market</span><strong>1X2 result</strong></div>
           </div>
+          <button class="detail-btn" type="button" onclick="event.stopPropagation();openMatchDetail(${fx.fixture.id})">View H2H & Stats</button>
           ${details}
         </div>
       </div>
