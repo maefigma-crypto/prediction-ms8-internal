@@ -52,7 +52,7 @@ export async function onRequest({ env, request }) {
         });
       }
     } catch (_) { /* skip malformed day */ }
-    if (posts.length >= 6) break;
+    if (posts.length >= 7) break;
   }
   return new Response(JSON.stringify(posts), {
     headers: { 'content-type': 'application/json', 'cache-control': 'public, max-age=1800' },

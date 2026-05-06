@@ -1695,7 +1695,7 @@ footer{
           <div class="bmeta" style="margin-top:8px;"><span class="bdate">${f.date}</span><span class="bread">Read full preview →</span></div>
         </div>`;
       document.getElementById('blog-featured').href='/blog/'+f.slug+'/?lang=en';
-      document.getElementById('blog-grid').innerHTML=posts.slice(1,6).map(p=>`
+      document.getElementById('blog-grid').innerHTML=posts.slice(1,7).map(p=>`
         <a href="/blog/${p.slug}/?lang=en" class="bcard">
           <div class="bimg" style="${cardBg(p)}">${p.og_image?'':p.emoji}</div>
           <div class="bbody">
