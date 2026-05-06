@@ -1,0 +1,52 @@
+{
+  "name": "ScoreOcs8 — Best Malaysia Online Casino Soccer Prediction",
+  "short_name": "ScoreOcs8",
+  "description": "Pro soccer predictions for EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup. Daily picks before kickoff, free notification alerts.",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#070a16",
+  "theme_color": "#070a16",
+  "lang": "en-MY",
+  "dir": "ltr",
+  "categories": ["sports", "entertainment", "news"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Today's Predictions",
+      "short_name": "Picks",
+      "description": "See today's pro picks across major leagues",
+      "url": "/#predictions",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Match Schedule",
+      "short_name": "Schedule",
+      "description": "Live tables, top scorers, fixtures, results",
+      "url": "/#highlights",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Register / Login",
+      "short_name": "Bet",
+      "description": "Register at PP88 to bet on every pick",
+      "url": "https://pp88fs.ocs8winwinwin.shop/?country=MY&lang=en&affcampaign=LAVCNR&aff=AFFLSAHYM",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/og/default",
+      "sizes": "1200x630",
+      "type": "image/svg+xml",
+      "form_factor": "wide",
+      "label": "ScoreOcs8 homepage"
+    }
+  ]
+}
