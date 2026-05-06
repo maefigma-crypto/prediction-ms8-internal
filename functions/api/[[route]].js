@@ -13,6 +13,7 @@ const TTL = {
   standings: 24 * 3600,
   odds: 5 * 60,
   predictions: 12 * 3600,
+  matchDetail: 24 * 3600,
 };
 
 function json(body, status = 200, extraHeaders = {}) {
@@ -160,6 +161,54 @@ async function handlePredictions(env, url) {
   });
 }
 
+async function handleMatchDetail(env, url) {
+  const fixtureId = url.searchParams.get('fixture_id');
+  if (!fixtureId) return { error: 'fixture_id required', status: 400 };
+
+  return cached(env, `match-detail:${fixtureId}`, TTL.matchDetail, async () => {
+    const fixtureData = await afGet(env, '/fixtures', { id: fixtureId });
+    const fx = fixtureData.response?.[0];
+    if (!fx) throw new Error('fixture not found');
+
+    const home = fx.teams.home.id;
+    const away = fx.teams.away.id;
+    const [h2hData, statsData] = await Promise.all([
+      afGet(env, '/fixtures/headtohead', { h2h: `${home}-${away}`, last: 8 }),
+      afGet(env, '/fixtures/statistics', { fixture: fixtureId }).catch(() => ({ response: [] })),
+    ]);
+
+    const h2h = h2hData.response || [];
+    const summary = { homeWins: 0, awayWins: 0, draws: 0, matches: h2h.length };
+    for (const m of h2h) {
+      const hs = m.goals?.home ?? 0;
+      const as = m.goals?.away ?? 0;
+      const homeIsOriginalHome = m.teams?.home?.id === home;
+      if (hs === as) summary.draws += 1;
+      else if ((hs > as && homeIsOriginalHome) || (as > hs && !homeIsOriginalHome)) summary.homeWins += 1;
+      else summary.awayWins += 1;
+    }
+
+    return {
+      updated: Date.now(),
+      fixture: fx,
+      summary,
+      h2h: h2h.map(m => ({
+        fixture_id: m.fixture?.id,
+        date: m.fixture?.date,
+        league: m.league?.name,
+        home: m.teams?.home?.name,
+        away: m.teams?.away?.name,
+        home_id: m.teams?.home?.id,
+        away_id: m.teams?.away?.id,
+        score_home: m.goals?.home,
+        score_away: m.goals?.away,
+        status: m.fixture?.status?.short,
+      })),
+      statistics: statsData.response || [],
+    };
+  });
+}
+
 function buildPredictionPrompt(fx, h2h) {
   const home = fx.teams.home.name;
   const away = fx.teams.away.name;
@@ -245,6 +294,10 @@ export async function onRequest(context) {
         result = await handleOdds(env, url); break;
       case 'predictions':
         result = await handlePredictions(env, url);
+        if (result.status) return json({ error: result.error }, result.status);
+        break;
+      case 'match-detail':
+        result = await handleMatchDetail(env, url);
         if (result.status) return json({ error: result.error }, result.status);
         break;
       case 'health':
