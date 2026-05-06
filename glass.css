@@ -1,0 +1,343 @@
+/* ==========================================================
+   GLASS DESIGN SYSTEM · OPTION A (Orange Neon)
+   Shared overrides for /predictions/*, /blog/, /login.html
+   Homepage (/index.html) uses an inline equivalent.
+   ========================================================== */
+
+/* --- BASE: Dark Casino Background + Orange Neon Glow --- */
+body {
+  background: #050811 !important;
+  position: relative;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 900px 700px at 12% 8%, rgba(249,115,22,0.20), transparent 60%),
+    radial-gradient(ellipse 800px 600px at 88% 22%, rgba(249,115,22,0.12), transparent 60%),
+    radial-gradient(ellipse 1100px 800px at 50% 95%, rgba(249,115,22,0.08), transparent 65%),
+    linear-gradient(180deg, #050811 0%, #0a0e1c 45%, #070a16 100%);
+}
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* --- TOP TELEGRAM BAR (prediction pages) --- */
+.tg-bar {
+  background: linear-gradient(180deg, #3eb1e8 0%, #229ED9 50%, #1a7aa8 100%) !important;
+  box-shadow: 0 6px 22px rgba(34,158,217,0.30), inset 0 1px 0 rgba(255,255,255,0.30), inset 0 -2px 0 rgba(0,0,0,0.18);
+}
+
+/* --- STICKY GLASS NAV (prediction & blog pages) --- */
+nav {
+  background: rgba(15,20,32,0.65) !important;
+  border-bottom: 1px solid rgba(255,255,255,0.10) !important;
+  backdrop-filter: blur(22px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(160%) !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+.nav-logo .hl { color: var(--accent); }
+.nav-links a {
+  border-radius: 999px !important;
+  padding: 8px 14px !important;
+  transition: all .2s;
+}
+.nav-links a:hover, .nav-links a.active {
+  background: rgba(249,115,22,0.10) !important;
+  color: var(--accent) !important;
+}
+
+/* --- GLOSSY PRIMARY BUTTONS --- */
+.btn-nav, .btn-p, .nav-signup {
+  border-radius: 999px !important;
+  background: linear-gradient(180deg, #ff9c4a 0%, #f97316 50%, #c75808 100%) !important;
+  border: none !important;
+  padding: 9px 22px !important;
+  box-shadow: 0 6px 18px rgba(249,115,22,0.45), inset 0 1px 0 rgba(255,255,255,0.40), inset 0 -2px 0 rgba(0,0,0,0.18) !important;
+  transition: transform .15s, filter .2s, box-shadow .2s !important;
+}
+.btn-nav:hover, .btn-p:hover, .nav-signup:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+  box-shadow: 0 10px 28px rgba(249,115,22,0.55), inset 0 1px 0 rgba(255,255,255,0.45) !important;
+}
+
+/* --- GLASS OUTLINE BUTTONS --- */
+.btn-o, .btn-alt {
+  border-radius: 14px !important;
+  background: rgba(255,255,255,0.06) !important;
+  border: 1px solid rgba(255,255,255,0.14) !important;
+  backdrop-filter: blur(12px);
+  transition: all .2s;
+}
+.btn-o:hover, .btn-alt:hover {
+  background: rgba(255,255,255,0.10) !important;
+  border-color: rgba(249,115,22,0.40) !important;
+  color: var(--accent) !important;
+}
+
+/* --- BREADCRUMB --- */
+.breadcrumb {
+  background: rgba(15,20,32,0.50) !important;
+  border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+  backdrop-filter: blur(14px);
+}
+
+/* --- LEAGUE HERO BANNER --- */
+.league-hero {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+}
+.league-hero h1 .hl {
+  background: linear-gradient(135deg, #ff8a3a, #f97316);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.league-badge {
+  background: rgba(249,115,22,0.10) !important;
+  border: 1px solid rgba(249,115,22,0.30) !important;
+  border-radius: 999px !important;
+  backdrop-filter: blur(10px);
+  padding: 5px 14px !important;
+}
+
+/* --- LEAGUE STATS GRID --- */
+.league-stats {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 18px;
+  gap: 8px;
+  display: grid;
+}
+.lsc {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+  border-radius: 14px !important;
+  backdrop-filter: blur(16px) saturate(160%);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.08);
+  position: relative;
+}
+.lsc::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 15%;
+  right: 15%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.30), transparent);
+}
+
+/* --- CATEGORY PILLS --- */
+.cat-section {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+}
+.cat-pill {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+  border-radius: 999px !important;
+  backdrop-filter: blur(12px);
+  transition: all .2s;
+}
+.cat-pill:hover, .cat-pill.active {
+  background: linear-gradient(180deg, rgba(249,115,22,0.20), rgba(249,115,22,0.06)) !important;
+  border-color: rgba(249,115,22,0.40) !important;
+  color: var(--accent) !important;
+}
+
+/* --- UNIVERSAL GLASS CARDS --- */
+.pc, .scard, .card, .faqitem, .seob, .empty {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+  border-radius: 18px !important;
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  box-shadow: 0 14px 40px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.08);
+  position: relative;
+  overflow: hidden;
+}
+.pc:hover, .card:hover {
+  border-color: rgba(249,115,22,0.35) !important;
+  transform: translateY(-3px);
+  box-shadow: 0 18px 48px rgba(0,0,0,0.40), 0 0 30px rgba(249,115,22,0.15), inset 0 1px 0 rgba(255,255,255,0.10) !important;
+}
+.pch, .scard-h {
+  background: rgba(255,255,255,0.03) !important;
+  border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+}
+
+/* --- ORANGE-GLOW HIGHLIGHT PANELS --- */
+.ppred {
+  background: linear-gradient(135deg, rgba(249,115,22,0.10), rgba(249,115,22,0.02)) !important;
+  border: 1px solid rgba(249,115,22,0.25) !important;
+  border-radius: 12px !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 0 20px rgba(249,115,22,0.10);
+}
+
+/* --- ODDS GRID --- */
+.podds {
+  background: rgba(255,255,255,0.04) !important;
+  border-top: 1px solid rgba(255,255,255,0.08) !important;
+}
+.podds-cell {
+  background: rgba(255,255,255,0.02) !important;
+}
+.podds-cell.best {
+  background: linear-gradient(135deg, rgba(249,115,22,0.14), rgba(249,115,22,0.02)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), inset 0 0 20px rgba(249,115,22,0.10);
+}
+
+/* --- FORM & FILTER PILLS --- */
+.chip {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+  backdrop-filter: blur(10px);
+}
+.chip:hover {
+  background: rgba(255,255,255,0.08) !important;
+  border-color: rgba(249,115,22,0.30) !important;
+  color: var(--text) !important;
+}
+.chip.active {
+  background: linear-gradient(180deg, #ff9c4a, #f97316) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+  box-shadow: 0 4px 12px rgba(249,115,22,0.40), inset 0 1px 0 rgba(255,255,255,0.30);
+}
+.langs {
+  border: 1px solid rgba(255,255,255,0.10) !important;
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(10px);
+}
+.langs button.active {
+  background: linear-gradient(180deg, #ff9c4a, #f97316) !important;
+}
+
+/* --- SIDEBAR TG CTA --- */
+.tg-cta {
+  background: linear-gradient(135deg, rgba(34,158,217,0.18), rgba(34,158,217,0.04)) !important;
+  border: 1px solid rgba(34,158,217,0.30) !important;
+  border-radius: 18px !important;
+  backdrop-filter: blur(18px);
+  box-shadow: 0 14px 40px rgba(0,0,0,0.30), 0 0 30px rgba(34,158,217,0.12), inset 0 1px 0 rgba(255,255,255,0.10);
+}
+.tg-btn {
+  background: linear-gradient(180deg, #3eb1e8 0%, #229ED9 50%, #1a7aa8 100%) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 6px 18px rgba(34,158,217,0.45), inset 0 1px 0 rgba(255,255,255,0.40), inset 0 -2px 0 rgba(0,0,0,0.18);
+  transition: transform .15s, filter .2s !important;
+}
+.tg-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+}
+
+/* --- LEAGUE TABLE --- */
+.ltrow.top1 {
+  border-left: 3px solid var(--accent) !important;
+  background: linear-gradient(90deg, rgba(249,115,22,0.06), transparent);
+}
+
+/* --- SEO / HOW-IT-WORKS / FAQ SECTIONS --- */
+.seo-content, .how-section, .faq-section {
+  background: transparent !important;
+  border-top: 1px solid rgba(255,255,255,0.06) !important;
+}
+.seo-block h2, .how-title, .faq-title {
+  /* keep their existing colors */
+}
+.how-steps {
+  background: transparent !important;
+  border: none !important;
+  gap: 12px;
+}
+.how-step {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+  border-radius: 18px !important;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+/* --- FOOTER --- */
+footer {
+  background: rgba(8,12,22,0.70) !important;
+  border-top: 1px solid rgba(255,255,255,0.10) !important;
+  backdrop-filter: blur(20px) saturate(160%);
+  margin-top: 40px;
+}
+.fpl a:hover { color: var(--accent); }
+
+/* --- BLOG SPECIFIC --- */
+.card-img {
+  background: linear-gradient(135deg, rgba(249,115,22,0.08), rgba(15,22,32,0.5)) !important;
+  border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+}
+.card-meta {
+  border-top: 1px solid rgba(255,255,255,0.06) !important;
+}
+.pagination button {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+  border-radius: 10px !important;
+  backdrop-filter: blur(10px);
+}
+.pagination .current {
+  background: linear-gradient(180deg, #ff9c4a, #f97316) !important;
+  border-color: transparent !important;
+  box-shadow: 0 4px 12px rgba(249,115,22,0.40), inset 0 1px 0 rgba(255,255,255,0.30);
+}
+
+/* --- LOGIN PAGE --- */
+.card {
+  /* applies to login.html .card and blog .card alike */
+}
+body > .card {
+  /* login: only direct child of body */
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  border-radius: 24px !important;
+  padding: 2.5rem !important;
+  backdrop-filter: blur(28px) saturate(170%);
+  -webkit-backdrop-filter: blur(28px) saturate(170%);
+  box-shadow: 0 30px 80px rgba(0,0,0,0.50), 0 0 60px rgba(249,115,22,0.10), inset 0 1px 0 rgba(255,255,255,0.12);
+  position: relative;
+  overflow: hidden;
+}
+body > .card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent);
+  pointer-events: none;
+}
+.trial {
+  background: linear-gradient(135deg, rgba(249,115,22,0.12), rgba(249,115,22,0.02)) !important;
+  border: 1px solid rgba(249,115,22,0.28) !important;
+  border-radius: 12px !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 0 24px rgba(249,115,22,0.12);
+}
+.divider {
+  color: rgba(255,255,255,0.40) !important;
+}
+
+/* --- MOBILE TWEAKS --- */
+@media (max-width: 600px) {
+  .league-hero h1 { font-size: 32px !important; }
+  .page-title { font-size: 32px !important; }
+}
