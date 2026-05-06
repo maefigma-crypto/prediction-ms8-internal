@@ -11,6 +11,7 @@ const TTL = {
   live: 60,
   fixtures: 6 * 3600,
   standings: 24 * 3600,
+  topscorers: 24 * 3600,
   odds: 5 * 60,
   predictions: 12 * 3600,
   matchDetail: 24 * 3600,
@@ -117,6 +118,20 @@ async function handleStandings(env, url) {
       return { updated: Date.now(), leagueId, season, response: data.response || [] };
     } catch (err) {
       // Knockout comps (UCL, FIFA WC) don't have a league table — return empty.
+      return { updated: Date.now(), leagueId, season, response: [], error: String(err.message || err) };
+    }
+  }, { refresh });
+}
+
+async function handleTopScorers(env, url) {
+  const season = url.searchParams.get('season') || DEFAULT_SEASON;
+  const refresh = url.searchParams.get('refresh') === '1';
+  const leagueId = parseInt(url.searchParams.get('league') || String(LEAGUES.EPL), 10);
+  return cached(env, `topscorers:${leagueId}:${season}`, TTL.topscorers, async () => {
+    try {
+      const data = await afGet(env, '/players/topscorers', { league: leagueId, season });
+      return { updated: Date.now(), leagueId, season, response: data.response || [] };
+    } catch (err) {
       return { updated: Date.now(), leagueId, season, response: [], error: String(err.message || err) };
     }
   }, { refresh });
@@ -290,6 +305,8 @@ export async function onRequest(context) {
         result = await handleFixtures(env, url); break;
       case 'standings':
         result = await handleStandings(env, url); break;
+      case 'topscorers':
+        result = await handleTopScorers(env, url); break;
       case 'odds':
         result = await handleOdds(env, url); break;
       case 'predictions':
@@ -460,7 +477,7 @@ export async function onRequest(context) {
         return json({
           error: 'not found',
           route,
-          routes: ['/api/live', '/api/fixtures', '/api/standings', '/api/odds', '/api/predictions?fixture_id=', '/api/health'],
+          routes: ['/api/live', '/api/fixtures', '/api/standings', '/api/topscorers', '/api/odds', '/api/predictions?fixture_id=', '/api/health'],
         }, 404);
     }
     return json(result.data, 200, { 'X-Cache': result.source });
