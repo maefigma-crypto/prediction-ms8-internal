@@ -46,7 +46,7 @@ export async function getRedirects(env) {
 export function defaultSettings() {
   return {
     site_name: 'ScoreOcs8',
-    default_seo_title: 'ScoreOcs8 — AI Sports Predictions',
+    default_seo_title: 'ScoreOcs8 - Pro Sports Predictions',
     default_meta_description: 'AI-powered football and badminton predictions.',
     default_og_image: '',
     robots_txt: 'User-agent: *\nAllow: /\nDisallow: /admin/\nSitemap: https://scoreocs8.pages.dev/sitemap.xml',
@@ -190,7 +190,7 @@ function toKvPost(dateKey, kind, entry, generatedAt) {
   if (awayName) ogParams.set('away', awayName);
   ogParams.set('league', leagueLabel);
   ogParams.set('date', kickoff);
-  ogParams.set('tag', kind === 'top' ? 'MATCH OF THE DAY' : 'AI PICK');
+  ogParams.set('tag', kind === 'top' ? 'BIG MATCH' : 'PRO PICK');
   const ogImage = `${SITE_URL}/og/match?${ogParams.toString()}`;
 
   return {
@@ -198,13 +198,13 @@ function toKvPost(dateKey, kind, entry, generatedAt) {
     slug,
     source: 'kv',
     meta: {
-      title: c.title_en || 'Daily AI Preview',
+      title: c.title_en || 'Daily Pro Preview',
       date: dateIso,
       category: categoryMap[leagueKey] || 'Football Prediction',
       league: leagueKey,
-      excerpt: c.meta_description || (c.body_en || '').replace(/[#*_`>\-]/g, '').slice(0, 155) || 'AI-generated match preview.',
+      excerpt: c.meta_description || (c.body_en || '').replace(/[#*_`>\-]/g, '').slice(0, 155) || 'Daily pro match preview.',
       featured_image: ogImage,
-      seo_title: c.title_en || 'Daily AI Preview',
+      seo_title: c.title_en || 'Daily Pro Preview',
       meta_description: c.meta_description || (c.body_en || '').replace(/\s+/g, ' ').slice(0, 155),
       // Keep title localisation; body is EN-only (SEO focus).
       title_bm: c.title_bm || '',

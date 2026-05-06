@@ -7,7 +7,7 @@
 //   1. Read content:YYYY-MM-DD from KV (written by cron/src/index.js) to
 //      get the 3 featured fixtures for today.
 //   2. For each fixture, read prediction:<fixture_id> from KV (written by
-//      /api/predictions?fixture_id=X) to get the AI pick + confidence.
+//      /api/predictions?fixture_id=X) to get the pro pick + confidence.
 //   3. Render a pure-HTML page with inline CSS (no JS) so the page is
 //      fully painted on first byte — screenshot tools capture it cleanly.
 //
@@ -61,7 +61,7 @@ function fmtKickoff(iso) {
   }
 }
 
-// Fetch the AI pick for one fixture from KV. Falls back to a placeholder if
+// Fetch the pro pick for one fixture from KV. Falls back to a placeholder if
 // the prediction hasn't been generated/cached yet.
 async function getPick(env, fixtureId) {
   try {
@@ -125,7 +125,7 @@ export async function onRequest(context) {
   const displayDate = dateOverride || todayMYT();
   const { fixtures, sourceKey } = await loadFeatured(env, dateOverride);
 
-  // Hydrate each fixture with its cached AI pick.
+  // Hydrate each fixture with its cached pro pick.
   const picks = await Promise.all(
     fixtures.map(async fx => ({ fx, pick: await getPick(env, fx.fixture?.id) }))
   );
@@ -159,7 +159,7 @@ function renderPickRow({ fx, pick }) {
   const homeLogo = fx.teams?.home?.logo || '';
   const awayLogo = fx.teams?.away?.logo || '';
   const time = fmtKickoff(fx.fixture?.date);
-  const pickLabel = pick?.label || 'AI analysing';
+  const pickLabel = pick?.label || 'Pro analysis pending';
   const pickConf = pick?.confidence || '—';
 
   return `
@@ -180,7 +180,7 @@ function renderPickRow({ fx, pick }) {
         </div>
       </div>
       <div class="pa">
-        <div class="pal">⚡ AI PICK · 推介</div>
+        <div class="pal">PRO PICK</div>
         <div class="pav">${esc(pickLabel)}</div>
         <div class="pac">Confidence · 胜率: <b>${esc(pickConf)}</b></div>
       </div>
@@ -312,8 +312,8 @@ function renderHtml({ displayDate, picks, accuracy, debug }) {
     </div>
 
     <div class="hero">
-      <div class="eyebrow">Today's Top <span class="hl">AI Picks</span></div>
-      <div class="subtitle">今日足球精选推介 · Powered by ScoreOcs8 AI</div>
+      <div class="eyebrow">Today's Top <span class="hl">Pro Picks</span></div>
+      <div class="subtitle">今日足球精选推介 · Powered by ScoreOcs8 Pro Analysis</div>
     </div>
 
     <div class="picks">${pickRows}</div>

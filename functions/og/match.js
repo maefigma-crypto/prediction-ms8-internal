@@ -1,94 +1,143 @@
-// GET /og/match?home=...&away=...&league=...&date=...&risk=...
-// Renders a branded ScoreOcs8 match card as SVG (1200x630, OG-card size).
-// Cheap: no deps, no WASM, no image fetches — pure string template.
+// GET /og/match?home=...&away=...&league=...&date=...&tag=...
+// Renders a branded ScoreOcs8 match image as SVG (1200x630).
+// This is cheap enough for daily KV/blog posts: no image API, no deps, no WASM.
 
 function escXml(s) {
-  return String(s ?? '').replace(/[<>&"']/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' }[c]));
+  return String(s ?? '').replace(/[<>&"']/g, c => ({
+    '<': '&lt;',
+    '>': '&gt;',
+    '&': '&amp;',
+    '"': '&quot;',
+    "'": '&apos;',
+  }[c]));
 }
 
 function fmtMyt(iso) {
   if (!iso) return '';
   try {
     const d = new Date(iso);
-    const date = d.toLocaleDateString('en-MY', { timeZone: 'Asia/Kuala_Lumpur', day: 'numeric', month: 'short', year: 'numeric' });
-    const time = d.toLocaleTimeString('en-MY', { timeZone: 'Asia/Kuala_Lumpur', hour: '2-digit', minute: '2-digit', hour12: false });
-    return `${date} · ${time} MYT`;
+    const date = d.toLocaleDateString('en-MY', {
+      timeZone: 'Asia/Kuala_Lumpur',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+    const time = d.toLocaleTimeString('en-MY', {
+      timeZone: 'Asia/Kuala_Lumpur',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+    return `${date} - ${time} MYT`;
   } catch {
     return '';
   }
 }
 
-// Shrink font size when text is too long to fit inside the card safely.
 function fitSize(text, maxLen, base, min) {
   const len = String(text).length;
   if (len <= maxLen) return base;
-  const scaled = Math.max(min, Math.round(base * (maxLen / len)));
-  return scaled;
+  return Math.max(min, Math.round(base * (maxLen / len)));
+}
+
+function shortTeam(name) {
+  const text = String(name || '').trim();
+  return text.length > 24 ? `${text.slice(0, 21)}...` : text;
 }
 
 export async function onRequestGet({ request }) {
   const url = new URL(request.url);
-  const home = url.searchParams.get('home') || 'Home Team';
-  const away = url.searchParams.get('away') || 'Away Team';
-  const league = (url.searchParams.get('league') || 'ScoreOcs8 AI Prediction').toUpperCase();
+  const home = shortTeam(url.searchParams.get('home') || 'Home Team');
+  const away = shortTeam(url.searchParams.get('away') || 'Away Team');
+  const league = (url.searchParams.get('league') || 'ScoreOcs8 Pro Analysis').toUpperCase();
   const dateStr = fmtMyt(url.searchParams.get('date'));
-  const tag = (url.searchParams.get('tag') || 'AI PICK').toUpperCase();
+  const tag = (url.searchParams.get('tag') || 'PRO PICK').toUpperCase();
 
-  const homeSize = fitSize(home, 16, 62, 38);
-  const awaySize = fitSize(away, 16, 62, 38);
+  const homeSize = fitSize(home, 18, 48, 30);
+  const awaySize = fitSize(away, 18, 48, 30);
+  const leagueWidth = Math.min(560, Math.max(210, league.length * 10 + 34));
+  const tagWidth = Math.min(260, Math.max(138, tag.length * 9 + 38));
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#080b10"/>
-      <stop offset="100%" stop-color="#141e2a"/>
+      <stop offset="0%" stop-color="#05070b"/>
+      <stop offset="48%" stop-color="#0c121b"/>
+      <stop offset="100%" stop-color="#102119"/>
     </linearGradient>
-    <radialGradient id="glow" cx="50%" cy="50%" r="60%">
-      <stop offset="0%" stop-color="rgba(249,115,22,0.15)"/>
-      <stop offset="100%" stop-color="rgba(249,115,22,0)"/>
+    <radialGradient id="pitch" cx="70%" cy="48%" r="58%">
+      <stop offset="0%" stop-color="rgba(0,229,160,0.26)"/>
+      <stop offset="48%" stop-color="rgba(249,115,22,0.10)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
     </radialGradient>
-    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
-      <path d="M 48 0 L 0 0 0 48" fill="none" stroke="rgba(249,115,22,0.045)" stroke-width="1"/>
+    <linearGradient id="orange" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#ff9f1a"/>
+    </linearGradient>
+    <linearGradient id="teal" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00e5a0"/>
+      <stop offset="100%" stop-color="#3d8fff"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#000000" flood-opacity="0.45"/>
+    </filter>
+    <pattern id="grid" width="42" height="42" patternUnits="userSpaceOnUse">
+      <path d="M42 0H0V42" fill="none" stroke="rgba(249,115,22,0.045)" stroke-width="1"/>
     </pattern>
   </defs>
 
-  <!-- Background layers -->
   <rect width="1200" height="630" fill="url(#bg)"/>
   <rect width="1200" height="630" fill="url(#grid)"/>
-  <ellipse cx="600" cy="315" rx="500" ry="260" fill="url(#glow)"/>
+  <ellipse cx="820" cy="315" rx="520" ry="300" fill="url(#pitch)"/>
 
-  <!-- Top accent bar -->
-  <rect x="0" y="0" width="1200" height="5" fill="#f97316"/>
+  <path d="M0 520 C240 475 420 540 620 500 C820 460 980 480 1200 420 L1200 630 L0 630 Z" fill="rgba(0,229,160,0.08)"/>
+  <path d="M730 145 H1120 V500 H730 Z" fill="rgba(255,255,255,0.018)" stroke="rgba(255,255,255,0.08)"/>
+  <path d="M860 145 V500 M730 245 H1120 M730 395 H1120" stroke="rgba(255,255,255,0.06)" stroke-width="2"/>
 
-  <!-- League tag (top-left) -->
-  <rect x="60" y="50" width="${Math.max(160, league.length * 11 + 24)}" height="34" rx="4" fill="rgba(249,115,22,0.12)" stroke="rgba(249,115,22,0.35)" stroke-width="1"/>
-  <text x="${60 + 12}" y="73" font-family="'Rajdhani','Helvetica Neue',system-ui,sans-serif" font-size="16" fill="#f97316" letter-spacing="3" font-weight="600">${escXml(league)}</text>
+  <rect x="0" y="0" width="1200" height="6" fill="url(#orange)"/>
+  <rect x="58" y="54" width="${leagueWidth}" height="40" rx="6" fill="rgba(249,115,22,0.12)" stroke="rgba(249,115,22,0.38)"/>
+  <text x="76" y="80" font-family="'DM Mono','Menlo',monospace" font-size="16" fill="#f97316" letter-spacing="2">${escXml(league)}</text>
+  <rect x="${1082 - tagWidth}" y="54" width="${tagWidth}" height="40" rx="6" fill="rgba(0,229,160,0.10)" stroke="rgba(0,229,160,0.34)"/>
+  <text x="${1066}" y="80" font-family="'DM Mono','Menlo',monospace" font-size="15" fill="#00e5a0" text-anchor="end" letter-spacing="2">${escXml(tag)}</text>
 
-  <!-- Tag (top-right) — with inline SVG bolt so emoji support isn't required -->
-  <rect x="${1140 - Math.max(150, tag.length * 10 + 44)}" y="50" width="${Math.max(150, tag.length * 10 + 44)}" height="34" rx="4" fill="rgba(245,166,35,0.12)" stroke="rgba(245,166,35,0.35)" stroke-width="1"/>
-  <path d="M ${1140 - Math.max(150, tag.length * 10 + 44) + 14} 60 L ${1140 - Math.max(150, tag.length * 10 + 44) + 10} 70 L ${1140 - Math.max(150, tag.length * 10 + 44) + 17} 70 L ${1140 - Math.max(150, tag.length * 10 + 44) + 13} 80 L ${1140 - Math.max(150, tag.length * 10 + 44) + 22} 68 L ${1140 - Math.max(150, tag.length * 10 + 44) + 15} 68 Z" fill="#f5a623"/>
-  <text x="${1140 - 12}" y="73" font-family="'Rajdhani','Helvetica Neue',system-ui,sans-serif" font-size="15" fill="#f5a623" letter-spacing="2.5" font-weight="700" text-anchor="end">${escXml(tag)}</text>
+  <text x="60" y="174" font-family="'Rajdhani','Helvetica Neue',system-ui,sans-serif" font-size="38" fill="#ffffff" font-weight="700" letter-spacing="1">Score<tspan fill="#f97316">Ocs8</tspan></text>
+  <text x="60" y="216" font-family="'DM Mono','Menlo',monospace" font-size="13" fill="#8a9ab5" letter-spacing="3">BIG MATCH PRO ANALYSIS</text>
 
-  <!-- Teams stack -->
-  <text x="600" y="${280 - (homeSize > 50 ? 0 : 10)}" font-family="'Rajdhani','Helvetica Neue',system-ui,sans-serif" font-size="${homeSize}" fill="#ffffff" text-anchor="middle" font-weight="700" letter-spacing="1">${escXml(home)}</text>
+  <g filter="url(#shadow)">
+    <rect x="60" y="260" width="485" height="190" rx="18" fill="rgba(15,22,32,0.88)" stroke="rgba(255,255,255,0.12)"/>
+    <text x="95" y="326" font-family="'Rajdhani','Helvetica Neue',system-ui,sans-serif" font-size="${homeSize}" fill="#ffffff" font-weight="700">${escXml(home)}</text>
+    <rect x="95" y="352" width="86" height="50" rx="25" fill="url(#orange)"/>
+    <text x="138" y="386" font-family="'Rajdhani','Helvetica Neue',system-ui,sans-serif" font-size="30" fill="#ffffff" text-anchor="middle" font-weight="800">VS</text>
+    <text x="205" y="390" font-family="'Rajdhani','Helvetica Neue',system-ui,sans-serif" font-size="${awaySize}" fill="#ffffff" font-weight="700">${escXml(away)}</text>
+    <text x="95" y="425" font-family="'DM Mono','Menlo',monospace" font-size="15" fill="#8a9ab5">${escXml(dateStr || 'SEE SCOREOCS8 FOR DETAILS')}</text>
+  </g>
 
-  <!-- VS pill -->
-  <circle cx="600" cy="335" r="36" fill="#f97316"/>
-  <text x="600" y="348" font-family="'Rajdhani','Helvetica Neue',system-ui,sans-serif" font-size="28" fill="#ffffff" text-anchor="middle" font-weight="700" letter-spacing="2">VS</text>
+  <g filter="url(#shadow)">
+    <rect x="625" y="250" width="245" height="132" rx="14" fill="rgba(15,22,32,0.84)" stroke="rgba(249,115,22,0.42)"/>
+    <text x="650" y="292" font-family="'DM Mono','Menlo',monospace" font-size="14" fill="#f97316" letter-spacing="2">PRO PICK</text>
+    <rect x="650" y="318" width="170" height="12" rx="6" fill="rgba(255,255,255,0.10)"/>
+    <rect x="650" y="318" width="124" height="12" rx="6" fill="url(#orange)"/>
+    <text x="650" y="358" font-family="'Rajdhani','Helvetica Neue',system-ui,sans-serif" font-size="24" fill="#ffffff" font-weight="700">Confidence 72%</text>
+  </g>
 
-  <text x="600" y="${400 + (awaySize > 50 ? 15 : 0)}" font-family="'Rajdhani','Helvetica Neue',system-ui,sans-serif" font-size="${awaySize}" fill="#ffffff" text-anchor="middle" font-weight="700" letter-spacing="1">${escXml(away)}</text>
+  <g filter="url(#shadow)">
+    <rect x="905" y="180" width="220" height="150" rx="14" fill="rgba(15,22,32,0.84)" stroke="rgba(0,229,160,0.36)"/>
+    <text x="930" y="220" font-family="'DM Mono','Menlo',monospace" font-size="13" fill="#00e5a0" letter-spacing="2">LIVE SCORE</text>
+    <text x="930" y="282" font-family="'Rajdhani','Helvetica Neue',system-ui,sans-serif" font-size="56" fill="#ffffff" font-weight="800">2 - 1</text>
+    <text x="930" y="310" font-family="'DM Mono','Menlo',monospace" font-size="13" fill="#8a9ab5">78:45</text>
+  </g>
 
-  <!-- Date strip -->
-  <rect x="300" y="470" width="600" height="1" fill="rgba(255,255,255,0.1)"/>
-  <text x="600" y="510" font-family="'DM Mono','Menlo','monospace'" font-size="20" fill="#8a9ab5" text-anchor="middle" letter-spacing="3">${escXml(dateStr || 'SEE SCOREOCS8 FOR DETAILS')}</text>
+  <g filter="url(#shadow)">
+    <rect x="720" y="420" width="360" height="86" rx="14" fill="rgba(15,22,32,0.84)" stroke="rgba(255,255,255,0.12)"/>
+    <text x="750" y="455" font-family="'DM Mono','Menlo',monospace" font-size="13" fill="#8a9ab5" letter-spacing="2">RESULTS PROOF</text>
+    <text x="750" y="490" font-family="'Rajdhani','Helvetica Neue',system-ui,sans-serif" font-size="22" fill="#00e5a0" font-weight="700">WON</text>
+    <text x="835" y="490" font-family="'Rajdhani','Helvetica Neue',system-ui,sans-serif" font-size="22" fill="#f5a623" font-weight="700">DRAW</text>
+    <text x="930" y="490" font-family="'Rajdhani','Helvetica Neue',system-ui,sans-serif" font-size="22" fill="#ff4757" font-weight="700">LOST</text>
+  </g>
 
-  <!-- Branding row -->
-  <text x="60" y="580" font-family="'Rajdhani','Helvetica Neue',system-ui,sans-serif" font-size="34" fill="#ffffff" font-weight="700" letter-spacing="1">Score<tspan fill="#f97316">Ocs8</tspan></text>
-  <text x="60" y="602" font-family="'DM Mono','Menlo','monospace'" font-size="12" fill="#4a5a72" letter-spacing="2">AI SPORTS PREDICTIONS</text>
-
-  <rect x="1040" y="562" width="100" height="32" rx="4" fill="#f97316"/>
-  <path d="M 1054 570 L 1048 582 L 1058 582 L 1052 594 L 1064 578 L 1054 578 Z" fill="#ffffff"/>
-  <text x="1106" y="584" font-family="'Rajdhani','Helvetica Neue',system-ui,sans-serif" font-size="14" fill="#ffffff" text-anchor="middle" font-weight="700" letter-spacing="2">PICK</text>
+  <rect x="60" y="540" width="500" height="46" rx="8" fill="rgba(249,115,22,0.10)" stroke="rgba(249,115,22,0.30)"/>
+  <text x="84" y="570" font-family="'Rajdhani','Helvetica Neue',system-ui,sans-serif" font-size="20" fill="#ffffff" font-weight="700" letter-spacing="2">JOIN TELEGRAM TO UNLOCK FULL PICKS</text>
+  <text x="790" y="570" font-family="'DM Mono','Menlo',monospace" font-size="13" fill="#4a5a72" letter-spacing="2">PRO ANALYSIS - LIVE SCORES - H2H - LINEUPS</text>
 </svg>`;
 
   return new Response(svg, {

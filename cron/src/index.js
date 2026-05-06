@@ -193,7 +193,7 @@ async function generateDaily(env) {
   await env.CACHE.put(`content:${date}`, JSON.stringify(output), { expirationTtl: 48 * 3600 });
 
   // Warm the /api/predictions cache for each featured fixture so the
-  // /daily/ screenshot page always shows real AI picks (not "analysing").
+  // /daily/ screenshot page always shows real pro picks (not "analysing").
   // Each hit populates prediction:<fixture_id> in KV via the Pages Function.
   const warmerReport = await warmPredictions(output).catch(e => ({ error: String(e.message || e) }));
 
@@ -246,7 +246,7 @@ async function pingIndexNow(bundle, date) {
 //
 // /api/predictions?fixture_id=X is cached on-demand for 12h. We proactively
 // call it for each featured fixture so the /daily/ screenshot page always
-// shows the actual AI pick instead of the "AI analysing" placeholder.
+// shows the actual pro pick instead of the "Pro analysis pending" placeholder.
 
 async function warmPredictions(output) {
   const ids = [];
@@ -557,7 +557,7 @@ function isoWeekKey(d = new Date()) {
   return `${tgt.getUTCFullYear()}-W${String(weekNum).padStart(2, '0')}`;
 }
 
-// Decide if an AI pick was correct given the final score.
+// Decide if a pro pick was correct given the final score.
 // Covers HOME/DRAW/AWAY (1X2). Over/under and BTTS markets will be added
 // when the prediction schema expands.
 function pickWasCorrect(pick, goalsHome, goalsAway) {

@@ -4,7 +4,7 @@
 //   📢 ScoreOcs8 Today's Predictions | 今日足球精选预测
 //   📅 21 April 2026
 //
-//   Today's top AI picks | 今日推介:
+//   Today's top pro picks | 今日推介:
 //   👉 🏆 UCL · Man City vs Arsenal — Man City win @1.85
 //   ...
 //
@@ -17,7 +17,7 @@
 //   👉 🇲🇾 https://[affiliate-my]
 //   👉 🇸🇬 https://[affiliate-sg]
 //
-//   #ScoreOcs8 #footballpredictions #AIpicks #足球预测 #今日推介
+//   #ScoreOcs8 #footballpredictions #ProPicks #足球预测 #今日推介
 
 const LEAGUE_EMOJI = {
   39: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
@@ -71,14 +71,14 @@ export function buildDailyCaption({
   lines.push('');
 
   if (picks.length) {
-    lines.push(`<b>Today's top AI picks</b> | 今日推介:`);
+    lines.push(`<b>Today's top pro picks</b> | 今日推介:`);
     for (const p of picks.slice(0, 3)) {
       const leagueId = p.fx?.league?.id;
       const flag = LEAGUE_EMOJI[leagueId] || '⚽';
       const league = LEAGUE_SHORT[leagueId] || (p.fx?.league?.name || '');
       const home = p.fx?.teams?.home?.name || 'Home';
       const away = p.fx?.teams?.away?.name || 'Away';
-      const pickLabel = p.pick?.pickLabel || p.pick?.pick || 'AI analysing';
+      const pickLabel = p.pick?.pickLabel || p.pick?.pick || 'Pro analysis pending';
       const conf = p.pick?.confidence != null ? ` (${p.pick.confidence}%)` : '';
       lines.push(`👉 ${flag} <b>${esc(league)}</b> · ${esc(home)} vs ${esc(away)} — <b>${esc(pickLabel)}</b>${conf}`);
     }
@@ -105,7 +105,7 @@ export function buildDailyCaption({
   }
 
   lines.push(
-    `#ScoreOcs8 #footballpredictions #AIpicks #malaysianfootball #足球预测 #今日推介`
+    `#ScoreOcs8 #footballpredictions #ProPicks #malaysianfootball #足球预测 #今日推介`
   );
 
   const out = lines.join('\n');
@@ -125,7 +125,7 @@ export function buildDailyCaptionX({
     day: 'numeric', month: 'short',
   });
   const lines = [];
-  lines.push(`📢 ScoreOcs8 Top AI Picks · ${d}`);
+  lines.push(`📢 ScoreOcs8 Top Pro Picks · ${d}`);
   lines.push('');
   for (const p of picks.slice(0, 3)) {
     const leagueId = p.fx?.league?.id;
@@ -143,7 +143,7 @@ export function buildDailyCaptionX({
   }
   lines.push('');
   lines.push(`🔗 ${siteUrl}/`);
-  lines.push('#football #AIpicks');
+  lines.push('#football #ProPicks');
 
   let out = lines.join('\n');
   // X counts URLs as 23 chars regardless of length; approximate by subtracting
@@ -189,7 +189,7 @@ export function buildPreMatchMotdCaption({
   // Same odds curve as the /slip/ page so caption matches the graphic.
   const odds = +(1 + (1 - conf / 100) * 2.5).toFixed(2);
   const payout = +(stake * odds).toFixed(2);
-  const selection = pick?.pickLabel || pick?.pick || 'AI analysing';
+  const selection = pick?.pickLabel || pick?.pick || 'Pro analysis pending';
 
   let kickoff = '—';
   try {
@@ -205,7 +205,7 @@ export function buildPreMatchMotdCaption({
   lines.push(`⚽ <b>${esc(home)} vs ${esc(away)}</b>`);
   lines.push(`⏰ Kickoff: ${esc(kickoff)} MYT`);
   lines.push('');
-  lines.push(`⚡ <b>AI Pick</b>: ${esc(selection)} (${conf}%)`);
+  lines.push(`⚡ <b>Pro Pick</b>: ${esc(selection)} (${conf}%)`);
   lines.push(`💰 Virtual stake · 虚拟注码: <b>RM${esc(stake)}</b>`);
   lines.push(`💵 Potential payout · 潜在回报: <b>RM${esc(payout.toFixed(2))}</b> @${esc(odds)}`);
   lines.push('');
@@ -232,8 +232,8 @@ export function buildResultCaption({ fixture, pickCorrect = null, weekAcc = null
   lines.push('');
   lines.push(`<b>${esc(home)} ${hs} — ${as} ${esc(away)}</b>`);
   lines.push('');
-  if (pickCorrect === true) lines.push(`✅ Our AI pick was <b>correct</b> · 预测正确`);
-  else if (pickCorrect === false) lines.push(`❌ Our AI pick missed · 预测未中`);
+  if (pickCorrect === true) lines.push(`✅ Our pro pick was <b>correct</b> · 预测正确`);
+  else if (pickCorrect === false) lines.push(`❌ Our pro pick missed · 预测未中`);
   if (weekAcc && weekAcc.total > 0) {
     lines.push(`📊 This week: ${weekAcc.hits}/${weekAcc.total} (${weekAcc.pct}%)`);
   }

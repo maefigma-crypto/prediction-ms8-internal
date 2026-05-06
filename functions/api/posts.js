@@ -12,7 +12,7 @@ function ogImageUrl(origin, fx, kind) {
   if (fx.teams?.away?.name) p.set('away', fx.teams.away.name);
   p.set('league', fx.league?.name || '');
   p.set('date', fx.fixture?.date || '');
-  p.set('tag', kind === 'top' ? 'MATCH OF THE DAY' : 'AI PICK');
+  p.set('tag', kind === 'top' ? 'BIG MATCH' : 'PRO PICK');
   return `${origin}/og/match?${p.toString()}`;
 }
 
