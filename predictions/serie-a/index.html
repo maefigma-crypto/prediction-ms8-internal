@@ -272,6 +272,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:2.
 
 <!-- NAV -->
 <nav>
+  <button class="nav-burger" onclick="toggleBurger()" aria-label="Open menu"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg></button>
   <a href="/" class="nav-logo"><img src="/logo.png" alt="ScoreOcs8" style="height:34px;width:auto;display:block;"></a>
   <ul class="nav-links">
     <li><a href="/">🏠 Home</a></li>
@@ -283,6 +284,32 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:2.
     <a href="https://pp88fs.ocs8winwinwin.shop/?country=MY&lang=en&affcampaign=LAVCNR&aff=AFFLSAHYM" target="_blank" rel="noopener" class="btn-nav">Register or Login</a>
   </div>
 </nav>
+<div id="nav-drawer" onclick="if(event.target===this)closeBurger()">
+  <div class="drawer-card">
+    <div class="drawer-head"><span>Menu</span><button onclick="closeBurger()" aria-label="Close menu">×</button></div>
+    <a href="/" class="dr-link">🏠 Home</a>
+    <a href="/#predictions" class="dr-link">📊 Match Predictions</a>
+    <a href="/#highlights" class="dr-link">📅 Match Schedule</a>
+    <a href="/blog/" class="dr-link">📝 Blog</a>
+    <div class="dr-section">Leagues</div>
+    <a href="/predictions/premier-league/" class="dr-link">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</a>
+    <a href="/predictions/champions-league/" class="dr-link">⭐ Champions League</a>
+    <a href="/predictions/la-liga/" class="dr-link">🇪🇸 La Liga</a>
+    <a href="/predictions/serie-a/" class="dr-link">🇮🇹 Serie A</a>
+    <a href="/predictions/bundesliga/" class="dr-link">🇩🇪 Bundesliga</a>
+    <a href="/predictions/ligue-1/" class="dr-link">🇫🇷 Ligue 1</a>
+    <a href="/predictions/fifa-world-cup/" class="dr-link">🏆 FIFA World Cup 2026</a>
+    <a href="https://t.me/scoreocs8" target="_blank" rel="noopener" class="dr-link dr-tg">📲 Join @scoreocs8 on Telegram</a>
+    <a href="https://pp88fs.ocs8winwinwin.shop/?country=MY&lang=en&affcampaign=LAVCNR&aff=AFFLSAHYM" target="_blank" rel="noopener" class="dr-cta">Register or Login →</a>
+  </div>
+</div>
+<script>
+function toggleBurger(){document.getElementById('nav-drawer').classList.toggle('open');}
+function closeBurger(){const d=document.getElementById('nav-drawer');if(d)d.classList.remove('open');}
+document.addEventListener('click',e=>{if(e.target.classList&&e.target.classList.contains('dr-link'))closeBurger();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeBurger();});
+</script>
+
 
 <!-- BREADCRUMB -->
 <div class="breadcrumb">

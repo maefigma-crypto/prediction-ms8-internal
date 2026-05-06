@@ -642,6 +642,24 @@ body > nav::before{content:'';position:absolute;top:0;left:18%;right:18%;height:
 .lang-btn{border-radius:999px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);backdrop-filter:blur(10px);}
 .nav-signin{border-radius:999px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);}
 
+/* Hamburger button + mobile drawer */
+.nav-burger{display:none;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:var(--text);width:38px;height:38px;border-radius:999px;cursor:pointer;align-items:center;justify-content:center;backdrop-filter:blur(10px);transition:background .2s;}
+.nav-burger:hover{background:rgba(255,255,255,0.10);}
+@media(max-width:900px){.nav-burger{display:inline-flex !important;}}
+#nav-drawer{display:none;position:fixed;inset:0;z-index:300;background:rgba(5,8,17,0.65);backdrop-filter:blur(14px) saturate(140%);align-items:flex-start;justify-content:center;padding:88px 12px 16px;}
+#nav-drawer.open{display:flex;}
+.drawer-card{width:100%;max-width:420px;background:rgba(20,28,44,0.85);border:1px solid rgba(255,255,255,0.12);border-radius:22px;backdrop-filter:blur(28px) saturate(170%);box-shadow:0 30px 80px rgba(0,0,0,0.50),inset 0 1px 0 rgba(255,255,255,0.10);padding:14px;display:flex;flex-direction:column;gap:4px;max-height:calc(100vh - 110px);overflow-y:auto;}
+.drawer-head{display:flex;justify-content:space-between;align-items:center;padding:6px 10px 12px;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:6px;}
+.drawer-head span{font-family:var(--ff);font-size:14px;font-weight:600;letter-spacing:.10em;text-transform:uppercase;color:var(--text2);}
+.drawer-head button{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);color:var(--text);width:34px;height:34px;border-radius:50%;font-size:20px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;}
+.dr-link{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;color:var(--text);text-decoration:none;font-family:var(--fb);font-size:14px;font-weight:500;transition:all .15s;min-height:44px;}
+.dr-link:hover{background:rgba(255,255,255,0.06);color:var(--accent);}
+.dr-section{font-family:var(--fm);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);padding:14px 14px 4px;margin-top:6px;}
+.dr-tg{background:linear-gradient(135deg,rgba(34,158,217,0.18),rgba(34,158,217,0.04));border:1px solid rgba(34,158,217,0.30);margin-top:8px;}
+.dr-tg:hover{background:linear-gradient(135deg,rgba(34,158,217,0.28),rgba(34,158,217,0.08));}
+.dr-cta{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 18px;margin-top:6px;border-radius:14px;background:linear-gradient(180deg,#ff9c4a 0%,#f97316 50%,#c75808 100%);color:#fff;text-decoration:none;font-family:var(--ff);font-size:15px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;box-shadow:0 8px 22px rgba(249,115,22,0.45),inset 0 1px 0 rgba(255,255,255,0.40);min-height:48px;}
+.dr-cta:hover{filter:brightness(1.08);}
+
 /* Push ticker / page below the floating nav */
 .ticker-wrap{margin-top:96px;background:rgba(15,20,32,0.55);border:1px solid rgba(255,255,255,0.08);backdrop-filter:blur(14px) saturate(160%);}
 
@@ -948,6 +966,9 @@ footer{
 </div>
 
 <nav>
+  <button class="nav-burger" onclick="toggleBurger()" aria-label="Open menu">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+  </button>
   <a href="#" class="nav-logo"><img src="/logo.png" alt="ScoreOcs8"></a>
   <ul class="nav-links">
     <li><a href="#" class="active">🏠 Home</a></li>
@@ -1008,6 +1029,29 @@ footer{
   </div>
 </nav>
 
+<!-- Mobile menu drawer (opened by hamburger) -->
+<div id="nav-drawer" onclick="if(event.target===this)closeBurger()">
+  <div class="drawer-card">
+    <div class="drawer-head">
+      <span>Menu</span>
+      <button onclick="closeBurger()" aria-label="Close menu">×</button>
+    </div>
+    <a href="/" class="dr-link">🏠 Home</a>
+    <a href="/#predictions" class="dr-link">📊 Match Predictions</a>
+    <a href="/#highlights" class="dr-link">📅 Match Schedule</a>
+    <a href="/blog/" class="dr-link">📝 Blog</a>
+    <div class="dr-section">Leagues</div>
+    <a href="/predictions/premier-league/" class="dr-link">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</a>
+    <a href="/predictions/champions-league/" class="dr-link">⭐ Champions League</a>
+    <a href="/predictions/la-liga/" class="dr-link">🇪🇸 La Liga</a>
+    <a href="/predictions/serie-a/" class="dr-link">🇮🇹 Serie A</a>
+    <a href="/predictions/bundesliga/" class="dr-link">🇩🇪 Bundesliga</a>
+    <a href="/predictions/ligue-1/" class="dr-link">🇫🇷 Ligue 1</a>
+    <a href="/predictions/fifa-world-cup/" class="dr-link">🏆 FIFA World Cup 2026</a>
+    <a href="https://t.me/scoreocs8" target="_blank" rel="noopener" class="dr-link dr-tg">📲 Join @scoreocs8 on Telegram</a>
+    <a href="https://pp88fs.ocs8winwinwin.shop/?country=MY&lang=en&affcampaign=LAVCNR&aff=AFFLSAHYM" target="_blank" rel="noopener" class="dr-cta">Register or Login →</a>
+  </div>
+</div>
 
 <div class="ticker-wrap">
   <div class="ticker-inner" id="live-ticker">
@@ -1839,6 +1883,10 @@ fetch('/api/auth/me').then(r=>r.json()).then(d=>{
   }
 }).catch(()=>{});
 function toggleLangMenu(){const m=document.getElementById('lang-menu');m.style.display=m.style.display==='none'?'block':'none';}
+function toggleBurger(){document.getElementById('nav-drawer').classList.toggle('open');}
+function closeBurger(){document.getElementById('nav-drawer').classList.remove('open');}
+document.addEventListener('click',e=>{if(e.target.classList&&e.target.classList.contains('dr-link'))closeBurger();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeBurger();});
 document.addEventListener('click',e=>{const li=document.getElementById('auth-logged-in');const lw=document.getElementById('lang-wrap');const am=document.getElementById('auth-modal');if(li&&!li.contains(e.target))document.getElementById('profile-dropdown').style.display='none';if(lw&&!lw.contains(e.target)){const lm=document.getElementById('lang-menu');if(lm)lm.style.display='none';}if(e.target===am)closeModal();});
 function setLang(lang,flag){document.getElementById('lang-current').textContent='🌐 '+lang;document.getElementById('lang-menu').style.display='none';
 const t={EN:{hero1:'Pro Match',hero2:'Predictions',hero3:'Live Picks',herosub:"See today's best match first, then read simple pro picks with confidence, H2H history, live score context, and settled result proof.",btn1:'View Predictions',btn2:'Live Streaming',acc:'Accuracy',users:'Active Users',matches:'Matches Analysed',sat:'Satisfaction',predtitle:'Match Predictions',predsub:'Updated daily 08:00 MYT · Major leagues only · Powered by ScoreOcs8 Pro Analysis',motdtitle:'Match of the Day',tgtitle:'Get Picks on Telegram',tgsub:'Join @scoreocs8 — predictions auto-posted before every match. Free forever.'},
@@ -2283,7 +2331,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
             <div class="easy-stat"><span>Kickoff</span><strong>${esc(kickoff)}</strong></div>
             <div class="easy-stat"><span>Market</span><strong>1X2 result</strong></div>
           </div>
-          <a class="detail-btn" href="/match/${fx.fixture.id}-${slugify(`${homeName}-vs-${awayName}`)}/" onclick="event.stopPropagation();event.preventDefault();openMatchDetail(${fx.fixture.id})">View ${esc(homeName)} vs ${esc(awayName)} prediction →</a>
+          <a class="detail-btn" href="/match/${fx.fixture.id}-${slugify(`${homeName}-vs-${awayName}`)}/" onclick="event.stopPropagation();event.preventDefault();openMatchDetail(${fx.fixture.id})" aria-label="View ${esc(homeName)} vs ${esc(awayName)} prediction" title="View ${esc(homeName)} vs ${esc(awayName)} prediction">Prediction →</a>
           <button class="pick-help-btn" type="button" onclick="event.stopPropagation();openPickHelp('${esc(homeName)}','${esc(awayName)}','${esc(pickLabel)}')">What does this pick mean?</button>
           ${details}
         </div>
