@@ -6,9 +6,9 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ScoreOcs8 — AI Sports Predictions | Football & Badminton</title>
-<meta name="description" content="ScoreOcs8 uses AI to deliver accurate football and badminton predictions for EPL, UCL, FIFA World Cup 2026 and BWF. Free 2-day trial.">
-<meta name="keywords" content="football prediction Malaysia, badminton prediction BWF, AI sports prediction Malaysia, EPL prediction MYT, FIFA World Cup 2026 Malaysia, ScoreOcs8, Lee Zii Jia prediction, Asian handicap guide Malaysia">
+<title>ScoreOcs8 - Pro Sports Predictions | Football & Badminton</title>
+<meta name="description" content="ScoreOcs8 delivers pro football and badminton predictions for EPL, UCL, FIFA World Cup 2026 and BWF. Telegram member access available.">
+<meta name="keywords" content="football prediction Malaysia, badminton prediction BWF, sports prediction Malaysia, EPL prediction MYT, FIFA World Cup 2026 Malaysia, ScoreOcs8, Lee Zii Jia prediction, Asian handicap guide Malaysia">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -261,7 +261,18 @@ body > nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-it
 .badminton-note .mini b{display:block;font-family:var(--fm);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:4px;}
 .insights-section{position:relative;z-index:1;background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
 .insights-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-#motd{background:linear-gradient(135deg,#101722 0%,#121821 56%,#1a1110 100%);border-top:1px solid rgba(249,115,22,.18);border-bottom:1px solid rgba(249,115,22,.18);}
+#motd{display:none!important;background:linear-gradient(135deg,#101722 0%,#121821 56%,#1a1110 100%);border-top:1px solid rgba(249,115,22,.18);border-bottom:1px solid rgba(249,115,22,.18);}
+.intro-banner{position:relative;z-index:1;background:linear-gradient(135deg,rgba(249,115,22,.08),rgba(13,17,23,.96) 44%,rgba(0,229,160,.05));border-top:1px solid rgba(249,115,22,.18);border-bottom:1px solid rgba(249,115,22,.18);}
+.intro-inner{display:grid;grid-template-columns:1.1fr .9fr;gap:22px;align-items:stretch;padding-top:50px;padding-bottom:50px;}
+.intro-copy{background:rgba(15,22,32,.72);border:1px solid var(--border2);border-radius:10px;padding:24px;}
+.intro-points{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px;}
+.intro-points div{background:rgba(8,11,16,.44);border:1px solid var(--border);border-radius:8px;padding:12px;}
+.intro-points strong{display:block;font-family:var(--ff);font-size:26px;color:var(--accent);line-height:1;}
+.intro-points span{display:block;font-size:13px;color:var(--text2);margin-top:5px;line-height:1.35;}
+.banner-slot{min-height:250px;border:1px dashed rgba(249,115,22,.42);border-radius:10px;background:linear-gradient(135deg,rgba(249,115,22,.16),rgba(20,30,42,.88));display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:24px;}
+.banner-tag{font-family:var(--fm);font-size:10px;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;}
+.banner-title{font-family:var(--ff);font-size:30px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;line-height:1.05;}
+.banner-sub{font-size:14px;color:var(--text2);max-width:360px;margin-top:10px;}
 #motd .sec{padding-top:56px;padding-bottom:56px;}
 #motd .stitle{font-size:46px;}
 #motd .ssub{font-size:16px;max-width:720px;}
@@ -450,6 +461,11 @@ html,body{overflow-x:hidden;max-width:100vw;}
   #motd .stitle{font-size:34px;}
   #motd .mtab{font-size:13px !important;padding:9px 12px !important;}
   #motd .motd-row{padding:16px 14px !important;}
+  .intro-inner{grid-template-columns:1fr;padding-top:34px;padding-bottom:34px;}
+  .intro-copy{padding:18px;}
+  .intro-points{grid-template-columns:1fr;}
+  .banner-slot{min-height:190px;}
+  .banner-title{font-size:24px;}
   .easy-top{grid-template-columns:1fr;}
   .easy-conf{display:flex;align-items:center;justify-content:space-between;text-align:left;min-width:0;}
   .easy-conf span{margin-top:0;}
@@ -518,7 +534,7 @@ html,body{overflow-x:hidden;max-width:100vw;}
     <button onclick="closeModal()" style="position:absolute;top:12px;right:14px;background:transparent;border:none;color:var(--text3);font-size:18px;cursor:pointer;line-height:1;">✕</button>
     <div style="width:60px;height:60px;border-radius:50%;background:rgba(249,115,22,.15);display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;font-size:28px;">🔓</div>
     <div style="font-family:var(--ff);font-size:26px;font-weight:700;letter-spacing:.04em;color:var(--accent);margin-bottom:.75rem;">Unlock All Predictions</div>
-    <div style="font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:1.75rem;">Sign up or log in to access 100+ more matches with AI-powered predictions, detailed analysis, and real-time odds.</div>
+    <div style="font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:1.75rem;">Sign up or log in to access 100+ more matches with pro predictions, detailed analysis, and real-time odds.</div>
     <div style="display:flex;flex-direction:column;gap:10px;">
       <a href="/login" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:#229ED9;color:#fff;font-family:var(--ff);font-size:15px;font-weight:700;letter-spacing:.05em;padding:13px;border-radius:6px;text-decoration:none;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.941z"/></svg>
@@ -538,13 +554,8 @@ html,body{overflow-x:hidden;max-width:100vw;}
     <li class="nav-dropdown">
       <a href="#blog">📋 League Blog ▾</a>
       <div class="dm">
-        <a href="/predictions/malaysia-super-league/">🇲🇾 Malaysia Super League</a>
         <a href="/predictions/premier-league/">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</a>
         <a href="/predictions/champions-league/">⭐ Champions League</a>
-        <a href="/predictions/la-liga/">🇪🇸 La Liga</a>
-        <a href="/predictions/bundesliga/">🇩🇪 Bundesliga</a>
-        <a href="/predictions/serie-a/">🇮🇹 Serie A</a>
-        <a href="/predictions/ligue-1/">🇫🇷 Ligue 1</a>
         <a href="/predictions/fifa-world-cup/">🏆 FIFA World Cup 2026</a>
         <a href="/predictions/badminton/">🏸 BWF Badminton</a>
       </div>
@@ -638,9 +649,9 @@ html,body{overflow-x:hidden;max-width:100vw;}
   <div class="hglow"></div><div class="hglow2"></div>
   <div class="hero-inner">
     <div>
-      <div class="eyebrow">AI picks · Live scores · Results proof · Malaysia</div>
-      <h1><span id="hl-hero1">AI Match</span><br><span class="hl" id="hl-hero2">Predictions</span><br><span id="hl-hero3">Live Picks</span></h1>
-      <p class="hero-sub" id="hl-herosub">See today's best match first, then read simple AI picks with confidence, H2H history, live score context, and settled result proof.</p>
+      <div class="eyebrow">Pro picks · Live scores · Results proof · Malaysia</div>
+      <h1><span id="hl-hero1">Pro Match</span><br><span class="hl" id="hl-hero2">Predictions</span><br><span id="hl-hero3">Live Picks</span></h1>
+      <p class="hero-sub" id="hl-herosub">See the biggest matches first, then read simple pro picks with confidence, H2H history, live score context, and settled result proof.</p>
       <div class="hero-btns">
         <a href="#predictions" class="btn-p" id="hl-btn1">📊 View Predictions</a>
         <a href="#highlights" class="btn-o" id="hl-btn2">📺 Live Streaming</a>
@@ -655,7 +666,7 @@ html,body{overflow-x:hidden;max-width:100vw;}
     </div>
     <div>
       <div class="hcard">
-        <div class="ch"><span class="cl">⭐ UEFA Champions League</span><span class="bpred">AI PICK · SEMI-FINAL</span></div>
+        <div class="ch"><span class="cl">⭐ UEFA Champions League</span><span class="bpred">PRO PICK · SEMI-FINAL</span></div>
         <div class="mb">
           <div class="mt">
             <div><div style="font-size:20px;margin-bottom:3px">🏟️</div><div class="tn">PSG</div></div>
@@ -663,11 +674,11 @@ html,body{overflow-x:hidden;max-width:100vw;}
             <div><div style="font-size:20px;margin-bottom:3px;text-align:right">🏟️</div><div class="tn tnr">Bayern München</div></div>
           </div>
           <div class="ps">
-            <div class="pl">ScoreOcs8 AI Prediction</div>
+            <div class="pl">ScoreOcs8 Pro Analysis</div>
             <div class="pbr"><span class="pbt">PSG</span><div class="pbw"><div class="pbf" style="width:48%;background:var(--accent)"></div></div><span class="pbp" style="color:var(--accent)">48%</span></div>
             <div class="pbr"><span class="pbt">Draw</span><div class="pbw"><div class="pbf" style="width:22%;background:var(--text3)"></div></div><span class="pbp" style="color:var(--text3)">22%</span></div>
             <div class="pbr"><span class="pbt">Bayern</span><div class="pbw"><div class="pbf" style="width:30%;background:var(--blue)"></div></div><span class="pbp" style="color:var(--blue)">30%</span></div>
-            <div class="aipick"><div><div class="aipl">AI Pick</div><div class="aipv">PSG 2–1</div></div><div style="font-family:var(--fm);font-size:10px;color:var(--text2)">Confidence<br><strong style="color:var(--accent)">MED ●●●○○</strong></div></div>
+            <div class="aipick"><div><div class="aipl">Pro Pick</div><div class="aipv">PSG 2–1</div></div><div style="font-family:var(--fm);font-size:10px;color:var(--text2)">Confidence<br><strong style="color:var(--accent)">MED ●●●○○</strong></div></div>
           </div>
         </div>
       </div>
@@ -675,24 +686,44 @@ html,body{overflow-x:hidden;max-width:100vw;}
   </div>
 </section>
 
+<section class="intro-banner" id="intro">
+  <div class="sec intro-inner">
+    <div class="intro-copy fu v">
+      <div class="stag">Member Access</div>
+      <h2 class="stitle">Big Match Predictions, Simple To Read</h2>
+      <p class="ssub">ScoreOcs8 focuses on major football and badminton matches only. Login with Telegram, join our channel, then enter your Telegram channel member ID to unlock the full prediction page.</p>
+      <div class="intro-points">
+        <div><strong>1</strong><span>Login with Telegram</span></div>
+        <div><strong>2</strong><span>Join @livebad channel</span></div>
+        <div><strong>3</strong><span>Unlock full pro analysis</span></div>
+      </div>
+    </div>
+    <div class="banner-slot fu v">
+      <div class="banner-tag">Banner Space</div>
+      <div class="banner-title">Add your promotion banner here</div>
+      <div class="banner-sub">Best for trial offer, Telegram channel, or big-match campaign.</div>
+    </div>
+  </div>
+</section>
+
 <div class="subcta" id="subscribe">
   <div class="sci">
-    <div class="sct fu">Subscribe Now to <span class="hl">Unlock All Predictions</span></div>
-    <p class="scs fu">2-day free trial — then deposit at our platform to continue. Cancel anytime.</p>
+    <div class="sct fu">Join Telegram to <span class="hl">Unlock Full Predictions</span></div>
+    <p class="scs fu">Login with Telegram, join our channel, then enter your Telegram channel member ID to unlock full analysis.</p>
     <div class="steps fu">
-      <div class="step"><div class="stepn">STEP 1 ›</div><div class="stepic">👤</div><div class="stept">Create ScoreOcs8 Account</div><div class="stepd">Sign up free — 2-day trial included</div></div>
-      <div class="step"><div class="stepn">STEP 2 ›</div><div class="stepic">💳</div><div class="stept">Deposit at Our Platform</div><div class="stepd">Min. RM50 deposit to unlock full access</div></div>
-      <div class="step"><div class="stepn">STEP 3 ›</div><div class="stepic">🏆</div><div class="stept">Start Winning</div><div class="stepd">Daily AI picks, live scores & predictions</div></div>
+      <div class="step"><div class="stepn">STEP 1 ›</div><div class="stepic">👤</div><div class="stept">Login With Telegram</div><div class="stepd">Use Telegram login for fast access</div></div>
+      <div class="step"><div class="stepn">STEP 2 ›</div><div class="stepic">📲</div><div class="stept">Join Our Channel</div><div class="stepd">Join @livebad before full unlock</div></div>
+      <div class="step"><div class="stepn">STEP 3 ›</div><div class="stepic">🔓</div><div class="stept">Enter Member ID</div><div class="stepd">Channel member ID unlocks full pro analysis</div></div>
     </div>
-    <div style="text-align:center" class="fu"><a href="/login.html" class="btn-p" style="font-size:16px;padding:14px 36px;">Join ScoreOcs8 Now</a></div>
+    <div style="text-align:center" class="fu"><a href="/login.html" class="btn-p" style="font-size:16px;padding:14px 36px;">Login With Telegram</a></div>
   </div>
 </div>
 
 <section id="predictions" style="position:relative;z-index:1;background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
   <div class="sec">
-    <div class="stag">Daily AI Picks</div>
+    <div class="stag">Daily Pro Picks</div>
     <h2 class="stitle" id="hl-predtitle">Match Predictions</h2>
-    <p class="ssub" id="hl-predsub">Updated daily 08:00 MYT · Major leagues & international only · Powered by ScoreOcs8 AI</p>
+    <p class="ssub" id="hl-predsub">Updated daily 08:00 MYT · Big matches & international only · Powered by ScoreOcs8 Pro Analysis</p>
     <div class="mtabs">
       <button class="mtab active" data-mode="upcoming" onclick="switchMTab(this)">⏰ Upcoming</button>
       <button class="mtab" data-mode="today" onclick="switchMTab(this)">📅 Today</button>
@@ -773,7 +804,7 @@ html,body{overflow-x:hidden;max-width:100vw;}
       <div class="pgrid">
 
         <div class="pc fu" data-league="bwf">
-          <div class="pch"><span class="pcl"><span class="lbadge" style="background:#1a1a20">🏸</span>BWF World Tour Finals · Today 15:00 MYT</span><div class="pcmeta"><span class="bpred">AI PICK</span><span class="badge-low">Low Risk</span></div></div>
+          <div class="pch"><span class="pcl"><span class="lbadge" style="background:#1a1a20">🏸</span>BWF World Tour Finals · Today 15:00 MYT</span><div class="pcmeta"><span class="bpred">PRO PICK</span><span class="badge-low">Low Risk</span></div></div>
           <div class="pcb">
             <div class="pct">
               <div class="team-side"><div class="tlogo" style="font-size:28px">🇲🇾</div><div class="tname">Lee Zii Jia</div><div class="tform"><span class="fd fw">W</span><span class="fd fw">W</span><span class="fd fl">L</span><span class="fd fw">W</span><span class="fd fw">W</span></div><span class="fstreak good">3 Wins</span></div>
@@ -781,7 +812,7 @@ html,body{overflow-x:hidden;max-width:100vw;}
               <div class="team-side"><div class="tlogo" style="font-size:28px">🇩🇰</div><div class="tname">V. Axelsen</div><div class="tform"><span class="fd fw">W</span><span class="fd fw">W</span><span class="fd fw">W</span><span class="fd fdraw">D</span><span class="fd fw">W</span></div><span class="fstreak good">4 Wins</span></div>
             </div>
             <div class="ppred">
-              <div class="ppred-head"><div class="ppred-left"><div class="ppred-icon">🎯</div><div><div class="ppred-lbl">AI Prediction</div><div class="ppred-pick">Lee Zii Jia Win</div></div></div><div class="ppred-conf"><div class="ppred-clbl">Confidence</div><div class="ppred-cval">54%</div></div></div>
+              <div class="ppred-head"><div class="ppred-left"><div class="ppred-icon">🎯</div><div><div class="ppred-lbl">Pro Analysis</div><div class="ppred-pick">Lee Zii Jia Win</div></div></div><div class="ppred-conf"><div class="ppred-clbl">Confidence</div><div class="ppred-cval">54%</div></div></div>
               <div class="ppred-analysis">Lee Zii Jia on a strong home run and comfortable on fast courts. Axelsen dominant globally but Lee ZJ's head-to-head record improved significantly in 2025. Narrow pick for the Malaysian.</div>
             </div>
           </div>
@@ -797,7 +828,7 @@ html,body{overflow-x:hidden;max-width:100vw;}
               <div class="team-side"><div class="tlogo" style="font-size:28px">🇨🇳</div><div class="tname">China</div><div class="tform"><span class="fd fw">W</span><span class="fd fw">W</span><span class="fd fw">W</span><span class="fd fw">W</span><span class="fd fw">W</span></div><span class="fstreak good">5 Wins</span></div>
             </div>
             <div class="ppred">
-              <div class="ppred-head"><div class="ppred-left"><div class="ppred-icon">🎯</div><div><div class="ppred-lbl">AI Prediction</div><div class="ppred-pick">China Win (3-2)</div></div></div><div class="ppred-conf"><div class="ppred-clbl">Confidence</div><div class="ppred-cval">62%</div></div></div>
+              <div class="ppred-head"><div class="ppred-left"><div class="ppred-icon">🎯</div><div><div class="ppred-lbl">Pro Analysis</div><div class="ppred-pick">China Win (3-2)</div></div></div><div class="ppred-conf"><div class="ppred-clbl">Confidence</div><div class="ppred-cval">62%</div></div></div>
               <div class="ppred-analysis">China's depth is exceptional — even trailing 1-2 they have strong singles options. Malaysia putting up a fight but China expected to close out in singles. Historic record strongly favours China.</div>
             </div>
           </div>
@@ -805,7 +836,7 @@ html,body{overflow-x:hidden;max-width:100vw;}
         </div>
 
         <div class="pc fu" data-league="bwf" style="transition-delay:.2s">
-          <div class="pch"><span class="pcl"><span class="lbadge" style="background:#1a1a20">🏸</span>BWF World Tour · Today 17:30 MYT</span><div class="pcmeta"><span class="bpred">AI PICK</span><span class="badge-med">Med Risk</span></div></div>
+          <div class="pch"><span class="pcl"><span class="lbadge" style="background:#1a1a20">🏸</span>BWF World Tour · Today 17:30 MYT</span><div class="pcmeta"><span class="bpred">PRO PICK</span><span class="badge-med">Med Risk</span></div></div>
           <div class="pcb">
             <div class="pct">
               <div class="team-side"><div class="tlogo" style="font-size:28px">🇲🇾</div><div class="tname">Ng/Tan</div><div class="tform"><span class="fd fw">W</span><span class="fd fl">L</span><span class="fd fw">W</span><span class="fd fw">W</span><span class="fd fl">L</span></div><span class="fstreak good">2 Wins</span></div>
@@ -813,7 +844,7 @@ html,body{overflow-x:hidden;max-width:100vw;}
               <div class="team-side"><div class="tlogo" style="font-size:28px">🇮🇳</div><div class="tname">Satwik/Chirag</div><div class="tform"><span class="fd fw">W</span><span class="fd fw">W</span><span class="fd fw">W</span><span class="fd fl">L</span><span class="fd fw">W</span></div><span class="fstreak good">3 Wins</span></div>
             </div>
             <div class="ppred">
-              <div class="ppred-head"><div class="ppred-left"><div class="ppred-icon">🎯</div><div><div class="ppred-lbl">AI Prediction</div><div class="ppred-pick">India Pair Win</div></div></div><div class="ppred-conf"><div class="ppred-clbl">Confidence</div><div class="ppred-cval">56%</div></div></div>
+              <div class="ppred-head"><div class="ppred-left"><div class="ppred-icon">🎯</div><div><div class="ppred-lbl">Pro Analysis</div><div class="ppred-pick">India Pair Win</div></div></div><div class="ppred-conf"><div class="ppred-clbl">Confidence</div><div class="ppred-cval">56%</div></div></div>
               <div class="ppred-analysis">Satwik/Chirag on a 3-match win streak and ranked higher. Ng/Tan competitive but head-to-head record in 2025 favours India 3-1. Expect a close 3-game encounter.</div>
             </div>
           </div>
@@ -831,7 +862,7 @@ html,body{overflow-x:hidden;max-width:100vw;}
     <h2 class="stitle" style="text-align:center">Why Choose ScoreOcs8?</h2>
     <p class="ssub" style="text-align:center">Advanced analytics meets intuitive design</p>
     <div class="wgrid fu">
-      <div class="wc"><div class="wci">🎯</div><div class="wct">AI-Powered Analysis</div><div class="wcd">Advanced ML models analyse thousands of data points per match — form, H2H, injuries, odds movements.</div></div>
+      <div class="wc"><div class="wci">🎯</div><div class="wct">Pro Match Analysis</div><div class="wcd">Advanced ML models analyse thousands of data points per match — form, H2H, injuries, odds movements.</div></div>
       <div class="wc"><div class="wci">⚡</div><div class="wct">Real-time Updates</div><div class="wcd">Instant updates on matches, odds and predictions. Live scores every 30s. All times in MYT (Asia/KL).</div></div>
       <div class="wc"><div class="wci">🛡️</div><div class="wct">Comprehensive Data</div><div class="wcd">Football, Badminton, FIFA World Cup, EPL, UCL — major leagues only. No small competition noise.</div></div>
       <div class="wc"><div class="wci">📈</div><div class="wct">87% Accuracy</div><div class="wcd">Prediction accuracy backed by historical data. Full transparency — every result logged publicly.</div></div>
@@ -1144,7 +1175,7 @@ html,body{overflow-x:hidden;max-width:100vw;}
   <div class="sec">
     <div class="stag">SEO · League Blog</div>
     <h2 class="stitle">Latest from the Blog</h2>
-    <p class="ssub">AI-powered match previews, league analysis & betting guides · Updated daily</p>
+    <p class="ssub">Big-match previews, pro analysis & betting guides · Updated daily</p>
 
     <a id="blog-featured" class="bcard fu" style="display:flex;flex-direction:row;gap:0;margin-bottom:16px;max-height:180px;text-decoration:none;"></a>
     <div class="bgrid fu" id="blog-grid"></div>
@@ -1185,12 +1216,12 @@ html,body{overflow-x:hidden;max-width:100vw;}
     <h2 class="stitle">Frequently Asked Questions</h2>
     <p class="ssub">Everything you need to know about ScoreOcs8</p>
     <div class="faqlist fu">
-      <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">How accurate are ScoreOcs8 AI predictions? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">Our AI achieves 87% overall accuracy. All predictions are logged and results published publicly in our Track Record section. We only cover major leagues — English Premier League, UEFA Champions League, FIFA World Cup, and BWF international badminton tournaments.</div></div></div>
+      <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">How accurate are ScoreOcs8 predictions? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">Our pro analysis record shows 87% overall accuracy. All predictions are logged and results published publicly in our Track Record section. We only cover major leagues — English Premier League, UEFA Champions League, FIFA World Cup, and BWF international badminton tournaments.</div></div></div>
       <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">What leagues and sports does ScoreOcs8 cover? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">Football: English Premier League, UEFA Champions League, FIFA World Cup qualifying and finals. Badminton: BWF World Tour, Thomas Cup, Uber Cup, Sudirman Cup. We do not cover small or lower-league competitions.</div></div></div>
       <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">How does the 2-day free trial work? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">Sign up free and get full access for 2 days. After the trial, a minimum RM50 deposit at our partner platform is required to continue. No hidden fees — cancel any time.</div></div></div>
       <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">What timezone are all match times shown in? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">All times on ScoreOcs8 are displayed in Asia/Kuala Lumpur time (MYT, UTC+8). The live clock in the nav bar always shows current MYT time so you never miss a kick-off.</div></div></div>
-      <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">How do I get started with ScoreOcs8 for free? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">Simply sign up for a free account — no credit card required. You get a 2-day free trial with full access to all AI predictions, live scores and match analysis. After the trial, a minimum RM50 deposit at our platform unlocks continued access.</div></div></div>
-      <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">Is there a Telegram channel for free daily picks? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">Yes! Join @livebad on Telegram for free daily predictions auto-posted before every match. Live score updates and AI analysis included. Completely free to join.</div></div></div>
+      <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">How do I get started with ScoreOcs8 for free? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">Simply sign up for a free account — no credit card required. You get a 2-day free trial with full access to all pro predictions, live scores and match analysis. After the trial, a minimum RM50 deposit at our platform unlocks continued access.</div></div></div>
+      <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">Is there a Telegram channel for free daily picks? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">Yes! Join @livebad on Telegram for free daily predictions auto-posted before every match. Live score updates and pro analysis included. Completely free to join.</div></div></div>
     </div>
   </div>
 </section>
@@ -1207,7 +1238,7 @@ html,body{overflow-x:hidden;max-width:100vw;}
 <footer>
   <div class="fi">
     <div class="ftop">
-      <div><div class="fbn"><img src="/logo.png" alt="ScoreOcs8" style="height:40px;width:auto;display:block;margin-bottom:4px;"></div><div class="fbd">AI-powered football and badminton predictions. Malaysia's #1 sports prediction platform.</div><div class="fsocial">
+      <div><div class="fbn"><img src="/logo.png" alt="ScoreOcs8" style="height:40px;width:auto;display:block;margin-bottom:4px;"></div><div class="fbd">Pro football and badminton predictions. Malaysia's #1 sports prediction platform.</div><div class="fsocial">
 <a href="https://t.me/livebad" target="_blank" rel="noopener" class="fsi" aria-label="Telegram @livebad" title="Telegram @livebad"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg></a>
 <a href="#" class="fsi" aria-label="WhatsApp Channel (coming soon)" title="WhatsApp Channel — coming soon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.297-.497.099-.198.05-.371-.025-.52-.074-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/></svg></a>
 <a href="https://instagram.com/scoreocs8" target="_blank" rel="noopener" class="fsi" aria-label="Instagram" title="Instagram @scoreocs8"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>
@@ -1216,13 +1247,13 @@ html,body{overflow-x:hidden;max-width:100vw;}
 <a href="https://tiktok.com/@scoreocs8" target="_blank" rel="noopener" class="fsi" aria-label="TikTok" title="TikTok @scoreocs8"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a>
 <a href="https://facebook.com/scoreocs8" target="_blank" rel="noopener" class="fsi" aria-label="Facebook" title="Facebook /scoreocs8"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
 </div></div>
-      <div class="fcol"><div class="fct">Quick Links</div><ul><li><a href="/">Home</a></li><li><a href="#predictions">Match Prediction</a></li><li><a href="#motd">Match of the Day</a></li><li><a href="/blog/">Blog</a></li><li><a href="#faq">FAQ</a></li></ul></div>
+      <div class="fcol"><div class="fct">Quick Links</div><ul><li><a href="/">Home</a></li><li><a href="#predictions">Match Prediction</a></li><li><a href="/blog/">Blog</a></li><li><a href="#faq">FAQ</a></li></ul></div>
       <div class="fcol"><div class="fct">Resources</div><ul><li><a href="/blog/">Latest Articles</a></li><li><a href="#history">Accuracy Stats</a></li><li><a href="#highlights">Highlights</a></li><li><a href="#" onclick="event.preventDefault();openHiw();">How It Works</a></li></ul></div>
       <div class="fcol"><div class="fct">Connect</div><ul><li><a href="https://t.me/livebad" target="_blank" rel="noopener">Telegram @livebad</a></li><li><a href="https://instagram.com/scoreocs8" target="_blank" rel="noopener">Instagram</a></li><li><a href="https://x.com/scoreocs8" target="_blank" rel="noopener">X / Twitter</a></li><li><a href="https://threads.net/@scoreocs8" target="_blank" rel="noopener">Threads</a></li><li><a href="https://tiktok.com/@scoreocs8" target="_blank" rel="noopener">TikTok</a></li></ul></div>
     </div>
     <div class="seob">
-      <h3>Malaysia's #1 AI Sports Prediction Platform — Football & Badminton</h3>
-      <p>ScoreOcs8 delivers AI-powered match predictions for the English Premier League, UEFA Champions League and FIFA World Cup 2026 qualifying and finals — all displayed in MYT (Asia/Kuala Lumpur, UTC+8) timezone. Our machine learning model analyses head-to-head records, team form, injury data and live betting odds to generate daily predictions with confidence percentages. Badminton coverage includes BWF World Tour, Thomas Cup, Uber Cup and Sudirman Cup international tournaments. New users receive a 2-day free trial — no deposit required to start. ScoreOcs8 predictions are also auto-broadcast daily to our free Telegram channel @livebad before every match kick-off.</p>
+      <h3>Malaysia's #1 Sports Prediction Platform — Football & Badminton</h3>
+      <p>ScoreOcs8 delivers pro match predictions for the English Premier League, UEFA Champions League and FIFA World Cup 2026 qualifying and finals — all displayed in MYT (Asia/Kuala Lumpur, UTC+8) timezone. Our analysis team reviews head-to-head records, team form, injury data and live betting odds to generate daily predictions with confidence percentages. Badminton coverage includes BWF World Tour, Thomas Cup, Uber Cup and Sudirman Cup international tournaments. New users receive a 2-day free trial — no deposit required to start. ScoreOcs8 predictions are also auto-broadcast daily to our free Telegram channel @livebad before every match kick-off.</p>
     </div>
     <div class="fbot"><div class="fcp">© 2025 ScoreOcs8. All rights reserved.</div><div class="fpl"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Cookie Policy</a></div></div>
   </div>
@@ -1359,9 +1390,9 @@ fetch('/api/auth/me').then(r=>r.json()).then(d=>{
 function toggleLangMenu(){const m=document.getElementById('lang-menu');m.style.display=m.style.display==='none'?'block':'none';}
 document.addEventListener('click',e=>{const li=document.getElementById('auth-logged-in');const lw=document.getElementById('lang-wrap');const am=document.getElementById('auth-modal');if(li&&!li.contains(e.target))document.getElementById('profile-dropdown').style.display='none';if(lw&&!lw.contains(e.target)){const lm=document.getElementById('lang-menu');if(lm)lm.style.display='none';}if(e.target===am)closeModal();});
 function setLang(lang,flag){document.getElementById('lang-current').textContent='🌐 '+lang;document.getElementById('lang-menu').style.display='none';
-const t={EN:{hero1:'AI Match',hero2:'Predictions',hero3:'Live Picks',herosub:"See today's best match first, then read simple AI picks with confidence, H2H history, live score context, and settled result proof.",btn1:'View Predictions',btn2:'Live Streaming',acc:'Accuracy',users:'Active Users',matches:'Matches Analysed',sat:'Satisfaction',predtitle:'Match Predictions',predsub:'Updated daily 08:00 MYT · Major leagues only · Powered by ScoreOcs8 AI',motdtitle:'Match of the Day',tgtitle:'Get Picks on Telegram',tgsub:'Join @livebad — predictions auto-posted before every match. Free forever.'},
-BM:{hero1:'Ramalan AI',hero2:'Perlawanan',hero3:'Pilihan Live',herosub:'Lihat perlawanan terbaik hari ini dahulu, kemudian baca pilihan AI ringkas dengan keyakinan, sejarah H2H, skor live dan bukti keputusan.',btn1:'Lihat Ramalan',btn2:'Siaran Langsung',acc:'Ketepatan',users:'Pengguna Aktif',matches:'Perlawanan Dianalisa',sat:'Kepuasan',predtitle:'Ramalan Perlawanan',predsub:'Dikemas kini harian 08:00 MYT · Liga utama sahaja · Dikuasakan oleh ScoreOcs8 AI',motdtitle:'Perlawanan Hari Ini',tgtitle:'Dapatkan Pilihan di Telegram',tgsub:'Sertai @livebad — ramalan dipos automatik sebelum setiap perlawanan. Percuma selamanya.'},
-中文:{hero1:'AI比赛',hero2:'预测',hero3:'实时推荐',herosub:'先看今日焦点赛事，再阅读清楚的AI推荐、信心指数、交手历史、实时比分和赛果证明。',btn1:'查看预测',btn2:'直播',acc:'准确率',users:'活跃用户',matches:'已分析比赛',sat:'满意度',predtitle:'比赛预测',predsub:'每日08:00 MYT更新 · 仅主要联赛 · 由ScoreOcs8 AI驱动',motdtitle:'今日焦点赛事',tgtitle:'在Telegram获取预测',tgsub:'加入@livebad — 每场比赛前自动发布预测。永久免费。'}};
+const t={EN:{hero1:'Pro Match',hero2:'Predictions',hero3:'Live Picks',herosub:"See today's best match first, then read simple pro picks with confidence, H2H history, live score context, and settled result proof.",btn1:'View Predictions',btn2:'Live Streaming',acc:'Accuracy',users:'Active Users',matches:'Matches Analysed',sat:'Satisfaction',predtitle:'Match Predictions',predsub:'Updated daily 08:00 MYT · Major leagues only · Powered by ScoreOcs8 Pro Analysis',motdtitle:'Match of the Day',tgtitle:'Get Picks on Telegram',tgsub:'Join @livebad — predictions auto-posted before every match. Free forever.'},
+BM:{hero1:'Ramalan Pro',hero2:'Perlawanan',hero3:'Pilihan Live',herosub:'Lihat perlawanan terbaik hari ini dahulu, kemudian baca pilihan pro ringkas dengan keyakinan, sejarah H2H, skor live dan bukti keputusan.',btn1:'Lihat Ramalan',btn2:'Siaran Langsung',acc:'Ketepatan',users:'Pengguna Aktif',matches:'Perlawanan Dianalisa',sat:'Kepuasan',predtitle:'Ramalan Perlawanan',predsub:'Dikemas kini harian 08:00 MYT · Liga utama sahaja · Dikuasakan oleh ScoreOcs8 Pro Analysis',motdtitle:'Perlawanan Hari Ini',tgtitle:'Dapatkan Pilihan di Telegram',tgsub:'Sertai @livebad — ramalan dipos automatik sebelum setiap perlawanan. Percuma selamanya.'},
+中文:{hero1:'AI比赛',hero2:'预测',hero3:'实时推荐',herosub:'先看今日焦点赛事，再阅读清楚的AI推荐、信心指数、交手历史、实时比分和赛果证明。',btn1:'查看预测',btn2:'直播',acc:'准确率',users:'活跃用户',matches:'已分析比赛',sat:'满意度',predtitle:'比赛预测',predsub:'每日08:00 MYT更新 · 仅主要联赛 · 由ScoreOcs8 Pro Analysis驱动',motdtitle:'今日焦点赛事',tgtitle:'在Telegram获取预测',tgsub:'加入@livebad — 每场比赛前自动发布预测。永久免费。'}};
 const d=t[lang]||t['EN'];
 const ids=[['hl-hero1',d.hero1],['hl-hero2',d.hero2],['hl-hero3',d.hero3],['hl-herosub',d.herosub],['hl-btn1',d.btn1],['hl-btn2',d.btn2],['hl-acc',d.acc],['hl-users',d.users],['hl-matches',d.matches],['hl-sat',d.sat],['hl-predtitle',d.predtitle],['hl-predsub',d.predsub],['hl-motdtitle',d.motdtitle],['hl-tgtitle',d.tgtitle],['hl-tgsub',d.tgsub]];
 ids.forEach(([id,val])=>{const el=document.getElementById(id);if(el)el.textContent=val;});
@@ -1433,7 +1464,7 @@ window.addEventListener('load',()=>{
         <div style="display:flex;gap:6px;justify-content:center;margin-bottom:14px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--border2);"></div><div style="width:22px;height:8px;border-radius:4px;background:var(--accent);"></div><div style="width:8px;height:8px;border-radius:50%;background:var(--border2);"></div></div>
         <div style="font-family:var(--fm);font-size:10px;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Step 2 of 3</div>
         <div style="font-family:var(--ff);font-size:20px;font-weight:700;color:var(--text);margin-bottom:6px;">Read the Analysis</div>
-        <div style="font-size:13px;color:var(--text2);line-height:1.65;margin-bottom:18px;">Each prediction shows the confidence level, key stats and our AI reasoning — so you know exactly why we picked it, not just what we picked.</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.65;margin-bottom:18px;">Each prediction shows the confidence level, key stats and our pro reasoning — so you know exactly why we picked it, not just what we picked.</div>
         <button onclick="gohiw(3)" style="width:100%;background:var(--accent);color:#fff;font-family:var(--ff);font-size:15px;font-weight:700;border:none;border-radius:10px;padding:14px;cursor:pointer;">Next →</button>
       </div>
     </div>
@@ -1588,7 +1619,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
       return `${firstScore > secondScore ? firstTeam : secondTeam} win`;
     }
     const title = plainText(ai?.title_en);
-    if (!title) return 'AI analysing';
+    if (!title) return 'Pro analysis pending';
     const cleaned = title
       .replace(/\b(prediction|preview|betting tips?|odds)\b/gi, '')
       .replace(new RegExp(`${escapeRegExp(home)}\\s+vs\\s+${escapeRegExp(away)}`, 'i'), '')
@@ -1597,7 +1628,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
       .trim()
       .slice(0, 72) || title.slice(0, 72);
     if (cleaned && cleaned.toLowerCase() !== home.toLowerCase() && cleaned.toLowerCase() !== away.toLowerCase()) return cleaned;
-    return cleaned ? `${cleaned} win` : 'AI analysing';
+    return cleaned ? `${cleaned} win` : 'Pro analysis pending';
   }
 
   function pickMeaning(pick, home, away) {
@@ -1608,7 +1639,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     if (team && (handicap === '-0.50' || handicap === '-0.5')) return `${team} must win at full-time. Draw or loss means this pick loses.`;
     if (team && (handicap === '+0.50' || handicap === '+0.5')) return `${team} can win or draw. It only loses if ${team} loses.`;
     if (team) return `${team} must win at full-time for this 1X2 pick to win.`;
-    return 'Confidence shows how strong the AI rates this pick, not a guaranteed result.';
+    return 'Confidence shows how strong the pro analysis rates this pick, not a guaranteed result.';
   }
 
   function aiVoteSeed(pick, homeName, awayName, confValue) {
@@ -1684,7 +1715,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     const conf = slip?.confidence ?? confidenceOf(ai);
     const reason = completed && slip
       ? `Final score ${slip.score_home}-${slip.score_away}. Pick result: ${slip.status === 'won' ? 'WIN' : slip.status === 'lost' ? 'LOSS' : 'PENDING'}.`
-      : firstSentence(ai?.body_en, 'Prediction appears here when the AI preview is generated.');
+      : firstSentence(ai?.body_en, 'Prediction appears here when the pro analysis is updated.');
     const badge = live_ ? `<span class="blive"><span class="ldot"></span>LIVE</span>` : completed ? `<span class="result-strip final" style="margin:0;padding:3px 8px;font-size:10px;">FT</span>` : `<span class="bpred">NEXT</span>`;
 
     if (main) {
@@ -1696,7 +1727,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
           <div class="live-team away"><div class="live-team-name">${esc(primary.teams.away.name)}</div><img src="${esc(primary.teams.away.logo || '')}" onerror="this.style.display='none'"></div>
         </div>
         <div class="live-pickbox">
-          <div class="live-pick-label">AI Prediction</div>
+          <div class="live-pick-label">Pro Analysis</div>
           <div class="live-pick-value">${esc(pick)}${conf == null ? '' : ` · ${esc(conf)}%`}</div>
           <div class="live-reason">${esc(reason)}</div>
         </div>`;
@@ -1733,7 +1764,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
       ? `<span class="blive"><span class="ldot"></span>LIVE ${fx.fixture.status.elapsed||''}'</span>`
       : status === 'FT'
         ? `<span class="bpred" style="color:var(--text2);background:rgba(255,255,255,.05);border-color:var(--border)">FT</span>`
-        : `<span class="bpred">AI PICK</span>`;
+        : `<span class="bpred">PRO PICK</span>`;
     const freeTag = members
       ? ''
       : `<span style="font-family:var(--fm);font-size:9px;color:#00e5a0;background:rgba(0,229,160,.1);padding:2px 7px;border-radius:2px;border:1px solid rgba(0,229,160,.2);">FREE</span>`;
@@ -1751,7 +1782,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     const completedReason = slip
       ? `Final score ${slip.score_home}-${slip.score_away}. This virtual pick was marked ${slip.status === 'won' ? 'WIN' : slip.status === 'lost' ? 'LOSS' : 'PENDING'} in the public record.`
       : 'Completed match. Result is shown for customer reference.';
-    const shortReason = completed ? completedReason : firstSentence(fullAnalysis, 'AI preview generates daily at 07:00 MYT. Check the kickoff time and come back before the match starts.');
+    const shortReason = completed ? completedReason : firstSentence(fullAnalysis, 'Pro analysis updates daily at 07:00 MYT. Check the kickoff time and come back before the match starts.');
     const pickLabel = slip?.selection || pickOf(ai, homeName, awayName);
     const confValue = slip?.confidence ?? confidenceOf(ai);
     const confText = confValue == null ? '--' : `${confValue}%`;
@@ -1760,7 +1791,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     const voteHome = Math.max(0, Math.min(100, Number(votes.home) || 0));
     const voteAway = Math.max(0, Math.min(100, Number(votes.away) || 0));
     const details = fullAnalysis
-      ? `<details class="easy-details"><summary>Read full AI note</summary><p>${esc(fullAnalysis.slice(0, 520))}${fullAnalysis.length > 520 ? '...' : ''}</p></details>`
+      ? `<details class="easy-details"><summary>Read full pro note</summary><p>${esc(fullAnalysis.slice(0, 520))}${fullAnalysis.length > 520 ? '...' : ''}</p></details>`
       : '';
     const resultStrip = completed
       ? `<div class="result-strip ${slip?.status === 'won' ? 'won' : slip?.status === 'lost' ? 'lost' : 'final'}">${slip?.status === 'won' ? 'WIN' : slip?.status === 'lost' ? 'LOSS' : 'FINAL'} · FT ${esc(homeScore)}-${esc(awayScore)}</div>`
@@ -1793,7 +1824,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
             </div>
             <div class="vote-bar"><div class="vote-fill" style="width:${voteHome}%"></div></div>
             <div class="vote-row"><span><strong data-vote-home>${voteHome}%</strong> ${esc(homeName)}</span><span>${esc(awayName)} <strong data-vote-away>${voteAway}%</strong></span></div>
-            <div class="vote-note">AI lean preview. Tap a team to save your own customer sentiment on this device.</div>
+            <div class="vote-note">Pro lean preview. Tap a team to save your own customer sentiment on this device.</div>
           </div>
           <div class="pick-meaning">${esc(pickMeaning(pickLabel, homeName, awayName))}</div>
           <div class="easy-meta">
@@ -1859,7 +1890,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);padding-top:10px;gap:8px;flex-wrap:wrap;">
         <div style="display:flex;align-items:center;gap:8px;"><span style="font-family:var(--fm);font-size:9px;color:var(--text3);">${m.flag} ${esc(m.name)} · ${esc(mytTime(fx.fixture.date))}</span>${badge}</div>
-        <button style="font-family:var(--ff);font-size:12px;font-weight:700;letter-spacing:.05em;padding:5px 14px;border-radius:4px;cursor:pointer;${btnStyle}" onclick="event.stopPropagation();alert('Sign up to view full AI prediction!')">${btnLabel}</button>
+        <button style="font-family:var(--ff);font-size:12px;font-weight:700;letter-spacing:.05em;padding:5px 14px;border-radius:4px;cursor:pointer;${btnStyle}" onclick="event.stopPropagation();alert('Join Telegram to view full pro prediction!')">${btnLabel}</button>
       </div>
     </div>`;
   }
