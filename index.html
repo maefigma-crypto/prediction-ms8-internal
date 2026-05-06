@@ -635,6 +635,7 @@ body > nav::before{content:'';position:absolute;top:0;left:18%;right:18%;height:
   background:linear-gradient(180deg,#ff9c4a 0%,#f97316 50%,#c75808 100%);
   border:none;
   padding:9px 20px;
+  white-space:nowrap;
   box-shadow:0 6px 18px rgba(249,115,22,0.42),inset 0 1px 0 rgba(255,255,255,0.40),inset 0 -2px 0 rgba(0,0,0,0.18);
 }
 .nav-signup:hover{background:linear-gradient(180deg,#ffac5a 0%,#ff8525 50%,#d56809 100%);}
@@ -859,15 +860,19 @@ footer{
   .nav-logo img{height:24px !important;}
   .nav-right{gap:6px !important;}
   .lang-btn{padding:5px 8px !important;font-size:11px !important;}
-  .nav-signup{padding:7px 14px !important;font-size:12px !important;letter-spacing:.04em !important;}
+  .nav-signup{padding:7px 12px !important;font-size:11px !important;letter-spacing:.02em !important;white-space:nowrap !important;}
   .ticker-wrap{margin-top:80px;}
   .hero h1{font-size:34px;}
   .hcard{display:block !important;}
 }
+@media(max-width:430px){
+  /* Smaller phones: drop the language pill so the Register or Login
+     button has room to stay on one line. */
+  .lang-btn{display:none !important;}
+}
 @media(max-width:380px){
   .nav-logo img{height:22px !important;}
-  .lang-btn{padding:4px 7px !important;font-size:10px !important;}
-  .nav-signup{padding:6px 11px !important;font-size:11px !important;}
+  .nav-signup{padding:6px 10px !important;font-size:10px !important;}
 }
 
 /* === MOBILE TAP TARGETS (≥44px per Apple HIG / Google Material) === */
@@ -931,7 +936,7 @@ footer{
     <div style="font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:1.75rem;">Create your PP88 account in 30 seconds — same username and password works on this site. Welcome bonus on first deposit.</div>
     <div style="display:flex;flex-direction:column;gap:10px;">
       <a href="https://pp88fs.ocs8winwinwin.shop/?country=MY&lang=en&affcampaign=LAVCNR&aff=AFFLSAHYM" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:linear-gradient(180deg,#ff9c4a 0%,#f97316 50%,#c75808 100%);color:#fff;font-family:var(--ff);font-size:15px;font-weight:700;letter-spacing:.05em;padding:14px;border-radius:12px;text-decoration:none;box-shadow:0 8px 22px rgba(249,115,22,0.45),inset 0 1px 0 rgba(255,255,255,0.40);">
-        Register / Login →
+        Register or Login →
       </a>
       <a href="https://t.me/scoreocs8" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:linear-gradient(180deg,#3eb1e8 0%,#229ED9 50%,#1a7aa8 100%);color:#fff;font-family:var(--ff);font-size:14px;font-weight:600;letter-spacing:.05em;padding:12px;border-radius:12px;text-decoration:none;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.941z"/></svg>
@@ -970,7 +975,7 @@ footer{
       </div>
     </div>
     <div id="auth-logged-out" style="display:flex;align-items:center;gap:8px;">
-      <a href="https://pp88fs.ocs8winwinwin.shop/?country=MY&lang=en&affcampaign=LAVCNR&aff=AFFLSAHYM" target="_blank" rel="noopener" class="nav-signup">Register / Login</a>
+      <a href="https://pp88fs.ocs8winwinwin.shop/?country=MY&lang=en&affcampaign=LAVCNR&aff=AFFLSAHYM" target="_blank" rel="noopener" class="nav-signup">Register or Login</a>
     </div>
     <div id="auth-logged-in" style="display:none;position:relative;">
       <div onclick="toggleProfile()" style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:5px 10px;border-radius:6px;border:1px solid var(--border2);transition:border-color .2s;" onmouseover="this.style.borderColor='rgba(249,115,22,.4)'" onmouseout="this.style.borderColor='var(--border2)'">
@@ -1064,13 +1069,13 @@ footer{
 <section class="intro-banner" id="intro">
   <div class="sec intro-inner">
     <div class="intro-copy fu v">
-      <div class="stag">Member Access</div>
-      <h2 class="stitle">Big Match Predictions, Simple To Read</h2>
-      <p class="ssub">ScoreOcs8 focuses on major soccer leagues only — EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup. Login with Telegram, join our channel, then enter your Telegram channel member ID to unlock the full prediction page.</p>
+      <div class="stag">Bet On OCS8</div>
+      <h2 class="stitle">Bet on Pro Match Predictions, Win Real Money</h2>
+      <p class="ssub">ScoreOcs8 covers major soccer leagues only — EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup. Read the daily AI pick, register at our partner online casino, and place your bet directly on every prediction.</p>
       <div class="intro-points">
-        <div><strong>1</strong><span>Login with Telegram</span></div>
-        <div><strong>2</strong><span>Join @scoreocs8 channel</span></div>
-        <div><strong>3</strong><span>Unlock full pro analysis</span></div>
+        <div><strong>1</strong><span>Read free pro picks</span></div>
+        <div><strong>2</strong><span>Register or Login at PP88</span></div>
+        <div><strong>3</strong><span>Bet on every prediction</span></div>
       </div>
     </div>
     <div class="banner-slot fu v">
@@ -1084,12 +1089,12 @@ footer{
     <div class="sct fu">Register to <span class="hl">Bet on These Picks</span></div>
     <p class="scs fu">Predictions are free to read. To bet on them: register at our partner casino, then join our Telegram channel for daily picks before kickoff.</p>
     <div class="steps fu">
-      <div class="step"><div class="stepn">STEP 1 ›</div><div class="stepic">🎯</div><div class="stept">Register / Login at PP88</div><div class="stepd">30 seconds, welcome bonus on first deposit. Same login works on this site.</div></div>
+      <div class="step"><div class="stepn">STEP 1 ›</div><div class="stepic">🎯</div><div class="stept">Register or Login at PP88</div><div class="stepd">30 seconds, welcome bonus on first deposit. Same login works on this site.</div></div>
       <div class="step"><div class="stepn">STEP 2 ›</div><div class="stepic">📲</div><div class="stept">Join @scoreocs8 on Telegram</div><div class="stepd">Free daily picks auto-posted before every match. Join the channel for latest updates.</div></div>
       <div class="step"><div class="stepn">STEP 3 ›</div><div class="stepic">⚽</div><div class="stept">Bet & Win</div><div class="stepd">Pick a match, read the AI analysis, place your bet directly on PP88.</div></div>
     </div>
     <div style="text-align:center;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;" class="fu">
-      <a href="https://pp88fs.ocs8winwinwin.shop/?country=MY&lang=en&affcampaign=LAVCNR&aff=AFFLSAHYM" target="_blank" rel="noopener" class="btn-p" style="font-size:16px;padding:14px 36px;">Register / Login →</a>
+      <a href="https://pp88fs.ocs8winwinwin.shop/?country=MY&lang=en&affcampaign=LAVCNR&aff=AFFLSAHYM" target="_blank" rel="noopener" class="btn-p" style="font-size:16px;padding:14px 36px;">Register or Login →</a>
       <a href="https://t.me/scoreocs8" target="_blank" rel="noopener" class="btn-o" style="font-size:16px;padding:14px 28px;">📲 Join @scoreocs8</a>
     </div>
   </div>
