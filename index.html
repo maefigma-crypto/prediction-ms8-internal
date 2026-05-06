@@ -869,6 +869,30 @@ footer{
   .lang-btn{padding:4px 7px !important;font-size:10px !important;}
   .nav-signup{padding:6px 11px !important;font-size:11px !important;}
 }
+
+/* === MOBILE TAP TARGETS (≥44px per Apple HIG / Google Material) === */
+@media(max-width:760px){
+  /* Nav buttons */
+  .nav-signup, .lang-btn, .btn-nav{min-height:40px;display:inline-flex;align-items:center;}
+  .nav-links a{min-height:40px;display:inline-flex;align-items:center;}
+  /* Hero CTAs (full-width on mobile already, just enforce min-height) */
+  .btn-p, .btn-o, .detail-btn, .tgbtn, .btn-glossy, .btn-glass{min-height:46px;display:inline-flex;align-items:center;justify-content:center;}
+  /* Footer social icons (currently 8px padding + 22px svg ≈ 38px — bump up) */
+  .fsi{min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;padding:11px;}
+  /* Filter / category pills */
+  .chip, .cat-pill, .msc-tab, .mtab, .sptab{min-height:40px;display:inline-flex;align-items:center;}
+  /* Modal close buttons — currently 26-38px on small screens */
+  #pick-help-modal button[onclick*="closePickHelp"],
+  #match-detail-modal button[onclick*="closeMatchDetail"],
+  #auth-modal button[onclick*="closeModal"],
+  #hiw-overlay button[onclick*="closeHiw"],
+  #tg-bar button{min-width:44px !important;min-height:44px !important;}
+  /* Tabs in match-center filter */
+  .msc-tab{padding:11px 16px !important;}
+  /* Vote buttons on prediction cards already 70px, OK */
+  /* League prediction cards — increase tap area */
+  .pc{cursor:pointer;}
+}
 </style>
 </head>
 <body>
@@ -1487,6 +1511,8 @@ footer{
       const esc = s => String(s ?? '').replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
       const row = document.getElementById('slips-row');
       const empty = msg => `<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:40px;text-align:center;color:var(--text3);font-family:var(--fm);font-size:12px;flex:1;min-width:280px;">${esc(msg)}</div>`;
+      const slugify = s => String(s||'').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,64);
+      const slipPath = c => { const sl = slugify(`${c.home}-vs-${c.away}`); return sl ? `/slip/${encodeURIComponent(c.fixture_id)}-${sl}/` : `/slip/${encodeURIComponent(c.fixture_id)}/`; };
 
       fetch('/api/slips').then(r => r.ok ? r.json() : null).then(d => {
         if (!d) { row.innerHTML = empty('Picks will appear once today’s match is featured.'); return; }
@@ -1498,7 +1524,7 @@ footer{
           const hasScore = c.score_home != null && c.score_away != null;
           const payClass = c.status === 'lost' ? 'pay-lost' : (c.status === 'running' ? 'pay-run' : 'pay');
           return `
-            <a class="scard" href="/slip/?fixture_id=${encodeURIComponent(c.fixture_id)}&status=${esc(c.status)}&stake=${c.stake}" target="_blank" rel="noopener">
+            <a class="scard" href="${slipPath(c)}?status=${esc(c.status)}&stake=${c.stake}" target="_blank" rel="noopener">
               <div class="scard-head">
                 <div class="scard-stake"><span class="sn">RM</span>${c.stake}</div>
                 <div class="scard-badge ${esc(c.status)}">${esc(c.status.toUpperCase())}</div>
@@ -1923,6 +1949,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
                       1:  { code: 'fifa',flag: '🏆',                       name: 'FIFA World Cup', swatch: '#1a2010' } };
   const LIVE = new Set(['1H','2H','HT','ET','BT','P','LIVE']);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const slugify = s => String(s||'').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,64);
   const mytTime = iso => { try { return new Date(iso).toLocaleString('en-MY',{timeZone:'Asia/Kuala_Lumpur',hour:'2-digit',minute:'2-digit',hour12:false})+' MYT'; } catch { return ''; } };
   const mytDate = iso => { try { return new Date(iso).toLocaleDateString('en-CA',{timeZone:'Asia/Kuala_Lumpur'}); } catch { return ''; } };
   const klDateKey = iso => new Date(new Date(iso).getTime() + 8*3600*1000).toISOString().slice(0,10);
@@ -2246,7 +2273,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
             <div class="easy-stat"><span>Kickoff</span><strong>${esc(kickoff)}</strong></div>
             <div class="easy-stat"><span>Market</span><strong>1X2 result</strong></div>
           </div>
-          <button class="detail-btn" type="button" onclick="event.stopPropagation();openMatchDetail(${fx.fixture.id})">View H2H & Stats</button>
+          <a class="detail-btn" href="/match/${fx.fixture.id}-${slugify(`${homeName}-vs-${awayName}`)}/" onclick="event.stopPropagation();event.preventDefault();openMatchDetail(${fx.fixture.id})">View ${esc(homeName)} vs ${esc(awayName)} prediction →</a>
           <button class="pick-help-btn" type="button" onclick="event.stopPropagation();openPickHelp('${esc(homeName)}','${esc(awayName)}','${esc(pickLabel)}')">What does this pick mean?</button>
           ${details}
         </div>

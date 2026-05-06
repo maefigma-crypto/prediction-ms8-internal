@@ -25,6 +25,20 @@ const LEAGUE_PRIORITY = [
   { key: 'EPL', id: 39 },
   { key: 'WC', id: 1 },
 ];
+
+// Slug helper for pretty /slip/ + /match/ URLs.
+function slugify(s) {
+  return String(s || '')
+    .toLowerCase()
+    .normalize('NFKD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 64);
+}
+function slipPath(fixtureId, home, away) {
+  const slug = slugify(`${home}-vs-${away}`);
+  return slug ? `/slip/${fixtureId}-${slug}/` : `/slip/${fixtureId}/`;
+}
 const DEFAULT_SEASON = '2025';
 
 // Today's date in MYT (Asia/Kuala_Lumpur, UTC+8). Cron fires at 23:00 UTC
@@ -418,7 +432,7 @@ async function postDailyToAll(env) {
       report.stage = 'motd-prematch';
       const motd = picks[0];
       if (motd?.fx?.fixture?.id) {
-        const slipUrl = `${SITE_URL}/slip/?fixture_id=${motd.fx.fixture.id}&status=running&stake=100&v=${Date.now()}`;
+        const slipUrl = `${SITE_URL}${slipPath(motd.fx.fixture.id, motd.fx.teams?.home?.name, motd.fx.teams?.away?.name)}?status=running&stake=100&v=${Date.now()}`;
         const slipPng = await screenshot(env, {
           url: slipUrl,
           viewport: { width: 1080, height: 1350 },
@@ -632,7 +646,7 @@ async function checkFinishedMatches(env) {
       // flooded with 3 result posts per day.
       if (item.is_motd) {
         const slipStatus = correct === true ? 'won' : (correct === false ? 'lost' : 'running');
-        const slipUrl = `${SITE_URL}/slip/?fixture_id=${item.fixture_id}&status=${slipStatus}&stake=100&v=${Date.now()}`;
+        const slipUrl = `${SITE_URL}${slipPath(item.fixture_id, item.home, item.away)}?status=${slipStatus}&stake=100&v=${Date.now()}`;
         const png = await screenshot(env, {
           url: slipUrl,
           viewport: { width: 1080, height: 1350 },

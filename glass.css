@@ -353,3 +353,12 @@ body > .card::before {
   .nav-logo img { height: 22px !important; }
   .btn-nav { padding: 6px 11px !important; font-size: 11px !important; }
 }
+
+/* === MOBILE TAP TARGETS (≥44px) === */
+@media (max-width: 760px) {
+  .btn-nav, .nav-links a { min-height: 40px; display: inline-flex; align-items: center; }
+  .btn-p, .btn-o, .tg-btn { min-height: 46px; display: inline-flex; align-items: center; justify-content: center; }
+  .cat-pill, .chip { min-height: 40px; display: inline-flex; align-items: center; }
+  .fsi { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 11px; }
+  .pagination button { min-height: 40px; min-width: 40px; }
+}

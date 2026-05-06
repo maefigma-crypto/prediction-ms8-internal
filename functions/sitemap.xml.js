@@ -1,10 +1,14 @@
 import { listPosts, listKvContent, getSettings, SITE_URL, escXml } from './_repo.js';
 
-export async function onRequestGet({ env }) {
-  const [githubPosts, kvPosts, settings] = await Promise.all([
+const slugify = s => String(s||'').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,64);
+
+export async function onRequestGet({ env, request }) {
+  const origin = new URL(request.url).origin;
+  const [githubPosts, kvPosts, settings, fixtures] = await Promise.all([
     listPosts(env),
     listKvContent(env, 30),
     getSettings(env),
+    fetch(origin + '/api/fixtures').then(r => r.ok ? r.json() : null).catch(() => null),
   ]);
   const posts = [...kvPosts, ...githubPosts];
 
@@ -20,6 +24,26 @@ export async function onRequestGet({ env }) {
     { loc: `${SITE_URL}/predictions/ligue-1/`,            priority: '0.9', changefreq: 'daily',  lastmod: today },
     { loc: `${SITE_URL}/predictions/fifa-world-cup/`,     priority: '0.9', changefreq: 'weekly', lastmod: today },
   ];
+
+  // Dynamic per-match pages: /match/<id>-<home>-vs-<away>/
+  const seenMatchIds = new Set();
+  for (const lg of (fixtures?.leagues || [])) {
+    for (const fx of [...(lg.next || []), ...(lg.today || []), ...(lg.last || [])]) {
+      const id = fx?.fixture?.id;
+      if (!id || seenMatchIds.has(id)) continue;
+      seenMatchIds.add(id);
+      const home = fx?.teams?.home?.name || '';
+      const away = fx?.teams?.away?.name || '';
+      const slug = slugify(`${home}-vs-${away}`);
+      const path = slug ? `/match/${id}-${slug}/` : `/match/${id}/`;
+      urls.push({
+        loc: SITE_URL + path,
+        priority: '0.7',
+        changefreq: 'daily',
+        lastmod: (fx?.fixture?.date || new Date().toISOString()).slice(0, 10),
+      });
+    }
+  }
 
   for (const p of posts) {
     if (p.meta.include_in_sitemap === false) continue;
