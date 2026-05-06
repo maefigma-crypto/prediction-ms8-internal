@@ -24,7 +24,6 @@ const LEAGUE_PRIORITY = [
   { key: 'UCL', id: 2 },
   { key: 'EPL', id: 39 },
   { key: 'WC', id: 1 },
-  { key: 'MSL', id: 278 },
 ];
 const DEFAULT_SEASON = '2025';
 
