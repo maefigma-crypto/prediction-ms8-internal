@@ -1211,50 +1211,196 @@ footer{
 
 <section id="highlights" style="position:relative;z-index:1;background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
   <div class="sec">
-    <div class="stag">Live Schedule</div>
+    <div class="stag">Live Match Center</div>
     <h2 class="stitle">Match Schedule</h2>
-    <p class="ssub">Live scores, fixtures and results from major leagues, powered by ScoreBat</p>
-    <div class="sbwrap fu">
-      <div class="sbh" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-        <div class="sbt">📅 Match Schedule</div>
-        <div id="sb-tabs" style="display:flex;gap:4px;flex-wrap:wrap;">
-          <button class="sbtab active" data-sb="england-premier-league">🏴󠁧󠁢󠁥󠁮󠁧󠁿 EPL</button>
-          <button class="sbtab" data-sb="uefa-champions-league">⭐ UCL</button>
-          <button class="sbtab" data-sb="spain-la-liga">🇪🇸 La Liga</button>
-          <button class="sbtab" data-sb="italy-serie-a">🇮🇹 Serie A</button>
-          <button class="sbtab" data-sb="germany-bundesliga">🇩🇪 Bundesliga</button>
-          <button class="sbtab" data-sb="france-ligue-1">🇫🇷 Ligue 1</button>
-          <button class="sbtab" data-sb="">🌐 All</button>
-        </div>
-        <span class="bpred">SCOREBAT</span>
+    <p class="ssub">Live tables, top scorers, upcoming fixtures and latest results from major leagues — auto-updated</p>
+
+    <div class="msc-tabs fu">
+      <button class="msc-tab active" data-league="39" data-name="Premier League">🏴󠁧󠁢󠁥󠁮󠁧󠁿 EPL</button>
+      <button class="msc-tab" data-league="2" data-name="Champions League">⭐ UCL</button>
+      <button class="msc-tab" data-league="140" data-name="La Liga">🇪🇸 La Liga</button>
+      <button class="msc-tab" data-league="135" data-name="Serie A">🇮🇹 Serie A</button>
+      <button class="msc-tab" data-league="78" data-name="Bundesliga">🇩🇪 Bundesliga</button>
+      <button class="msc-tab" data-league="61" data-name="Ligue 1">🇫🇷 Ligue 1</button>
+    </div>
+
+    <div class="msc-grid fu">
+      <div class="msc-card">
+        <div class="msc-card-h"><span class="msc-card-icon">📊</span><span>Live Table</span></div>
+        <div class="msc-card-b" id="msc-table"><div class="msc-loading">Loading league table…</div></div>
       </div>
-      <div class="sb-frame">
-        <iframe id="sb-iframe" src="https://www.scorebat.com/embed/competition/england-premier-league/" frameborder="0" width="100%" height="520" allowfullscreen allow="autoplay; fullscreen" style="display:block;background:#fff;"></iframe>
+      <div class="msc-card">
+        <div class="msc-card-h"><span class="msc-card-icon">⚽</span><span>Top Scorers</span></div>
+        <div class="msc-card-b" id="msc-scorers"><div class="msc-loading">Loading top scorers…</div></div>
+      </div>
+      <div class="msc-card">
+        <div class="msc-card-h"><span class="msc-card-icon">📅</span><span>Upcoming Matches</span></div>
+        <div class="msc-card-b" id="msc-upcoming"><div class="msc-loading">Loading fixtures…</div></div>
+      </div>
+      <div class="msc-card">
+        <div class="msc-card-h"><span class="msc-card-icon">✅</span><span>Latest Results</span></div>
+        <div class="msc-card-b" id="msc-results"><div class="msc-loading">Loading results…</div></div>
       </div>
     </div>
+
     <style>
-      #sb-tabs .sbtab{font-family:var(--fm);font-size:11px;letter-spacing:.04em;padding:6px 12px;border:1px solid var(--border);color:var(--text2);border-radius:4px;background:var(--card);cursor:pointer;transition:all .2s;white-space:nowrap;}
-      #sb-tabs .sbtab:hover{border-color:rgba(249,115,22,.4);color:var(--text);}
-      #sb-tabs .sbtab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
-      /* Dark wrapper around ScoreBat's white iframe so it reads as an
-         intentional "broadcast viewer" frame instead of a clashing
-         white rectangle. Inner padding/bevel + accent top-stripe. */
-      .sb-frame{margin-top:12px;padding:10px;background:linear-gradient(180deg,var(--card) 0%,var(--card2) 100%);border:1px solid var(--border2);border-radius:8px;box-shadow:inset 0 0 0 1px rgba(249,115,22,.08),0 8px 24px rgba(0,0,0,.25);position:relative;overflow:hidden;}
-      .sb-frame::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent 0%,var(--accent) 20%,var(--accent) 80%,transparent 100%);opacity:.5;}
-      .sb-frame iframe{border-radius:4px;overflow:hidden;}
+      .msc-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+      .msc-tab{font-family:var(--ff);font-size:13px;font-weight:600;letter-spacing:.04em;padding:9px 16px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.04);color:var(--text2);border-radius:999px;backdrop-filter:blur(12px);cursor:pointer;transition:all .2s;white-space:nowrap;}
+      .msc-tab:hover{background:rgba(255,255,255,0.08);color:var(--text);border-color:rgba(249,115,22,0.30);}
+      .msc-tab.active{background:linear-gradient(180deg,#ff9c4a 0%,#f97316 50%,#c75808 100%);color:#fff;border-color:transparent;box-shadow:0 4px 14px rgba(249,115,22,0.40),inset 0 1px 0 rgba(255,255,255,0.30);}
+      .msc-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+      @media(max-width:760px){.msc-grid{grid-template-columns:1fr;}}
+      .msc-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);border-radius:18px;backdrop-filter:blur(18px) saturate(160%);box-shadow:0 14px 40px rgba(0,0,0,0.32),inset 0 1px 0 rgba(255,255,255,0.08);overflow:hidden;position:relative;}
+      .msc-card::before{content:'';position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.30),transparent);}
+      .msc-card-h{padding:14px 18px;display:flex;align-items:center;gap:10px;font-family:var(--ff);font-size:14px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text);border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);}
+      .msc-card-icon{font-size:16px;}
+      .msc-card-b{padding:6px 0;max-height:380px;overflow-y:auto;}
+      .msc-card-b::-webkit-scrollbar{width:6px;}
+      .msc-card-b::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.10);border-radius:3px;}
+      .msc-loading,.msc-empty{padding:32px 18px;text-align:center;color:var(--text3);font-family:var(--fm);font-size:11px;letter-spacing:.06em;}
+      /* Live table rows */
+      .msc-row{display:grid;align-items:center;gap:10px;padding:9px 18px;border-top:1px solid rgba(255,255,255,0.04);font-size:13px;}
+      .msc-row:first-child{border-top:none;}
+      .msc-row.t-table{grid-template-columns:24px 1fr 28px 28px 28px 36px;}
+      .msc-rank{font-family:var(--fm);font-size:11px;color:var(--text3);text-align:center;}
+      .msc-rank.top{color:var(--accent);font-weight:700;}
+      .msc-team{display:flex;align-items:center;gap:8px;min-width:0;}
+      .msc-team img{width:18px;height:18px;object-fit:contain;flex-shrink:0;}
+      .msc-team-name{font-family:var(--ff);font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+      .msc-stat{font-family:var(--fm);font-size:11px;color:var(--text2);text-align:center;}
+      .msc-pts{font-family:var(--ff);font-size:14px;font-weight:700;color:var(--accent);text-align:center;}
+      .msc-head{display:grid;grid-template-columns:24px 1fr 28px 28px 28px 36px;gap:10px;padding:8px 18px;font-family:var(--fm);font-size:9px;letter-spacing:.10em;color:var(--text3);text-transform:uppercase;border-top:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);}
+      /* Top scorers */
+      .msc-row.t-scorer{grid-template-columns:24px 1fr 36px;}
+      .msc-pl{display:flex;align-items:center;gap:9px;min-width:0;}
+      .msc-pl img{width:28px;height:28px;border-radius:50%;object-fit:cover;background:rgba(255,255,255,0.06);flex-shrink:0;}
+      .msc-pl-info{min-width:0;}
+      .msc-pl-name{font-family:var(--ff);font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+      .msc-pl-club{font-family:var(--fm);font-size:10px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+      .msc-goals{font-family:var(--ff);font-size:15px;font-weight:700;color:var(--accent);text-align:center;}
+      /* Fixtures / results */
+      .msc-fx{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:11px 18px;border-top:1px solid rgba(255,255,255,0.04);}
+      .msc-fx:first-child{border-top:none;}
+      .msc-fx-date{font-family:var(--fm);font-size:9px;letter-spacing:.10em;color:var(--accent);text-transform:uppercase;background:rgba(249,115,22,0.10);border:1px solid rgba(249,115,22,0.22);border-radius:999px;padding:3px 9px;white-space:nowrap;}
+      .msc-fx-teams{font-family:var(--ff);font-size:13px;font-weight:600;color:var(--text);min-width:0;}
+      .msc-fx-vs{color:var(--text3);font-weight:400;margin:0 6px;}
+      .msc-fx-meta{font-family:var(--fm);font-size:10px;color:var(--text3);margin-top:2px;}
+      .msc-fx-time{font-family:var(--fm);font-size:11px;color:var(--amber);white-space:nowrap;text-align:right;}
+      .msc-fx-score{font-family:var(--ff);font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;text-align:right;}
+      .msc-fx-score .win{color:var(--green);}
     </style>
+
     <script>
     (function(){
-      const tabs = document.querySelectorAll('#sb-tabs .sbtab');
-      const iframe = document.getElementById('sb-iframe');
+      const tabs = document.querySelectorAll('.msc-tab');
+      const elTable = document.getElementById('msc-table');
+      const elScorers = document.getElementById('msc-scorers');
+      const elUpcoming = document.getElementById('msc-upcoming');
+      const elResults = document.getElementById('msc-results');
+      const cache = {};
+      const SEASON = '2025';
+      const esc = s => String(s ?? '').replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
+      const myt = d => { try { return new Date(d).toLocaleString('en-MY',{timeZone:'Asia/Kuala_Lumpur',hour:'2-digit',minute:'2-digit',hour12:false}); } catch { return ''; } };
+      const mytDate = d => { try { return new Date(d).toLocaleDateString('en-MY',{timeZone:'Asia/Kuala_Lumpur',day:'numeric',month:'short'}).toUpperCase(); } catch { return ''; } };
+
+      const empty = msg => `<div class="msc-empty">${esc(msg)}</div>`;
+
+      function renderTable(data) {
+        try {
+          const std = data?.response?.[0]?.league?.standings?.[0] || [];
+          if (!std.length) { elTable.innerHTML = empty('Standings not available for this league'); return; }
+          const rows = std.slice(0, 10).map((t, i) => {
+            const rankClass = i < 3 ? 'top' : '';
+            return `<div class="msc-row t-table">
+              <div class="msc-rank ${rankClass}">${esc(t.rank ?? i+1)}</div>
+              <div class="msc-team">${t.team?.logo ? `<img src="${esc(t.team.logo)}" alt="">` : ''}<span class="msc-team-name">${esc(t.team?.name || '')}</span></div>
+              <div class="msc-stat">${esc(t.all?.played ?? 0)}</div>
+              <div class="msc-stat">${esc(t.all?.win ?? 0)}</div>
+              <div class="msc-stat">${esc(t.all?.lose ?? 0)}</div>
+              <div class="msc-pts">${esc(t.points ?? 0)}</div>
+            </div>`;
+          }).join('');
+          elTable.innerHTML = `<div class="msc-head"><div></div><div>Team</div><div>MP</div><div>W</div><div>L</div><div>PTS</div></div>${rows}`;
+        } catch (e) { elTable.innerHTML = empty('Could not load table'); }
+      }
+
+      function renderScorers(data) {
+        try {
+          const list = data?.response || [];
+          if (!list.length) { elScorers.innerHTML = empty('Top scorer data not available'); return; }
+          elScorers.innerHTML = list.slice(0, 10).map((p, i) => {
+            const stat = p.statistics?.[0] || {};
+            return `<div class="msc-row t-scorer">
+              <div class="msc-rank ${i<3?'top':''}">${i+1}</div>
+              <div class="msc-pl">${p.player?.photo ? `<img src="${esc(p.player.photo)}" alt="">` : '<img alt="">'}<div class="msc-pl-info"><div class="msc-pl-name">${esc(p.player?.name || '')}</div><div class="msc-pl-club">${esc(stat.team?.name || '')}</div></div></div>
+              <div class="msc-goals">${esc(stat.goals?.total ?? 0)}</div>
+            </div>`;
+          }).join('');
+        } catch (e) { elScorers.innerHTML = empty('Could not load top scorers'); }
+      }
+
+      function fxRow(fx, isResult) {
+        const home = esc(fx.teams?.home?.name || '');
+        const away = esc(fx.teams?.away?.name || '');
+        const date = mytDate(fx.fixture?.date);
+        const time = myt(fx.fixture?.date);
+        let right;
+        if (isResult) {
+          const sh = fx.goals?.home, sa = fx.goals?.away;
+          if (sh != null && sa != null) {
+            right = `<div class="msc-fx-score">${sh<sa?'<span>'+esc(sh)+'</span>':sh>sa?'<span class="win">'+esc(sh)+'</span>':esc(sh)}<span style="color:var(--text3)">–</span>${sh>sa?'<span>'+esc(sa)+'</span>':sh<sa?'<span class="win">'+esc(sa)+'</span>':esc(sa)}</div>`;
+          } else right = `<div class="msc-fx-time">FT</div>`;
+        } else {
+          right = `<div class="msc-fx-time">${esc(time)} MYT</div>`;
+        }
+        return `<div class="msc-fx"><span class="msc-fx-date">${esc(date)}</span><div><div class="msc-fx-teams">${home}<span class="msc-fx-vs">vs</span>${away}</div></div>${right}</div>`;
+      }
+
+      function renderUpcoming(data) {
+        try {
+          const list = data?.leagues?.[0]?.next || [];
+          if (!list.length) { elUpcoming.innerHTML = empty('No upcoming fixtures returned'); return; }
+          elUpcoming.innerHTML = list.slice(0, 8).map(fx => fxRow(fx, false)).join('');
+        } catch (e) { elUpcoming.innerHTML = empty('Could not load fixtures'); }
+      }
+
+      function renderResults(data) {
+        try {
+          const list = data?.leagues?.[0]?.last || [];
+          if (!list.length) { elResults.innerHTML = empty('No recent results returned'); return; }
+          elResults.innerHTML = list.slice(0, 8).map(fx => fxRow(fx, true)).join('');
+        } catch (e) { elResults.innerHTML = empty('Could not load results'); }
+      }
+
+      async function loadLeague(leagueId) {
+        if (cache[leagueId]) {
+          const c = cache[leagueId];
+          renderTable(c.std); renderScorers(c.scor); renderUpcoming(c.fx); renderResults(c.fx);
+          return;
+        }
+        // Show loading state
+        elTable.innerHTML = '<div class="msc-loading">Loading league table…</div>';
+        elScorers.innerHTML = '<div class="msc-loading">Loading top scorers…</div>';
+        elUpcoming.innerHTML = '<div class="msc-loading">Loading fixtures…</div>';
+        elResults.innerHTML = '<div class="msc-loading">Loading results…</div>';
+
+        const [std, scor, fx] = await Promise.all([
+          fetch(`/api/standings?league=${leagueId}&season=${SEASON}`).then(r => r.ok ? r.json() : null).catch(() => null),
+          fetch(`/api/topscorers?league=${leagueId}&season=${SEASON}`).then(r => r.ok ? r.json() : null).catch(() => null),
+          fetch(`/api/fixtures?league=${leagueId}&season=${SEASON}`).then(r => r.ok ? r.json() : null).catch(() => null),
+        ]);
+        cache[leagueId] = { std, scor, fx };
+        renderTable(std); renderScorers(scor); renderUpcoming(fx); renderResults(fx);
+      }
+
       tabs.forEach(t => t.addEventListener('click', () => {
         tabs.forEach(b => b.classList.remove('active'));
         t.classList.add('active');
-        const slug = t.dataset.sb;
-        iframe.src = slug
-          ? `https://www.scorebat.com/embed/competition/${slug}/`
-          : `https://www.scorebat.com/embed/?`;
+        loadLeague(t.dataset.league);
       }));
+
+      // Initial load — EPL
+      loadLeague('39');
     })();
     </script>
   </div>
