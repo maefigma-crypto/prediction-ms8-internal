@@ -1,6 +1,6 @@
 // Per-match landing page: /match/<fixture-id>-<home>-vs-<away>/
 // Server-rendered, indexable, glass-styled. Pulls data from /api/match-detail
-// and /api/predictions to assemble a full preview with H2H + AI pick + meta.
+// and /api/predictions to assemble a full preview with H2H + pro pick + meta.
 //
 // SEO model: each fixture gets its own canonical URL ranking for queries like
 // "<home> vs <away> prediction" and "<home> vs <away> head to head".
@@ -73,7 +73,7 @@ export async function onRequest(context) {
     return new Response('', { status: 301, headers: { location: `/match/${canonicalSlug}/` } });
   }
 
-  const pickLabel = pickRaw?.pickLabel || pickRaw?.pick || 'AI analysing';
+  const pickLabel = pickRaw?.pickLabel || pickRaw?.pick || 'Pro analysis pending';
   const confidence = pickRaw?.confidence != null ? pickRaw.confidence + '%' : '—';
   const reason = pickRaw?.reason || pickRaw?.analysis || '';
 
@@ -85,7 +85,7 @@ export async function onRequest(context) {
   const aStat = stats.find(x => x.team?.id === fx?.teams?.away?.id) || stats[1];
 
   const title = `${home} vs ${away} Prediction — ${leagueName} | ScoreOcs8`;
-  const description = `${home} vs ${away} ${leagueName} prediction, head-to-head record, AI pick (${pickLabel}) and live stats from ScoreOcs8 — Malaysia online casino soccer prediction site. Kickoff ${kickoff || 'TBD'}.`;
+  const description = `${home} vs ${away} ${leagueName} prediction, head-to-head record, pro pick (${pickLabel}) and live stats from ScoreOcs8 — Malaysia online casino soccer prediction site. Kickoff ${kickoff || 'TBD'}.`;
   const ogImage = `${SITE}/og/match?home=${encodeURIComponent(home)}&away=${encodeURIComponent(away)}&league=${encodeURIComponent(leagueName)}&date=${encodeURIComponent(fx?.fixture?.date || '')}`;
 
   // Schema.org SportsEvent JSON-LD with all the structured fields Google likes.
@@ -278,7 +278,7 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
     <div class="pick-card">
       <div class="pick-row">
         <div>
-          <div class="label">⚡ AI Pick</div>
+          <div class="label">Pro Pick</div>
           <div class="pick">${esc(pickLabel)}</div>
         </div>
         <div style="text-align:right;">

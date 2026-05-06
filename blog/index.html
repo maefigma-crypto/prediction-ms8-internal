@@ -201,9 +201,11 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeBurger();});
       grid.innerHTML = `<div class="empty"><strong>No posts yet</strong>${league?'Nothing in this filter.':'Publish from <a href="/admin/" style="color:var(--accent)">/admin/</a> to get started.'}</div>`;
       return;
     }
-    grid.innerHTML = data.posts.map(p => `
+    grid.innerHTML = data.posts.map(p => {
+      const img = p.featured_image || p.og_image || '';
+      return `
       <a class="card" href="/blog/${esc(p.slug)}/${lang!=='en'?`?lang=${lang}`:''}">
-        <div class="card-img"${p.featured_image?` style="background-image:url('${esc(p.featured_image)}')"`:''}>${p.featured_image?'':'📄'}</div>
+        <div class="card-img"${img?` style="background-image:url('${esc(img)}')"`:''}>${img?'':'📄'}</div>
         <div class="card-body">
           <div class="card-cat">${esc(p.category || 'General')}</div>
           <div class="card-title">${esc(p.title)}</div>
@@ -211,7 +213,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeBurger();});
           <div class="card-meta"><span>${esc(fmtDate(p.date))}</span><span class="card-read">Read →</span></div>
         </div>
       </a>
-    `).join('');
+    `;
+    }).join('');
 
     if (data.pages > 1) {
       const pages = [];

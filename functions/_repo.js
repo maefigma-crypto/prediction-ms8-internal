@@ -47,7 +47,7 @@ export function defaultSettings() {
   return {
     site_name: 'ScoreOcs8',
     default_seo_title: 'ScoreOcs8 - Pro Sports Predictions',
-    default_meta_description: 'AI-powered football and badminton predictions.',
+    default_meta_description: 'Pro football predictions, live scores, match previews and result proof.',
     default_og_image: '',
     robots_txt: 'User-agent: *\nAllow: /\nDisallow: /admin/\nSitemap: https://scoreocs8.pages.dev/sitemap.xml',
     google_analytics_id: '',

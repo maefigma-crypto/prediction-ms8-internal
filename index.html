@@ -379,6 +379,11 @@ body > nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-it
 .intro-points span{display:block;font-size:13px;color:var(--text2);margin-top:5px;line-height:1.35;}
 .banner-slot{border:1px solid rgba(249,115,22,.32);border-radius:10px;background:var(--card);overflow:hidden;display:block;padding:0;box-shadow:0 18px 46px rgba(0,0,0,.28);}
 .banner-slot img{width:100%;height:auto;aspect-ratio:16/9;object-fit:contain;display:block;background:#05080c;}
+.hero-btns,.hstats,.intro-copy,.subcta{display:none!important;}
+.hero{min-height:560px;}
+.intro-banner .sec{padding-top:34px;padding-bottom:34px;}
+.banner-slot{max-width:980px;margin:0 auto;width:100%;}
+.proof-panel.trust-bottom{margin-top:18px;margin-bottom:0;}
 .banner-tag{font-family:var(--fm);font-size:10px;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;}
 .banner-title{font-family:var(--ff);font-size:30px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;line-height:1.05;}
 .banner-sub{font-size:14px;color:var(--text2);max-width:360px;margin-top:10px;}
@@ -1119,7 +1124,7 @@ footer{
     <div class="intro-copy fu v">
       <div class="stag">Bet On OCS8</div>
       <h2 class="stitle">Bet on Pro Match Predictions, Win Real Money</h2>
-      <p class="ssub">ScoreOcs8 covers major soccer leagues only — EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup. Read the daily AI pick, register at our partner online casino, and place your bet directly on every prediction.</p>
+      <p class="ssub">ScoreOcs8 covers major soccer leagues only — EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup. Read daily pro picks, match context, and result records before kickoff.</p>
       <div class="intro-points">
         <div><strong>1</strong><span>Read free pro picks</span></div>
         <div><strong>2</strong><span>Register or Login at PP88</span></div>
@@ -1139,7 +1144,7 @@ footer{
     <div class="steps fu">
       <div class="step"><div class="stepn">STEP 1 ›</div><div class="stepic">🎯</div><div class="stept">Register or Login at PP88</div><div class="stepd">30 seconds, welcome bonus on first deposit. Same login works on this site.</div></div>
       <div class="step"><div class="stepn">STEP 2 ›</div><div class="stepic">📲</div><div class="stept">Join @scoreocs8 on Telegram</div><div class="stepd">Free daily picks auto-posted before every match. Join the channel for latest updates.</div></div>
-      <div class="step"><div class="stepn">STEP 3 ›</div><div class="stepic">⚽</div><div class="stept">Bet & Win</div><div class="stepd">Pick a match, read the AI analysis, place your bet directly on PP88.</div></div>
+      <div class="step"><div class="stepn">STEP 3 ›</div><div class="stepic">⚽</div><div class="stept">Read the Pick</div><div class="stepd">Open a match, read the pro analysis, then decide what to do next.</div></div>
     </div>
     <div style="text-align:center;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;" class="fu">
       <a href="https://pp88fs.ocs8winwinwin.shop/?country=MY&lang=en&affcampaign=LAVCNR&aff=AFFLSAHYM" target="_blank" rel="noopener" class="btn-p" style="font-size:16px;padding:14px 36px;">Register or Login →</a>
@@ -1210,7 +1215,7 @@ footer{
   </div>
 </section>
 
-<section style="position:relative;z-index:1;">
+<section id="why-scoreocs8" style="position:relative;z-index:1;">
   <div class="sec">
     <div class="stag">Why Choose Us</div>
     <h2 class="stitle" style="text-align:center">Why Choose ScoreOcs8?</h2>
@@ -2604,6 +2609,32 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
   loadTicker();
   setInterval(loadTicker, 90_000);
 })();
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const intro = document.getElementById('intro');
+  const predictions = document.getElementById('predictions');
+  const schedule = document.getElementById('highlights');
+  const slips = document.getElementById('slips');
+  const history = document.getElementById('history');
+  const blog = document.getElementById('blog');
+  const faq = document.getElementById('faq');
+  const why = document.getElementById('why-scoreocs8');
+  const insights = document.getElementById('insights');
+  const proof = document.querySelector('.proof-panel');
+
+  if (intro && schedule) intro.after(schedule);
+  if (schedule && predictions) schedule.after(predictions);
+  if (proof && history) {
+    proof.classList.add('trust-bottom');
+    history.after(proof);
+  }
+  if (slips && history && slips.nextElementSibling !== history) slips.after(history);
+  if (faq && insights) faq.before(insights);
+  if (faq && why) faq.before(why);
+  if (blog && why && blog.nextElementSibling !== why) blog.after(why);
+});
 </script>
 
 <script src="/pwa.js" defer></script>
