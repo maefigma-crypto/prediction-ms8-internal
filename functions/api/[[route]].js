@@ -470,7 +470,31 @@ export async function onRequest(context) {
           status: h.correct === true ? 'won' : (h.correct === false ? 'lost' : 'running'),
         }));
 
-        return json({ updated: Date.now(), running, recent });
+        const settled = recent.filter(x => x.status === 'won' || x.status === 'lost');
+        const wins = settled.filter(x => x.status === 'won');
+        const staked = settled.reduce((sum, x) => sum + (Number(x.stake) || 0), 0);
+        const returned = wins.reduce((sum, x) => sum + (Number(x.payout) || 0), 0);
+        const net = +(returned - staked).toFixed(2);
+        const roi = staked ? Math.round((net / staked) * 100) : null;
+        const accuracy = settled.length ? Math.round((wins.length / settled.length) * 100) : null;
+
+        return json({
+          updated: Date.now(),
+          running,
+          recent,
+          stats: {
+            accuracy,
+            settled: settled.length,
+            wins: wins.length,
+            losses: settled.length - wins.length,
+            running: running.length + recent.filter(x => x.status === 'running').length,
+            staked,
+            returned: +returned.toFixed(2),
+            net,
+            roi,
+          },
+          track_record_url: '/#history',
+        });
       }
       default:
         return json({
