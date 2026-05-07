@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+<title>OCS Super Panel</title>
+<meta name="theme-color" content="#070a16">
+<link rel="icon" type="image/svg+xml" href="/icons/favicon.svg">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="OCS Panel">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/panel.css">
+</head>
+<body>
+
+<!-- =========== LOGIN VIEW =========== -->
+<div id="view-login" class="view view-active">
+  <div class="login-shell">
+    <div class="login-card glass">
+      <div class="login-brand">
+        <div class="login-logo">
+          <span class="dot"></span>
+          <span>OCS<b>SUPER</b>PANEL</span>
+        </div>
+        <p class="login-sub">Sign in to control web push broadcasts across your sites.</p>
+      </div>
+      <form id="login-form" autocomplete="off">
+        <label>
+          <span>Username</span>
+          <input id="login-username" name="username" type="text" autocomplete="username" required spellcheck="false" autocapitalize="off">
+        </label>
+        <label>
+          <span>Password</span>
+          <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+        </label>
+        <button type="submit" class="btn-primary" id="login-submit">Sign in →</button>
+        <div id="login-error" class="login-error"></div>
+      </form>
+      <div class="login-foot">
+        <span>Behind Cloudflare Access</span>
+        <span>·</span>
+        <span>Audit logged</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========== FORCE PASSWORD CHANGE VIEW =========== -->
+<div id="view-change-password" class="view">
+  <div class="login-shell">
+    <div class="login-card glass">
+      <div class="login-brand">
+        <div class="login-logo"><span class="dot"></span><span>CHANGE PASSWORD</span></div>
+        <p class="login-sub">First sign-in detected — please set a strong password (12+ chars, must include a digit and a symbol).</p>
+      </div>
+      <form id="cp-form" autocomplete="off">
+        <label>
+          <span>Current password</span>
+          <input id="cp-current" type="password" autocomplete="current-password" required>
+        </label>
+        <label>
+          <span>New password</span>
+          <input id="cp-new" type="password" autocomplete="new-password" minlength="12" required>
+        </label>
+        <label>
+          <span>Confirm new password</span>
+          <input id="cp-confirm" type="password" autocomplete="new-password" required>
+        </label>
+        <button type="submit" class="btn-primary">Update password →</button>
+        <div id="cp-error" class="login-error"></div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- =========== AUTHENTICATED APP =========== -->
+<div id="view-app" class="view">
+  <header class="topbar glass">
+    <button class="burger" id="burger" aria-label="Menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </button>
+    <div class="topbar-title">
+      <span class="dot"></span>
+      <span>OCS<b>SUPER</b>PANEL</span>
+    </div>
+    <div class="topbar-user">
+      <span id="who"></span>
+      <button class="btn-ghost" id="logout">Logout</button>
+    </div>
+  </header>
+
+  <div class="app-shell">
+    <aside class="sidebar glass" id="sidebar">
+      <nav>
+        <a href="#dashboard"   class="nav-item" data-route="dashboard"><span>📊</span> Dashboard</a>
+        <a href="#compose"     class="nav-item" data-route="compose"><span>📣</span> Compose</a>
+        <a href="#subscribers" class="nav-item" data-route="subscribers"><span>👥</span> Subscribers</a>
+        <a href="#history"     class="nav-item" data-route="history"><span>📜</span> History</a>
+        <a href="#audit"       class="nav-item" data-route="audit"><span>🛡️</span> Audit log</a>
+        <a href="#settings"    class="nav-item" data-route="settings"><span>⚙️</span> Settings</a>
+      </nav>
+      <div class="sidebar-foot">
+        <span class="muted">v1.0</span>
+        <span class="muted">$5/mo CF Pages</span>
+      </div>
+    </aside>
+
+    <main class="content">
+
+      <!-- Dashboard -->
+      <section class="route" data-view="dashboard">
+        <h1>Dashboard</h1>
+        <p class="muted">Overview of all sites you control.</p>
+        <div class="grid-cards" id="site-cards">
+          <div class="card glass loading-card">Loading sites…</div>
+        </div>
+      </section>
+
+      <!-- Compose -->
+      <section class="route" data-view="compose">
+        <h1>Compose Broadcast</h1>
+        <p class="muted">Send a web push notification to all subscribers of a site.</p>
+
+        <div class="compose-grid">
+          <form id="compose-form" class="card glass compose-form" autocomplete="off">
+            <label>
+              <span>Site</span>
+              <select id="c-site" required>
+                <option value="scoreocs8">ScoreOcs8 (soccer prediction)</option>
+              </select>
+            </label>
+            <label>
+              <span>Title <em id="c-title-count" class="muted">0 / 80</em></span>
+              <input id="c-title" maxlength="80" placeholder="e.g. ⚡ Today's top pick is live" required>
+            </label>
+            <label>
+              <span>Body <em id="c-body-count" class="muted">0 / 240</em></span>
+              <textarea id="c-body" maxlength="240" rows="3" placeholder="e.g. Liverpool vs Arsenal — AI pick: Liverpool win (74%). Tap to view." required></textarea>
+            </label>
+            <label>
+              <span>Click URL <em class="muted">(where the notification leads)</em></span>
+              <input id="c-url" type="text" value="/" placeholder="/match/<id>-<slug>/">
+            </label>
+            <div class="compose-actions">
+              <button type="button" class="btn-ghost" id="c-dryrun">Dry-run (count only)</button>
+              <button type="submit" class="btn-primary" id="c-send">Send broadcast →</button>
+            </div>
+            <div id="c-status" class="muted"></div>
+          </form>
+
+          <div class="card glass compose-preview">
+            <div class="muted small">Preview</div>
+            <div class="phone-preview">
+              <div class="notif">
+                <div class="notif-icon"><span>S8</span></div>
+                <div class="notif-body">
+                  <div class="notif-app">SCOREOCS8 · NOW</div>
+                  <div class="notif-title" id="p-title">Title preview</div>
+                  <div class="notif-text" id="p-body">Body preview will appear here as you type.</div>
+                </div>
+              </div>
+            </div>
+            <div class="muted small" style="margin-top:14px;">Tap result lands on <code id="p-url">/</code></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Subscribers -->
+      <section class="route" data-view="subscribers">
+        <h1>Subscribers</h1>
+        <p class="muted">Browse who's signed up for push on each site.</p>
+        <div class="card glass" id="subs-table-wrap">Loading subscribers…</div>
+      </section>
+
+      <!-- History -->
+      <section class="route" data-view="history">
+        <h1>Broadcast History</h1>
+        <p class="muted">Past broadcasts with delivery stats.</p>
+        <div class="card glass" id="hist-wrap">Loading history…</div>
+      </section>
+
+      <!-- Audit log -->
+      <section class="route" data-view="audit">
+        <h1>Audit Log</h1>
+        <p class="muted">Every login, broadcast, and setting change. 90-day retention.</p>
+        <div class="card glass" id="audit-wrap">Loading audit log…</div>
+      </section>
+
+      <!-- Settings -->
+      <section class="route" data-view="settings">
+        <h1>Settings</h1>
+        <p class="muted">Account + environment.</p>
+        <div class="card glass">
+          <h3>Account</h3>
+          <p class="muted small">Signed in as <b id="s-username">—</b> · role <b id="s-role">—</b></p>
+          <button class="btn-ghost" id="s-change-password">Change password</button>
+        </div>
+        <div class="card glass">
+          <h3>Environment</h3>
+          <p class="muted small">Required env vars on the Cloudflare Pages project:</p>
+          <ul class="env-list">
+            <li><code>VAPID_PUBLIC_KEY</code> — Web Push public key</li>
+            <li><code>VAPID_PRIVATE_KEY</code> — kept secret on the server</li>
+            <li><code>VAPID_SUBJECT</code> — <code>mailto:&lt;email&gt;</code></li>
+            <li><code>SESSION_SECRET</code> — 32-byte random (already generated)</li>
+          </ul>
+          <p class="muted small">VAPID keys generated when ScoreOcs8 PWA was set up — see <code>_vapid_keys.txt</code> in the prediction-ms8-internal repo.</p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script src="/js/app.js" type="module"></script>
+</body>
+</html>

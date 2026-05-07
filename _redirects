@@ -1,0 +1,9 @@
+# Cloudflare Pages _redirects — rules evaluated in order, first match wins.
+
+# Block /panel/* on this public site. The admin panel is a SEPARATE
+# Cloudflare Pages project (ocs-super-panel.pages.dev) that builds from
+# the panel/ subdirectory of this repo. We don't want the source code
+# accidentally served from the public domain even with Cloudflare Access
+# in front of the panel project — defense in depth.
+/panel/*  /  404
+/panel    /  404

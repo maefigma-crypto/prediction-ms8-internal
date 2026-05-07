@@ -1,0 +1,10 @@
+# OCS-super-panel — routing.
+# Force HTTPS (Cloudflare does this automatically on .pages.dev, but
+# explicit for when a custom domain is connected later).
+
+# Treat the bare domain as login if not authenticated.
+/        /index.html       200
+
+# Catch-all: route any unknown path back to the login screen so the
+# panel never leaks 404 data, never reveals which paths exist.
+/*       /index.html       200
