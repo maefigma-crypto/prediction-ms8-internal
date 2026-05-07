@@ -45,6 +45,25 @@ function shortTeam(name) {
   return text.length > 24 ? `${text.slice(0, 21)}...` : text;
 }
 
+function stableNumber(seed) {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) hash = ((hash << 5) - hash + seed.charCodeAt(i)) | 0;
+  return Math.abs(hash);
+}
+
+function displayScore(url, home, away) {
+  const score = String(url.searchParams.get('score') || '').trim();
+  if (/^\d+\s*[-–]\s*\d+$/.test(score)) return score.replace(/[–]/g, '-').replace(/\s*-\s*/, ' - ');
+  const n = stableNumber(`${home}|${away}|${url.searchParams.get('date') || ''}`);
+  return `${1 + (n % 3)} - ${Math.floor(n / 7) % 3}`;
+}
+
+function displayConfidence(url, home, away) {
+  const raw = parseInt(url.searchParams.get('confidence') || '', 10);
+  if (Number.isFinite(raw)) return Math.max(50, Math.min(92, raw));
+  return 64 + (stableNumber(`${home}|${away}|confidence`) % 18);
+}
+
 export async function onRequestGet({ request }) {
   const url = new URL(request.url);
   const home = shortTeam(url.searchParams.get('home') || 'Home Team');
@@ -52,6 +71,9 @@ export async function onRequestGet({ request }) {
   const league = (url.searchParams.get('league') || 'ScoreOcs8 Pro Analysis').toUpperCase();
   const dateStr = fmtMyt(url.searchParams.get('date'));
   const tag = (url.searchParams.get('tag') || 'PRO PICK').toUpperCase();
+  const score = displayScore(url, home, away);
+  const confidence = displayConfidence(url, home, away);
+  const confidenceWidth = Math.round(170 * (confidence / 100));
 
   const homeSize = fitSize(home, 18, 48, 30);
   const awaySize = fitSize(away, 18, 48, 30);
@@ -116,14 +138,14 @@ export async function onRequestGet({ request }) {
     <rect x="625" y="250" width="245" height="132" rx="14" fill="rgba(15,22,32,0.84)" stroke="rgba(249,115,22,0.42)"/>
     <text x="650" y="292" font-family="'DM Mono','Menlo',monospace" font-size="14" fill="#f97316" letter-spacing="2">PRO PICK</text>
     <rect x="650" y="318" width="170" height="12" rx="6" fill="rgba(255,255,255,0.10)"/>
-    <rect x="650" y="318" width="124" height="12" rx="6" fill="url(#orange)"/>
-    <text x="650" y="358" font-family="'Rajdhani','Helvetica Neue',system-ui,sans-serif" font-size="24" fill="#ffffff" font-weight="700">Confidence 72%</text>
+    <rect x="650" y="318" width="${confidenceWidth}" height="12" rx="6" fill="url(#orange)"/>
+    <text x="650" y="358" font-family="'Rajdhani','Helvetica Neue',system-ui,sans-serif" font-size="24" fill="#ffffff" font-weight="700">Confidence ${confidence}%</text>
   </g>
 
   <g filter="url(#shadow)">
     <rect x="905" y="180" width="220" height="150" rx="14" fill="rgba(15,22,32,0.84)" stroke="rgba(0,229,160,0.36)"/>
     <text x="930" y="220" font-family="'DM Mono','Menlo',monospace" font-size="13" fill="#00e5a0" letter-spacing="2">LIVE SCORE</text>
-    <text x="930" y="282" font-family="'Rajdhani','Helvetica Neue',system-ui,sans-serif" font-size="56" fill="#ffffff" font-weight="800">2 - 1</text>
+    <text x="930" y="282" font-family="'Rajdhani','Helvetica Neue',system-ui,sans-serif" font-size="56" fill="#ffffff" font-weight="800">${escXml(score)}</text>
     <text x="930" y="310" font-family="'DM Mono','Menlo',monospace" font-size="13" fill="#8a9ab5">78:45</text>
   </g>
 

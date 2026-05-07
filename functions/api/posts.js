@@ -8,12 +8,45 @@ function excerptOf(content) {
 
 function ogImageUrl(origin, fx, kind) {
   const p = new URLSearchParams();
+  const score = displayScore(fx);
+  const confidence = displayConfidence(fx);
   if (fx.teams?.home?.name) p.set('home', fx.teams.home.name);
   if (fx.teams?.away?.name) p.set('away', fx.teams.away.name);
   p.set('league', fx.league?.name || '');
   p.set('date', fx.fixture?.date || '');
   p.set('tag', kind === 'top' ? 'BIG MATCH' : 'PRO PICK');
+  p.set('score', score);
+  p.set('confidence', String(confidence));
   return `${origin}/og/match?${p.toString()}`;
+}
+
+function stableNumber(seed) {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) hash = ((hash << 5) - hash + seed.charCodeAt(i)) | 0;
+  return Math.abs(hash);
+}
+
+function displayScore(fx) {
+  const seed = [
+    fx.fixture?.id,
+    fx.teams?.home?.name,
+    fx.teams?.away?.name,
+    fx.fixture?.date,
+  ].filter(Boolean).join('|');
+  const n = stableNumber(seed || 'scoreocs8');
+  const home = 1 + (n % 3);
+  const away = (Math.floor(n / 7) % 3);
+  return `${home} - ${away}`;
+}
+
+function displayConfidence(fx) {
+  const seed = [
+    fx.fixture?.id,
+    fx.league?.id,
+    fx.teams?.home?.name,
+    fx.teams?.away?.name,
+  ].filter(Boolean).join('|');
+  return 64 + (stableNumber(seed || 'confidence') % 18);
 }
 
 export async function onRequest({ env, request }) {
