@@ -52,6 +52,8 @@ export async function onRequest(context) {
   const fx = detail?.fixture || {};
   const home = fx?.teams?.home?.name || 'Home';
   const away = fx?.teams?.away?.name || 'Away';
+  const homeId = fx?.teams?.home?.id;
+  const awayId = fx?.teams?.away?.id;
   const homeLogo = fx?.teams?.home?.logo || '';
   const awayLogo = fx?.teams?.away?.logo || '';
   const leagueId = fx?.league?.id;
@@ -140,6 +142,21 @@ export async function onRequest(context) {
     return `<tr><td>${esc(date)}</td><td>${esc(m.home)} ${esc(m.score_home)}–${esc(m.score_away)} ${esc(m.away)}</td><td>${esc(m.league || '')}</td></tr>`;
   }).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--text3)">No head-to-head record available yet.</td></tr>';
 
+  const logoImg = (src, name) => src ? `<img class="h2h-logo" src="${esc(src)}" alt="${esc(name)} logo" loading="lazy">` : '';
+  const h2hOutcome = row => {
+    const hs = Number(row.score_home), as = Number(row.score_away);
+    if (!Number.isFinite(hs) || !Number.isFinite(as)) return { label: 'Pending', cls: 'draw' };
+    if (hs === as) return { label: 'Draw', cls: 'draw' };
+    const winnerId = hs > as ? row.home_id : row.away_id;
+    const label = winnerId === homeId ? `${home} win` : winnerId === awayId ? `${away} win` : `${hs > as ? row.home : row.away} win`;
+    return { label, cls: winnerId === homeId ? 'win' : 'loss' };
+  };
+  const h2hRowsRich = h2h.map(row => {
+    const date = row.date ? new Date(row.date).toLocaleDateString('en-GB', { timeZone:'Asia/Kuala_Lumpur', day:'2-digit', month:'short', year:'numeric' }) : '';
+    const outcome = h2hOutcome(row);
+    return `<tr><td>${esc(date)}</td><td><div class="h2h-matchline">${logoImg(row.home_logo, row.home)}<span>${esc(row.home)} ${esc(row.score_home)}-${esc(row.score_away)} ${esc(row.away)}</span>${logoImg(row.away_logo, row.away)}</div></td><td>${esc(row.league || '')}</td><td><span class="h2h-result ${outcome.cls}">${esc(outcome.label)}</span></td></tr>`;
+  }).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text3)">No head-to-head record available yet.</td></tr>';
+
   const statRow = (label) => {
     const get = side => {
       const row = (side?.statistics || []).find(s => String(s.type||'').toLowerCase() === label.toLowerCase());
@@ -222,6 +239,12 @@ h1 .vs{color:var(--text3);margin:0 14px;font-weight:500;}
 .h2h-stat{padding:14px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);text-align:center;}
 .h2h-stat strong{font-family:var(--ff);font-size:30px;color:var(--accent);display:block;line-height:1;}
 .h2h-stat span{font-family:var(--fm);font-size:10px;color:var(--text3);letter-spacing:.10em;text-transform:uppercase;display:block;margin-top:6px;}
+.h2h-matchline{display:flex;align-items:center;gap:8px;font-family:var(--ff);font-weight:700;color:var(--text);}
+.h2h-logo{width:28px;height:28px;object-fit:contain;border-radius:50%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.10);padding:3px;flex-shrink:0;}
+.h2h-result{display:inline-flex;align-items:center;justify-content:center;padding:4px 9px;border-radius:999px;font-family:var(--fm);font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;}
+.h2h-result.win{color:var(--green);background:rgba(0,229,160,.10);border:1px solid rgba(0,229,160,.24);}
+.h2h-result.loss{color:var(--red);background:rgba(255,71,87,.10);border:1px solid rgba(255,71,87,.24);}
+.h2h-result.draw{color:var(--amber);background:rgba(245,166,35,.10);border:1px solid rgba(245,166,35,.24);}
 table{width:100%;border-collapse:collapse;font-size:14px;}
 table td,table th{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.06);text-align:left;}
 table th{font-family:var(--fm);font-size:10px;color:var(--text3);letter-spacing:.10em;text-transform:uppercase;font-weight:500;}
@@ -298,8 +321,8 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
       <div class="h2h-stat"><strong>${esc(summary.awayWins ?? 0)}</strong><span>${esc(away)} wins</span></div>
     </div>
     <table>
-      <thead><tr><th>Date</th><th>Match</th><th>Competition</th></tr></thead>
-      <tbody>${h2hRows}</tbody>
+      <thead><tr><th>Date</th><th>Match</th><th>Competition</th><th>Outcome</th></tr></thead>
+      <tbody>${h2hRowsRich}</tbody>
     </table>
   </section>
 

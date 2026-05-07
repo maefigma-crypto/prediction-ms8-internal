@@ -214,6 +214,8 @@ async function handleMatchDetail(env, url) {
         away: m.teams?.away?.name,
         home_id: m.teams?.home?.id,
         away_id: m.teams?.away?.id,
+        home_logo: m.teams?.home?.logo || '',
+        away_logo: m.teams?.away?.logo || '',
         score_home: m.goals?.home,
         score_away: m.goals?.away,
         status: m.fixture?.status?.short,
