@@ -340,7 +340,7 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
   <div class="cta">
     <h3>Bet on this prediction</h3>
     <p>Register on OCS8, claim the sports welcome bonus, and place this pick in seconds.</p>
-    <a class="cta-btn" href="/login.html">Register & Bet</a>
+    <a class="cta-btn" href="/register.html">Register & Bet</a>
   </div>
 
   <p style="font-size:12px;color:var(--text3);text-align:center;margin-top:30px;">ScoreOcs8 predictions are informational only — not a guarantee. 18+ only.</p>

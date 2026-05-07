@@ -36,7 +36,7 @@
       "name": "Register",
       "short_name": "Bet",
       "description": "Register on OCS8 to claim the sports welcome bonus",
-      "url": "/login.html",
+      "url": "/register.html",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }
   ],

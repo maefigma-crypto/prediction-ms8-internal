@@ -91,7 +91,7 @@ self.addEventListener('notificationclick', event => {
   event.notification.close();
   const action = event.action;
   const targetUrl = action === 'bet'
-    ? '/login.html'
+    ? '/register.html'
     : (event.notification.data?.url || '/');
 
   event.waitUntil(
