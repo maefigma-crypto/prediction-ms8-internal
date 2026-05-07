@@ -387,7 +387,7 @@ body > nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-it
 .insights-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
 #motd{display:none!important;background:linear-gradient(135deg,#101722 0%,#121821 56%,#1a1110 100%);border-top:1px solid rgba(249,115,22,.18);border-bottom:1px solid rgba(249,115,22,.18);}
 .intro-banner{position:relative;z-index:1;background:linear-gradient(135deg,rgba(249,115,22,.08),rgba(13,17,23,.96) 44%,rgba(0,229,160,.05));border-top:1px solid rgba(249,115,22,.18);border-bottom:1px solid rgba(249,115,22,.18);}
-.intro-inner{display:grid;grid-template-columns:1fr;gap:22px;align-items:stretch;padding-top:50px;padding-bottom:50px;}
+.intro-inner{display:grid;grid-template-columns:1fr;gap:26px;align-items:stretch;padding-top:64px;padding-bottom:64px;}
 .intro-copy{background:rgba(15,22,32,.72);border:1px solid var(--border2);border-radius:10px;padding:24px;}
 .intro-points{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px;}
 .intro-points div{background:rgba(8,11,16,.44);border:1px solid var(--border);border-radius:8px;padding:12px;}
@@ -395,6 +395,25 @@ body > nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-it
 .intro-points span{display:block;font-size:13px;color:var(--text2);margin-top:5px;line-height:1.35;}
 .banner-slot{border:1px solid rgba(249,115,22,.32);border-radius:10px;background:var(--card);overflow:hidden;display:block;padding:0;box-shadow:0 18px 46px rgba(0,0,0,.28);}
 .banner-slot img{width:100%;height:auto;aspect-ratio:16/9;object-fit:contain;display:block;background:#05080c;}
+.promo-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:16px;align-items:stretch;}
+.promo-card{background:#f8fafc;color:#101827;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.12);box-shadow:0 18px 46px rgba(0,0,0,.28);}
+.promo-card.dark{background:#090b10;color:#fff;}
+.promo-art{position:relative;min-height:210px;background:#080808;overflow:hidden;}
+.promo-art img{width:100%;height:100%;min-height:210px;object-fit:cover;display:block;}
+.promo-pill{position:absolute;top:14px;left:14px;display:inline-flex;align-items:center;gap:7px;background:#fff;color:#101827;border-radius:999px;padding:7px 12px;font-family:var(--ff);font-size:14px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;}
+.promo-body{padding:18px;}
+.promo-title{font-family:var(--ff);font-size:30px;font-weight:800;line-height:1.02;letter-spacing:.01em;text-transform:uppercase;margin-bottom:12px;}
+.promo-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:13px;}
+.promo-tags span{font-family:var(--fm);font-size:9px;color:#64748b;border:1px solid #d7dde7;border-radius:999px;padding:4px 8px;text-transform:uppercase;}
+.promo-list{display:flex;flex-direction:column;gap:9px;margin-bottom:18px;}
+.promo-list div{display:flex;align-items:flex-start;gap:9px;font-size:14px;line-height:1.35;}
+.promo-list div::before{content:'✓';display:flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#d1d5db;color:#fff;font-size:11px;flex-shrink:0;margin-top:1px;}
+.promo-cta{display:flex;align-items:center;justify-content:center;gap:10px;min-height:54px;border-radius:12px;background:#05070b;color:#fff;text-decoration:none;font-family:var(--ff);font-size:18px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;}
+.promo-card.dark .promo-body{background:#a5002b;}
+.promo-card.dark .promo-title{color:#ffef2a;font-size:34px;}
+.promo-card.dark .promo-tags span{color:rgba(255,255,255,.82);border-color:rgba(255,255,255,.24);}
+.promo-card.dark .promo-list div{color:#fff;}
+.promo-card.dark .promo-cta{background:#ffc400;color:#8b001e;}
 .hstats,.intro-copy,.subcta{display:none!important;}
 .hero{min-height:520px;}
 .intro-banner .sec{padding-top:34px;padding-bottom:34px;}
@@ -618,6 +637,9 @@ html,body{overflow-x:hidden;max-width:100vw;}
   .intro-points{grid-template-columns:1fr;}
   .banner-slot{min-height:190px;}
   .banner-title{font-size:24px;}
+  .promo-grid{grid-template-columns:1fr;}
+  .promo-title{font-size:26px;}
+  .promo-card.dark .promo-title{font-size:28px;}
   .easy-top{grid-template-columns:1fr;}
   .easy-conf{display:flex;align-items:center;justify-content:space-between;text-align:left;min-width:0;}
   .easy-conf span{margin-top:0;}
@@ -1216,6 +1238,36 @@ footer{
     </div>
     <div class="banner-slot fu v">
       <img src="/images/ocs8-powered-banner.webp" alt="Connected by OCS8, ScoreOCS8 is powered by OCS8">
+    </div>
+    <div class="promo-grid fu v">
+      <div class="promo-card">
+        <div class="promo-art">
+          <img src="/images/promotion-banner-pro-picks.png" alt="OCS8 welcome bonus promotion">
+          <div class="promo-pill">OCS8 Rewards</div>
+        </div>
+        <div class="promo-body">
+          <div class="promo-title">100% welcome bonus up to MYR 300</div>
+          <div class="promo-tags"><span>First deposit</span><span>Welcome bonus</span><span>Football picks</span></div>
+          <div class="promo-list">
+            <div>Register through the OCS8 partner site</div>
+            <div>Claim the welcome reward before kickoff</div>
+            <div>Use ScoreOcs8 picks to follow major football matches</div>
+          </div>
+          <a class="promo-cta" href="https://pp88fs.ocs8winwinwin.shop/?country=MY&lang=en&affcampaign=LAVCNR&aff=AFFLSAHYM" target="_blank" rel="noopener">Get your bonus →</a>
+        </div>
+      </div>
+      <div class="promo-card dark">
+        <div class="promo-body">
+          <div class="promo-title">Bonus selamat datang sehingga MYR 300</div>
+          <div class="promo-tags"><span>OCS8</span><span>Angpao reward</span><span>MYT football</span></div>
+          <div class="promo-list">
+            <div>Click Sertai to open the money site</div>
+            <div>Join Telegram for daily free ScoreOcs8 updates</div>
+            <div>Track virtual proof before choosing a pick</div>
+          </div>
+          <a class="promo-cta" href="https://pp88fs.ocs8winwinwin.shop/?country=MY&lang=en&affcampaign=LAVCNR&aff=AFFLSAHYM" target="_blank" rel="noopener">Sertai →</a>
+        </div>
+      </div>
     </div>
   </div>
 </section>
