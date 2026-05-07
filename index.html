@@ -951,6 +951,24 @@ footer{
   /* League prediction cards — increase tap area */
   .pc{cursor:pointer;}
 }
+.bonus-popup{display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.78);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:18px;}
+.bonus-popup.open{display:flex;}
+.bonus-card{width:min(760px,96vw);max-height:88vh;overflow:auto;background:#f8fafc;color:#101827;border-radius:14px;border:1px solid rgba(255,255,255,.18);box-shadow:0 30px 90px rgba(0,0,0,.55);}
+.bonus-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 18px;border-bottom:1px solid #d8dde6;}
+.bonus-title{font-family:var(--ff);font-size:30px;font-weight:700;letter-spacing:.02em;color:#101827;}
+.bonus-close{width:42px;height:42px;border:1px solid #d8dde6;border-radius:10px;background:#fff;color:#101827;font-size:22px;cursor:pointer;}
+.bonus-list{display:flex;flex-direction:column;gap:14px;padding:16px 18px 18px;}
+.bonus-offer{border:1px solid #d8dde6;border-radius:10px;overflow:hidden;background:#fff;}
+.bonus-offer-top{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;padding:16px 18px;}
+.bonus-logo{width:62px;height:62px;border-radius:10px;background:#0f1620;display:flex;align-items:center;justify-content:center;padding:10px;}
+.bonus-logo img{max-width:100%;max-height:100%;object-fit:contain;}
+.bonus-brand{font-family:var(--fb);font-size:13px;font-weight:700;color:#101827;letter-spacing:.06em;text-transform:uppercase;}
+.bonus-offer-title{font-family:var(--ff);font-size:22px;font-weight:700;color:#101827;line-height:1.1;margin-top:2px;text-transform:uppercase;}
+.bonus-badge{align-self:start;background:linear-gradient(180deg,#ff8a1c,#f97316);color:#fff;font-family:var(--ff);font-size:13px;font-weight:700;border-radius:0 0 0 10px;padding:8px 12px;margin:-16px -18px 0 0;}
+.bonus-copy{border-top:1px solid #d8dde6;padding:14px 18px;font-size:13px;line-height:1.55;color:#334155;}
+.bonus-cta{display:flex;align-items:center;justify-content:center;margin:0 18px 18px;min-height:46px;border-radius:8px;background:linear-gradient(180deg,#ff8a1c,#f97316);color:#fff;text-decoration:none;font-family:var(--ff);font-size:17px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;}
+.bonus-terms{font-size:11px;color:#64748b;line-height:1.45;padding:0 18px 16px;}
+@media(max-width:620px){.bonus-offer-top{grid-template-columns:auto 1fr;}.bonus-badge{grid-column:1/-1;justify-self:start;margin:0;border-radius:999px;}.bonus-title{font-size:24px;}}
 </style>
 </head>
 <body>
@@ -996,6 +1014,42 @@ footer{
         Join @scoreocs8 for free updates
       </a>
       <div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5;">18+ only · Play responsibly · Welcome bonus T&C apply.</div>
+    </div>
+  </div>
+</div>
+
+<!-- OCS8 BONUSES POPUP -->
+<div id="bonus-popup" class="bonus-popup" onclick="if(event.target===this)closeBonusPopup()">
+  <div class="bonus-card" role="dialog" aria-modal="true" aria-labelledby="bonus-title">
+    <div class="bonus-head">
+      <div id="bonus-title" class="bonus-title">OCS8 Bonuses & Promotions 🔥</div>
+      <button class="bonus-close" onclick="closeBonusPopup()" aria-label="Close promotions">×</button>
+    </div>
+    <div class="bonus-list">
+      <div class="bonus-offer">
+        <div class="bonus-offer-top">
+          <div class="bonus-logo"><img src="/logo.png" alt="ScoreOcs8"></div>
+          <div>
+            <div class="bonus-brand">ScoreOcs8 Welcome Bonus</div>
+            <div class="bonus-offer-title">Register or login to unlock today&apos;s football offers</div>
+          </div>
+          <div class="bonus-badge">Best 🏆</div>
+        </div>
+        <div class="bonus-copy">Join through ScoreOcs8 before kickoff to view the latest OCS8 football promotions, daily pro picks and member-only match previews in MYT.</div>
+        <a class="bonus-cta" href="https://pp88fs.ocs8winwinwin.shop/?country=MY&lang=en&affcampaign=LAVCNR&aff=AFFLSAHYM" target="_blank" rel="noopener">View Offer</a>
+      </div>
+      <div class="bonus-offer">
+        <div class="bonus-offer-top">
+          <div class="bonus-logo"><img src="/images/promotion-banner-pro-picks.png" alt="OCS8 promotion"></div>
+          <div>
+            <div class="bonus-brand">Daily Soccer Picks</div>
+            <div class="bonus-offer-title">Get free Telegram updates before the match starts</div>
+          </div>
+        </div>
+        <div class="bonus-copy">Follow the same virtual slips, result proof and major-league predictions shown on ScoreOcs8. No small-league noise, just top football fixtures.</div>
+        <a class="bonus-cta" href="https://t.me/scoreocs8" target="_blank" rel="noopener">Join Telegram</a>
+      </div>
+      <div class="bonus-terms">18+ only. Play responsibly. Bonus availability, deposit requirements and promotion terms are handled by the partner platform and may change without notice.</div>
     </div>
   </div>
 </div>
@@ -1827,6 +1881,10 @@ function filterM(){const s=document.getElementById('si').value.toLowerCase();con
 function resetF(){document.getElementById('si').value='';document.getElementById('lf').value='';document.getElementById('fd').value='';document.getElementById('td').value='';document.querySelectorAll('.pc').forEach(c=>c.style.display='block');}
 function openModal(){const m=document.getElementById('auth-modal');m.style.display='flex';}
 function closeModal(){document.getElementById('auth-modal').style.display='none';}
+function closeBonusPopup(){const p=document.getElementById('bonus-popup');if(p)p.classList.remove('open');try{sessionStorage.setItem('scoreocs8_bonus_seen','1');}catch{}}
+function openBonusPopup(){const p=document.getElementById('bonus-popup');if(p)p.classList.add('open');}
+document.addEventListener('DOMContentLoaded',()=>{try{if(sessionStorage.getItem('scoreocs8_bonus_seen'))return;}catch{}setTimeout(openBonusPopup,900);});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeBonusPopup();});
 function closePickHelp(){const m=document.getElementById('pick-help-modal');if(m)m.style.display='none';}
 function openPickHelp(home,away,pick){
   const modal=document.getElementById('pick-help-modal');
