@@ -91,7 +91,7 @@ self.addEventListener('notificationclick', event => {
   event.notification.close();
   const action = event.action;
   const targetUrl = action === 'bet'
-    ? 'https://pp88fs.ocs8winwinwin.shop/?country=MY&lang=en&affcampaign=LAVCNR&aff=AFFLSAHYM'
+    ? '/login.html'
     : (event.notification.data?.url || '/');
 
   event.waitUntil(

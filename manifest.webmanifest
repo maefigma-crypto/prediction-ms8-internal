@@ -33,10 +33,10 @@
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Register / Login",
+      "name": "Register",
       "short_name": "Bet",
-      "description": "Register at PP88 to bet on every pick",
-      "url": "https://pp88fs.ocs8winwinwin.shop/?country=MY&lang=en&affcampaign=LAVCNR&aff=AFFLSAHYM",
+      "description": "Register on OCS8 to claim the sports welcome bonus",
+      "url": "/login.html",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }
   ],
