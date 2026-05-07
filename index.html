@@ -395,25 +395,19 @@ body > nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-it
 .intro-points span{display:block;font-size:13px;color:var(--text2);margin-top:5px;line-height:1.35;}
 .banner-slot{border:1px solid rgba(249,115,22,.32);border-radius:10px;background:var(--card);overflow:hidden;display:block;padding:0;box-shadow:0 18px 46px rgba(0,0,0,.28);}
 .banner-slot img{width:100%;height:auto;aspect-ratio:16/9;object-fit:contain;display:block;background:#05080c;}
-.promo-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:16px;align-items:stretch;}
-.promo-card{background:#f8fafc;color:#101827;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.12);box-shadow:0 18px 46px rgba(0,0,0,.28);}
-.promo-card.dark{background:#090b10;color:#fff;}
-.promo-art{position:relative;min-height:210px;background:#080808;overflow:hidden;}
-.promo-art img{width:100%;height:100%;min-height:210px;object-fit:cover;display:block;}
-.promo-pill{position:absolute;top:14px;left:14px;display:inline-flex;align-items:center;gap:7px;background:#fff;color:#101827;border-radius:999px;padding:7px 12px;font-family:var(--ff);font-size:14px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;}
-.promo-body{padding:18px;}
-.promo-title{font-family:var(--ff);font-size:30px;font-weight:800;line-height:1.02;letter-spacing:.01em;text-transform:uppercase;margin-bottom:12px;}
-.promo-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:13px;}
-.promo-tags span{font-family:var(--fm);font-size:9px;color:#64748b;border:1px solid #d7dde7;border-radius:999px;padding:4px 8px;text-transform:uppercase;}
-.promo-list{display:flex;flex-direction:column;gap:9px;margin-bottom:18px;}
-.promo-list div{display:flex;align-items:flex-start;gap:9px;font-size:14px;line-height:1.35;}
-.promo-list div::before{content:'✓';display:flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#d1d5db;color:#fff;font-size:11px;flex-shrink:0;margin-top:1px;}
-.promo-cta{display:flex;align-items:center;justify-content:center;gap:10px;min-height:54px;border-radius:12px;background:#05070b;color:#fff;text-decoration:none;font-family:var(--ff);font-size:18px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;}
-.promo-card.dark .promo-body{background:#a5002b;}
-.promo-card.dark .promo-title{color:#ffef2a;font-size:34px;}
-.promo-card.dark .promo-tags span{color:rgba(255,255,255,.82);border-color:rgba(255,255,255,.24);}
-.promo-card.dark .promo-list div{color:#fff;}
-.promo-card.dark .promo-cta{background:#ffc400;color:#8b001e;}
+.promo-grid{display:grid;grid-template-columns:1fr;gap:16px;align-items:stretch;}
+.promo-card{max-width:920px;margin:0 auto;width:100%;background:rgba(15,22,32,.92);color:var(--text);border-radius:16px;overflow:hidden;border:1px solid rgba(249,115,22,.28);box-shadow:0 22px 58px rgba(0,0,0,.34),0 0 34px rgba(249,115,22,.12);}
+.promo-art{position:relative;min-height:260px;background:#080808;overflow:hidden;border-bottom:1px solid rgba(249,115,22,.22);}
+.promo-art img{width:100%;height:100%;min-height:260px;object-fit:cover;display:block;}
+.promo-pill{position:absolute;top:16px;left:16px;display:inline-flex;align-items:center;gap:7px;background:rgba(8,11,16,.9);color:var(--accent);border:1px solid rgba(249,115,22,.35);border-radius:999px;padding:8px 13px;font-family:var(--ff);font-size:14px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;backdrop-filter:blur(10px);}
+.promo-body{padding:24px;}
+.promo-title{font-family:var(--ff);font-size:40px;font-weight:800;line-height:1.02;letter-spacing:.01em;text-transform:uppercase;margin-bottom:14px;color:var(--text);}
+.promo-tags{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px;}
+.promo-tags span{font-family:var(--fm);font-size:10px;color:var(--accent);border:1px solid rgba(249,115,22,.25);background:rgba(249,115,22,.08);border-radius:999px;padding:5px 9px;text-transform:uppercase;}
+.promo-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 16px;margin-bottom:22px;}
+.promo-list div{display:flex;align-items:flex-start;gap:10px;font-size:16px;line-height:1.35;color:var(--text2);}
+.promo-list div::before{content:'✓';display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:rgba(0,229,160,.14);border:1px solid rgba(0,229,160,.28);color:var(--green);font-size:12px;flex-shrink:0;margin-top:1px;}
+.promo-cta{display:flex;align-items:center;justify-content:center;gap:10px;min-height:58px;border-radius:12px;background:linear-gradient(180deg,#ff9c4a,#f97316,#c75808);color:#fff;text-decoration:none;font-family:var(--ff);font-size:20px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;box-shadow:0 12px 28px rgba(249,115,22,.38),inset 0 1px 0 rgba(255,255,255,.35);}
 .hstats,.intro-copy,.subcta{display:none!important;}
 .hero{min-height:520px;}
 .intro-banner .sec{padding-top:34px;padding-bottom:34px;}
@@ -639,7 +633,8 @@ html,body{overflow-x:hidden;max-width:100vw;}
   .banner-title{font-size:24px;}
   .promo-grid{grid-template-columns:1fr;}
   .promo-title{font-size:26px;}
-  .promo-card.dark .promo-title{font-size:28px;}
+  .promo-list{grid-template-columns:1fr;}
+  .promo-art,.promo-art img{min-height:190px;}
   .easy-top{grid-template-columns:1fr;}
   .easy-conf{display:flex;align-items:center;justify-content:space-between;text-align:left;min-width:0;}
   .easy-conf span{margin-top:0;}
@@ -1242,30 +1237,19 @@ footer{
     <div class="promo-grid fu v">
       <div class="promo-card">
         <div class="promo-art">
-          <img src="/images/promotion-banner-pro-picks.png" alt="OCS8 welcome bonus promotion">
-          <div class="promo-pill">OCS8 Rewards</div>
+          <img src="/images/ocs8-sports-welcome-bonus.png" alt="OCS8 Sports Welcome Bonus">
+          <div class="promo-pill">OCS8 Sports</div>
         </div>
         <div class="promo-body">
-          <div class="promo-title">100% welcome bonus up to MYR 300</div>
-          <div class="promo-tags"><span>First deposit</span><span>Welcome bonus</span><span>Football picks</span></div>
+          <div class="promo-title">Sports Welcome Bonus</div>
+          <div class="promo-tags"><span>Sports bonus</span><span>OCS8 website</span><span>Football picks</span></div>
           <div class="promo-list">
-            <div>Register through the OCS8 partner site</div>
-            <div>Claim the welcome reward before kickoff</div>
-            <div>Use ScoreOcs8 picks to follow major football matches</div>
+            <div>Register on OCS8 Website</div>
+            <div>Min Deposit: RM30</div>
+            <div>Bonus: 128%</div>
+            <div>Max Bonus: RM128</div>
           </div>
-          <a class="promo-cta" href="https://pp88fs.ocs8winwinwin.shop/?country=MY&lang=en&affcampaign=LAVCNR&aff=AFFLSAHYM" target="_blank" rel="noopener">Get your bonus →</a>
-        </div>
-      </div>
-      <div class="promo-card dark">
-        <div class="promo-body">
-          <div class="promo-title">Bonus selamat datang sehingga MYR 300</div>
-          <div class="promo-tags"><span>OCS8</span><span>Angpao reward</span><span>MYT football</span></div>
-          <div class="promo-list">
-            <div>Click Sertai to open the money site</div>
-            <div>Join Telegram for daily free ScoreOcs8 updates</div>
-            <div>Track virtual proof before choosing a pick</div>
-          </div>
-          <a class="promo-cta" href="https://pp88fs.ocs8winwinwin.shop/?country=MY&lang=en&affcampaign=LAVCNR&aff=AFFLSAHYM" target="_blank" rel="noopener">Sertai →</a>
+          <a class="promo-cta" href="https://pp88fs.ocs8winwinwin.shop/?country=MY&lang=en&affcampaign=LAVCNR&aff=AFFLSAHYM" target="_blank" rel="noopener">Claim Sports Bonus →</a>
         </div>
       </div>
     </div>
