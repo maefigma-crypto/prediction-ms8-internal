@@ -109,12 +109,17 @@ async function handlePost({ request, env }) {
     affcampaign: null,
   };
 
+  const bodyAff = cleanText(body.aff || body.ref || body.referral).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 32);
+  const bodyCampaign = cleanText(body.affcampaign || body.campaign).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64);
+  if (bodyAff) payload.aff = bodyAff;
+  if (bodyCampaign) payload.affcampaign = bodyCampaign;
+
   try {
     const parsed = new URL(landingUrl);
     const aff = parsed.searchParams.get('aff') || parsed.searchParams.get('ref');
     const affcampaign = parsed.searchParams.get('affcampaign') || parsed.searchParams.get('campaign');
-    if (aff) payload.aff = aff;
-    if (affcampaign) payload.affcampaign = affcampaign;
+    if (!payload.aff && aff) payload.aff = aff;
+    if (!payload.affcampaign && affcampaign) payload.affcampaign = affcampaign;
   } catch (_) {
     // Keep raw attribution URL even if parsing fails.
   }

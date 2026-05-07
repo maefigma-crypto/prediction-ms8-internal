@@ -95,6 +95,10 @@ body{background:radial-gradient(circle at 18% 12%,rgba(249,115,22,.18),transpare
         <input id="reg-confirm" name="confirm_password" type="password" autocomplete="new-password" minlength="6" required placeholder="Repeat password">
       </div>
     </div>
+    <div class="field">
+      <label for="reg-referral">Referral Code</label>
+      <input id="reg-referral" name="referral" autocomplete="off" maxlength="32" placeholder="Optional">
+    </div>
     <div class="form-status" id="register-status"></div>
     <button class="cta-primary" id="register-submit" type="submit">Create OCS8 Account</button>
   </form>
@@ -120,19 +124,63 @@ body{background:radial-gradient(circle at 18% 12%,rgba(249,115,22,.18),transpare
 </div>
 <script src="/pwa.js" defer></script>
 <script>
-const partnerUrl = 'https://pp88fs.ocs8winwinwin.shop/?country=MY&lang=en&affcampaign=LAVCNR&aff=AFFLSAHYM';
+const DEFAULT_REFERRAL = 'AFFLSAHYM';
+const DEFAULT_CAMPAIGN = 'LAVCNR';
+const REF_CACHE_KEY = 'ocs8_referral_code';
+const partnerBaseUrl = 'https://pp88fs.ocs8winwinwin.shop/';
 const form = document.getElementById('ocs-register-form');
 const statusEl = document.getElementById('register-status');
 const submitBtn = document.getElementById('register-submit');
+const referralInput = document.getElementById('reg-referral');
+const loginLink = document.getElementById('partner-login-link');
+
+function cleanReferral(value) {
+  return String(value || '').trim().replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 32);
+}
+
+function referralFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  return cleanReferral(params.get('aff') || params.get('ref') || params.get('referral') || '');
+}
+
+function currentReferral() {
+  return cleanReferral(referralInput.value) || DEFAULT_REFERRAL;
+}
+
+function partnerUrl() {
+  const url = new URL(partnerBaseUrl);
+  url.searchParams.set('country', 'MY');
+  url.searchParams.set('lang', 'en');
+  url.searchParams.set('affcampaign', DEFAULT_CAMPAIGN);
+  url.searchParams.set('aff', currentReferral());
+  return url.toString();
+}
+
+function updateReferralLinks() {
+  loginLink.href = partnerUrl();
+}
 
 function setStatus(message, type) {
   statusEl.textContent = message || '';
   statusEl.className = 'form-status' + (type ? ' ' + type : '');
 }
 
+const initialReferral = referralFromUrl() || cleanReferral(localStorage.getItem(REF_CACHE_KEY));
+if (initialReferral) referralInput.value = initialReferral;
+updateReferralLinks();
+referralInput.addEventListener('input', () => {
+  const ref = cleanReferral(referralInput.value);
+  if (ref) localStorage.setItem(REF_CACHE_KEY, ref);
+  else localStorage.removeItem(REF_CACHE_KEY);
+  updateReferralLinks();
+});
+
 form.addEventListener('submit', async event => {
   event.preventDefault();
   const data = Object.fromEntries(new FormData(form).entries());
+  data.referral = cleanReferral(data.referral);
+  data.aff = data.referral || DEFAULT_REFERRAL;
+  if (data.referral) localStorage.setItem(REF_CACHE_KEY, data.referral);
   if (data.password !== data.confirm_password) {
     setStatus('Password and confirm password must match.', 'err');
     return;
@@ -146,7 +194,7 @@ form.addEventListener('submit', async event => {
     const res = await fetch('/api/member/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...data, url: window.location.href }),
+      body: JSON.stringify({ ...data, url: window.location.href, affcampaign: DEFAULT_CAMPAIGN }),
     });
     const result = await res.json().catch(() => null);
     const message = result?.message?.[0] || (res.ok ? 'Registration completed.' : 'Registration failed.');
@@ -156,7 +204,7 @@ form.addEventListener('submit', async event => {
     }
     setStatus(message + ' You can login at OCS8 now.', 'ok');
     submitBtn.textContent = 'Account Created';
-    setTimeout(() => window.open(partnerUrl, '_blank', 'noopener'), 800);
+    setTimeout(() => window.open(partnerUrl(), '_blank', 'noopener'), 800);
   } catch (err) {
     setStatus('Connection failed. Please try again or use Login below.', 'err');
   } finally {
