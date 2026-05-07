@@ -1455,6 +1455,75 @@ footer{
 
 
 
+<section id="match-highlights" style="position:relative;z-index:1;background:var(--bg);border-top:1px solid var(--border);">
+  <div class="sec">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;">
+      <div>
+        <div class="stag">Full Time</div>
+        <h2 class="stitle">Highlights</h2>
+        <p class="ssub">Finished big matches with result cards first. YouTube highlight links can be attached when available.</p>
+      </div>
+      <a href="https://www.youtube.com/results?search_query=football+highlights" target="_blank" rel="noopener" class="hl-view-all">View All</a>
+    </div>
+    <div class="highlight-grid" id="highlight-grid">
+      <div class="msc-loading">Loading latest highlights...</div>
+    </div>
+  </div>
+  <style>
+    .hl-view-all{font-family:var(--ff);font-size:14px;font-weight:700;color:var(--accent);text-decoration:none;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;}
+    .hl-view-all:hover{color:var(--accent2);}
+    .highlight-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;}
+    @media(max-width:980px){.highlight-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+    @media(max-width:640px){.highlight-grid{grid-template-columns:1fr;}}
+    .highlight-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10);border-radius:16px;overflow:hidden;box-shadow:0 14px 38px rgba(0,0,0,.30);transition:transform .18s,border-color .18s;}
+    .highlight-card:hover{transform:translateY(-3px);border-color:rgba(249,115,22,.36);}
+    .highlight-art{position:relative;aspect-ratio:16/9;background:#0b1119;overflow:hidden;border-bottom:1px solid rgba(249,115,22,.18);}
+    .highlight-art img.result-bg{width:100%;height:100%;object-fit:cover;display:block;}
+    .highlight-body{padding:16px 18px 18px;}
+    .highlight-meta{display:flex;align-items:center;gap:8px;font-family:var(--fm);font-size:10px;color:var(--text3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:10px;}
+    .highlight-title{font-family:var(--ff);font-size:22px;font-weight:800;color:var(--text);line-height:1.05;margin-bottom:7px;}
+    .highlight-sub{font-size:13px;color:var(--text2);line-height:1.45;margin-bottom:16px;}
+    .highlight-actions{display:flex;gap:10px;align-items:center;justify-content:space-between;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;}
+    .highlight-actions a{font-family:var(--ff);font-size:13px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;text-decoration:none;color:var(--accent);}
+    .highlight-actions a.watch{color:var(--green);}
+  </style>
+  <script>
+  (function(){
+    const grid = document.getElementById('highlight-grid');
+    if (!grid) return;
+    const esc = s => String(s ?? '').replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
+    const dateFmt = iso => { try { return new Date(iso).toLocaleDateString('en-MY',{timeZone:'Asia/Kuala_Lumpur',day:'numeric',month:'short',year:'numeric'}); } catch { return ''; } };
+    const short = s => String(s || '').replace(/ Football Club| FC| CF| AFC| SC/gi,'').trim();
+    const card = h => {
+      const score = `${h.score_home ?? '-'}-${h.score_away ?? '-'}`;
+      const title = `${short(h.home)} ${score} ${short(h.away)}`;
+      const link = h.youtube_url || h.youtube_search_url || `https://www.youtube.com/results?search_query=${encodeURIComponent(`${h.home} ${score} ${h.away} highlights`)}`;
+      const label = h.youtube_url ? 'Watch Highlights' : 'Find YouTube';
+      return `<article class="highlight-card">
+        <div class="highlight-art">
+          <img class="result-bg" src="${esc(h.image_url || '/og/default')}" alt="${esc(title)} highlights result card">
+        </div>
+        <div class="highlight-body">
+          <div class="highlight-meta"><span>FT</span><span>${esc(dateFmt(h.kickoff_iso))}</span><span>${esc(h.league || 'Football')}</span></div>
+          <div class="highlight-title">${esc(title)}</div>
+          <div class="highlight-sub">Full-time result card is ready. YouTube highlight matching can be linked when the official video is available.</div>
+          <div class="highlight-actions">
+            <a class="${h.youtube_url?'watch':''}" href="${esc(link)}" target="_blank" rel="noopener">${label}</a>
+            <a href="/match/${encodeURIComponent(h.fixture_id)}-${encodeURIComponent(`${short(h.home)}-vs-${short(h.away)}`.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''))}/">Match Detail</a>
+          </div>
+        </div>
+      </article>`;
+    };
+    fetch('/api/highlights?limit=6').then(r => r.ok ? r.json() : null).then(data => {
+      const items = data?.highlights || [];
+      grid.innerHTML = items.length ? items.map(card).join('') : '<div class="msc-empty">Highlights will appear after the next tracked match finishes.</div>';
+    }).catch(() => {
+      grid.innerHTML = '<div class="msc-empty">Could not load highlights yet.</div>';
+    });
+  })();
+  </script>
+</section>
+
 <section id="highlights" style="position:relative;z-index:1;background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
   <div class="sec">
     <div class="stag">Live Match Center</div>

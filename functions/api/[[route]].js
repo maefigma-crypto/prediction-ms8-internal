@@ -386,6 +386,57 @@ export async function onRequest(context) {
           })),
         });
       }
+      case 'highlights': {
+        const limit = Math.max(1, Math.min(12, parseInt(url.searchParams.get('limit') || '6', 10) || 6));
+        let list = [];
+        try {
+          const raw = await env.CACHE.get('highlights:latest');
+          if (raw) list = JSON.parse(raw);
+        } catch {}
+
+        // Backfill from track history so the section can render immediately
+        // on older KV data before the next FT cron write.
+        if (!list.length) {
+          try {
+            const raw = await env.CACHE.get('history:matches');
+            const history = raw ? JSON.parse(raw) : [];
+            list = history.slice(0, limit).map(h => {
+              const score = h.score_home != null ? `${h.score_home}-${h.score_away}` : '';
+              const params = new URLSearchParams({
+                home: h.home || 'Home',
+                away: h.away || 'Away',
+                league: 'Football',
+                score,
+                date: h.kickoff_iso || '',
+              });
+              return {
+                fixture_id: h.fixture_id,
+                kickoff_iso: h.kickoff_iso,
+                league_id: h.league_id || null,
+                league: 'Football',
+                home: h.home,
+                away: h.away,
+                home_logo: null,
+                away_logo: null,
+                score_home: h.score_home,
+                score_away: h.score_away,
+                image_url: `/og/highlight?${params.toString()}`,
+                youtube_url: null,
+                youtube_search_url: `https://www.youtube.com/results?search_query=${encodeURIComponent(`${h.home} ${score} ${h.away} highlights`)}`,
+                source: 'history-backfill',
+                ts: h.ts || Date.now(),
+              };
+            });
+          } catch {}
+        }
+
+        return json({
+          updated: Date.now(),
+          count: list.length,
+          highlights: list.slice(0, limit),
+          youtube_matching: 'pending',
+        });
+      }
       case 'content/today': {
         // MYT date so reads match cron's writes (cron runs at 23:00 UTC =
         // 07:00 MYT next day; storing by UTC would write under yesterday).
@@ -502,7 +553,7 @@ export async function onRequest(context) {
         return json({
           error: 'not found',
           route,
-          routes: ['/api/live', '/api/fixtures', '/api/standings', '/api/topscorers', '/api/odds', '/api/predictions?fixture_id=', '/api/health'],
+          routes: ['/api/live', '/api/fixtures', '/api/standings', '/api/topscorers', '/api/odds', '/api/predictions?fixture_id=', '/api/highlights', '/api/health'],
         }, 404);
     }
     return json(result.data, 200, { 'X-Cache': result.source });

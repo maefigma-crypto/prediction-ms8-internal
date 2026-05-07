@@ -15,6 +15,7 @@ import * as Threads from './lib/threads.js';
 
 const API_FOOTBALL_BASE = 'https://v3.football.api-sports.io';
 const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
+const YOUTUBE_SEARCH_API = 'https://www.googleapis.com/youtube/v3/search';
 const CLAUDE_MODEL = 'claude-haiku-4-5-20251001';
 const MAX_TOKENS_PER_REQ = 2000;
 const DAILY_TOKEN_BUDGET = 8000;
@@ -586,6 +587,76 @@ async function appendHistory(env, entry) {
   });
 }
 
+async function appendHighlight(env, entry) {
+  const raw = await env.CACHE.get('highlights:latest');
+  let list = [];
+  if (raw) { try { list = JSON.parse(raw); } catch {} }
+  list = list.filter(m => m.fixture_id !== entry.fixture_id);
+  list.unshift(entry);
+  list = list.slice(0, 24);
+  await env.CACHE.put('highlights:latest', JSON.stringify(list), {
+    expirationTtl: 90 * 24 * 3600,
+  });
+}
+
+function highlightImageUrl(fx) {
+  const home = fx?.teams?.home?.name || 'Home';
+  const away = fx?.teams?.away?.name || 'Away';
+  const league = fx?.league?.name || 'Football';
+  const score = `${fx?.goals?.home ?? 0}-${fx?.goals?.away ?? 0}`;
+  const params = new URLSearchParams({
+    home,
+    away,
+    league,
+    score,
+    date: fx?.fixture?.date || '',
+  });
+  if (fx?.teams?.home?.logo) params.set('home_logo', fx.teams.home.logo);
+  if (fx?.teams?.away?.logo) params.set('away_logo', fx.teams.away.logo);
+  return `${SITE_URL}/og/highlight?${params.toString()}`;
+}
+
+function youtubeSearchUrl(fx) {
+  const home = fx?.teams?.home?.name || '';
+  const away = fx?.teams?.away?.name || '';
+  const score = `${fx?.goals?.home ?? ''}-${fx?.goals?.away ?? ''}`;
+  const query = `${home} ${score} ${away} highlights`;
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+}
+
+async function findYoutubeHighlight(env, fx) {
+  if (!env.YOUTUBE_API_KEY) return null;
+  const home = fx?.teams?.home?.name || '';
+  const away = fx?.teams?.away?.name || '';
+  const score = `${fx?.goals?.home ?? ''}-${fx?.goals?.away ?? ''}`;
+  const q = `${home} ${score} ${away} highlights`;
+  const params = new URLSearchParams({
+    part: 'snippet',
+    type: 'video',
+    maxResults: '5',
+    order: 'relevance',
+    q,
+    key: env.YOUTUBE_API_KEY,
+  });
+  try {
+    const res = await fetch(`${YOUTUBE_SEARCH_API}?${params.toString()}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const video = (data.items || []).find(item => item?.id?.videoId);
+    if (!video) return null;
+    return {
+      url: `https://www.youtube.com/watch?v=${video.id.videoId}`,
+      video_id: video.id.videoId,
+      title: video.snippet?.title || null,
+      channel: video.snippet?.channelTitle || null,
+      thumbnail: video.snippet?.thumbnails?.high?.url || video.snippet?.thumbnails?.medium?.url || null,
+      matched_at: Date.now(),
+    };
+  } catch {
+    return null;
+  }
+}
+
 async function bumpAccuracy(env, correct) {
   const weekKey = `accuracy:week:${isoWeekKey()}`;
   const curKey = `accuracy:week:current`;
@@ -687,6 +758,29 @@ async function checkFinishedMatches(env) {
         pick: pick?.pickLabel || pick?.pick || null,
         confidence: pick?.confidence ?? null,
         correct,
+        ts: Date.now(),
+      });
+
+      const youtube = await findYoutubeHighlight(env, fx);
+      await appendHighlight(env, {
+        fixture_id: item.fixture_id,
+        kickoff_iso: fx.fixture.date,
+        league_id: item.league_id,
+        league: fx.league?.name || null,
+        home: item.home,
+        away: item.away,
+        home_logo: fx.teams?.home?.logo || null,
+        away_logo: fx.teams?.away?.logo || null,
+        score_home: goalsHome,
+        score_away: goalsAway,
+        image_url: highlightImageUrl(fx),
+        youtube_url: youtube?.url || null,
+        youtube_video_id: youtube?.video_id || null,
+        youtube_title: youtube?.title || null,
+        youtube_channel: youtube?.channel || null,
+        youtube_thumbnail: youtube?.thumbnail || null,
+        youtube_search_url: youtubeSearchUrl(fx),
+        source: 'ft-cron',
         ts: Date.now(),
       });
     } catch (e) {
