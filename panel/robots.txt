@@ -1,0 +1,6 @@
+User-agent: *
+Disallow: /
+
+# OCS-super-panel is an admin-only application. Do not crawl, do not
+# index, do not archive. Cloudflare Access gates the entire app at the
+# edge anyway — this is belt-and-suspenders.
