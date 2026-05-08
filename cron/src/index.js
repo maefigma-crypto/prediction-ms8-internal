@@ -16,6 +16,8 @@ import * as Threads from './lib/threads.js';
 const API_FOOTBALL_BASE = 'https://v3.football.api-sports.io';
 const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
 const YOUTUBE_SEARCH_API = 'https://www.googleapis.com/youtube/v3/search';
+const YOUTUBE_CHANNELS_API = 'https://www.googleapis.com/youtube/v3/channels';
+const DEFAULT_YOUTUBE_CHANNELS = '@stadiumastro,@beINSPORTSAsia';
 const CLAUDE_MODEL = 'claude-haiku-4-5-20251001';
 const MAX_TOKENS_PER_REQ = 2000;
 const DAILY_TOKEN_BUDGET = 8000;
@@ -624,19 +626,84 @@ function youtubeSearchUrl(fx) {
   return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
 }
 
+function youtubeChannelTokens(env) {
+  const raw = String(env.YOUTUBE_CHANNELS || env.YOUTUBE_CHANNEL_IDS || DEFAULT_YOUTUBE_CHANNELS);
+  return raw
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
+}
+
+function youtubeHandleFromToken(token) {
+  const s = String(token || '').trim();
+  const handleUrl = s.match(/youtube\.com\/@([^/?#]+)/i);
+  if (handleUrl) return handleUrl[1];
+  if (s.startsWith('@')) return s.slice(1);
+  if (/^UC[A-Za-z0-9_-]{20,}$/.test(s)) return null;
+  return s.replace(/^@/, '');
+}
+
+function youtubeChannelIdFromToken(token) {
+  const s = String(token || '').trim();
+  const channelUrl = s.match(/youtube\.com\/channel\/([^/?#]+)/i);
+  if (channelUrl) return channelUrl[1];
+  if (/^UC[A-Za-z0-9_-]{20,}$/.test(s)) return s;
+  return null;
+}
+
+async function resolveYoutubeChannelId(env, token) {
+  const direct = youtubeChannelIdFromToken(token);
+  if (direct) return direct;
+  const handle = youtubeHandleFromToken(token);
+  if (!handle || !env.YOUTUBE_API_KEY) return null;
+  const cacheKey = `youtube:channel:${handle.toLowerCase()}`;
+  const cached = await env.CACHE?.get(cacheKey).catch(() => null);
+  if (cached) return cached;
+  const params = new URLSearchParams({
+    part: 'id',
+    forHandle: handle,
+    key: env.YOUTUBE_API_KEY,
+  });
+  const res = await fetch(`${YOUTUBE_CHANNELS_API}?${params.toString()}`);
+  if (!res.ok) return null;
+  const data = await res.json();
+  const id = data.items?.[0]?.id || null;
+  if (id) await env.CACHE?.put(cacheKey, id, { expirationTtl: 60 * 60 * 24 * 30 }).catch(() => {});
+  return id;
+}
+
+async function youtubeChannelIds(env) {
+  const ids = [];
+  for (const token of youtubeChannelTokens(env)) {
+    const id = await resolveYoutubeChannelId(env, token);
+    if (id && !ids.includes(id)) ids.push(id);
+  }
+  return ids;
+}
+
+function youtubeVideoScore(item, fx) {
+  const title = String(item?.snippet?.title || '').toLowerCase();
+  const home = String(fx?.teams?.home?.name || '').toLowerCase();
+  const away = String(fx?.teams?.away?.name || '').toLowerCase();
+  const score = `${fx?.goals?.home ?? ''}-${fx?.goals?.away ?? ''}`;
+  let points = 0;
+  if (home && title.includes(home)) points += 3;
+  if (away && title.includes(away)) points += 3;
+  if (score && title.includes(score)) points += 2;
+  if (/highlight|highlights|ringkasan|extended|full time|ft/.test(title)) points += 2;
+  return points;
+}
+
 async function findYoutubeHighlight(env, fx) {
   if (!env.YOUTUBE_API_KEY) return null;
   const home = fx?.teams?.home?.name || '';
   const away = fx?.teams?.away?.name || '';
   const score = `${fx?.goals?.home ?? ''}-${fx?.goals?.away ?? ''}`;
   const q = `${home} ${score} ${away} highlights`;
-  const channelIds = String(env.YOUTUBE_CHANNEL_IDS || '')
-    .split(',')
-    .map(s => s.trim())
-    .filter(Boolean);
   try {
     let items = [];
-    const searches = channelIds.length ? channelIds : [null];
+    const channelIds = await youtubeChannelIds(env);
+    const searches = [...channelIds, null];
     for (const channelId of searches) {
       const params = new URLSearchParams({
         part: 'snippet',
@@ -654,7 +721,11 @@ async function findYoutubeHighlight(env, fx) {
     }
     const video = items
       .filter(item => item?.id?.videoId)
-      .sort((a, b) => new Date(b.snippet?.publishedAt || 0) - new Date(a.snippet?.publishedAt || 0))[0];
+      .sort((a, b) => {
+        const scoreDiff = youtubeVideoScore(b, fx) - youtubeVideoScore(a, fx);
+        if (scoreDiff) return scoreDiff;
+        return new Date(b.snippet?.publishedAt || 0) - new Date(a.snippet?.publishedAt || 0);
+      })[0];
     if (!video) return null;
     return {
       url: `https://www.youtube.com/watch?v=${video.id.videoId}`,
