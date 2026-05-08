@@ -1,14 +1,13 @@
-// ScoreOcs8 — /slip/?fixture_id=X virtual bet slip page.
+// ScoreOcs8 - /slip/?fixture_id=X odds snapshot page.
 //
 // Designed to be screenshotted by the FT checker cron and posted to
-// Telegram/X when a featured match finishes. Visual style mimics a
-// Malaysian bookmaker bet slip (RM currency, stake + payout, ticket ID)
-// but uses FAKE money — this is DEMONSTRATIVE content, not a betting tip.
+// Telegram/X when a featured match finishes. It shows the pick, sampled odds,
+// demo stake and result outcome. It is not a real bookmaker ticket.
 //
 // Status rendering:
 //   before FT     → grey "Running"
-//   FT + correct  → green "Won RM{payout}"
-//   FT + wrong    → red "Lost"
+//   FT + correct  -> green "Won"
+//   FT + wrong    -> red "Lost"
 //
 // Portrait 1080×1350 aspect (4:5) — the "square-ish tall" format that
 // works across Telegram, IG feed, X, Threads without cropping.
@@ -31,9 +30,9 @@ function esc(s) {
   }[c]));
 }
 
-// Deterministic-looking ticket id from fixture id so the same match always
-// renders the same ticket string. Obviously not cryptographic.
-function ticketId(fxId) {
+// Deterministic snapshot id from fixture id so the same match always renders
+// the same reference string. This is not a bookmaker bet ID.
+function snapshotId(fxId) {
   const seed = String(fxId || 0);
   let h = 2166136261;
   for (let i = 0; i < seed.length; i++) {
@@ -157,7 +156,7 @@ export async function onRequest(context) {
     homeScore,
     awayScore,
     hasScore,
-    ticket: ticketId(fixtureId),
+    ticket: snapshotId(fixtureId),
     debug,
   });
 
@@ -191,7 +190,7 @@ function renderHtml(d) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=1080, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>ScoreOcs8 Virtual Bet Slip</title>
+<title>ScoreOcs8 Odds Snapshot</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -273,20 +272,20 @@ body::before{
   <div class="wrap">
     <div class="brand">
       <img class="logo" src="https://scoreocs8.pages.dev/logo.png" alt="ScoreOcs8">
-      <div class="disclaimer">Virtual · For Demonstration</div>
+      <div class="disclaimer">Odds Snapshot · Demo Tracking</div>
     </div>
 
     <div class="tabs">
-      <div class="tab">Bet Slip</div>
-      <div class="tab active">My Bets</div>
+      <div class="tab">Pick Record</div>
+      <div class="tab active">Snapshot</div>
     </div>
 
     <div class="slip">
       <div class="slip-head">
         <div class="slip-title">
           <span class="i">i</span>
-          <span class="sn">RM ${esc(d.stake)}</span>
-          <span class="sl">Single</span>
+          <span class="sn">Demo ${esc(d.stake)}</span>
+          <span class="sl">Single Pick</span>
         </div>
         <div class="badge ${badge.className}">${badge.text}</div>
       </div>
@@ -301,16 +300,16 @@ body::before{
         <div class="match-box">${esc(d.home)} vs ${esc(d.away)}</div>
         <div class="kickoff"><span class="k">Event Time:</span> ${esc(d.kickoff)}</div>
         ${scoreLine}
-        <div class="ticket">${esc(d.ticket)}</div>
+        <div class="ticket">Snapshot ref: ${esc(d.ticket)}</div>
       </div>
 
       <div class="sf">
         <div class="sfc">
-          <div class="sfl">Stake</div>
+          <div class="sfl">Demo Stake</div>
           <div class="sfv">${esc(d.stake)}</div>
         </div>
         <div class="sfc">
-          <div class="sfl">Payout</div>
+          <div class="sfl">Projected Return</div>
           <div class="sfv pay${d.status === 'lost' ? ' pay-lost' : (d.status === 'running' ? ' pay-run' : '')}">${esc(d.payout.toFixed(2))}</div>
         </div>
       </div>
@@ -319,7 +318,7 @@ body::before{
     <div class="cta">
       <div class="cta-t">More predictions & analysis · 更多预测分析</div>
       <div class="cta-l">scoreocs8.pages.dev</div>
-      <div class="cta-d">⚠ Virtual currency · No real betting · 18+</div>
+      <div class="cta-d">Sampled odds only · Platform odds and ticket layouts can differ · No real betting · 18+</div>
     </div>
   </div>
 </body>

@@ -1075,7 +1075,7 @@ footer{
             <div class="bonus-offer-title">Daily pro picks before match kickoff</div>
           </div>
         </div>
-        <div class="bonus-copy">Follow the same virtual slips, result proof and major-league predictions shown on ScoreOcs8. No small-league noise, just top football fixtures.</div>
+        <div class="bonus-copy">Follow the same tracked picks, result proof and major-league predictions shown on ScoreOcs8. No small-league noise, just top football fixtures.</div>
         <a class="bonus-cta" href="https://t.me/scoreocs8" target="_blank" rel="noopener">Join Telegram</a>
       </div>
       <div class="bonus-terms">18+ only. Play responsibly. Bonus availability, deposit requirements and promotion terms are handled by the partner platform and may change without notice.</div>
@@ -1203,7 +1203,7 @@ footer{
     <div>
       <div class="eyebrow">Pro picks · Live scores · Results proof · Malaysia</div>
       <h1><span id="hl-hero1">Daily Soccer</span><br><span class="hl" id="hl-hero2">Predictions</span><br><span id="hl-hero3">For Big Matches</span></h1>
-      <p class="hero-sub" id="hl-herosub">ScoreOcs8 focuses on major football matches only. Check upcoming fixtures, simple pro picks, H2H context, and settled virtual pick results in one place.</p>
+      <p class="hero-sub" id="hl-herosub">ScoreOcs8 focuses on major football matches only. Check upcoming fixtures, simple pro picks, H2H context, and settled pick results in one place.</p>
       <div class="hero-btns">
         <a href="#highlights" class="btn-p" id="hl-btn2">📅 Match Schedule</a>
         <a href="#predictions" class="btn-o" id="hl-btn1">📊 Match Prediction</a>
@@ -1306,7 +1306,7 @@ footer{
       <div class="proof-box">
         <div class="proof-kicker">Customer proof</div>
         <div class="proof-title">Settled picks, shown before today&apos;s calls</div>
-        <div class="proof-sub">Recent virtual slips are logged with final score, pick, odds and outcome so visitors can judge the record before reading the next prediction.</div>
+        <div class="proof-sub">Recent picks are logged with final score, selected outcome and sampled odds so visitors can judge the record before reading the next prediction. Platform odds and ticket layouts can differ.</div>
       </div>
       <div class="proof-box">
         <div class="proof-stats" id="pred-proof-stats">
@@ -1317,10 +1317,10 @@ footer{
       </div>
       <div class="proof-box" style="grid-column:1/-1;">
         <div class="proof-list" id="pred-proof-list">
-          <div class="proof-pick"><div class="out">LOADING</div><div class="match">Virtual picks record</div><div class="sel">Loading latest settled slips...</div></div>
+          <div class="proof-pick"><div class="out">LOADING</div><div class="match">Tracked picks record</div><div class="sel">Loading latest settled snapshots...</div></div>
         </div>
       </div>
-      <div class="proof-footnote">Virtual record only. No real-money betting is stored or implied.</div>
+      <div class="proof-footnote">Odds snapshot only. Platform odds and ticket layouts can differ. No real-money bet is stored or implied.</div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px;">
       <div style="display:flex;align-items:center;gap:10px;">
@@ -1721,21 +1721,21 @@ footer{
   </div>
 </section>
 
-<!-- ── RECENT VIRTUAL PICKS ── -->
+<!-- ── RECENT ODDS SNAPSHOTS ── -->
 <section id="slips" style="position:relative;z-index:1;">
   <div class="sec">
-    <div class="stag">Virtual</div>
-    <h2 class="stitle">Recent Virtual Picks</h2>
-    <p class="ssub">Same slips posted to our Telegram channel · Tap any card for the full slip view · Virtual currency, no real betting</p>
+    <div class="stag">Tracking</div>
+    <h2 class="stitle">Recent Odds Snapshots</h2>
+    <p class="ssub">Tracked picks with sampled odds and final result · Tap any card for the full snapshot · Odds vary by platform</p>
     <div class="slip-stats" id="slip-stats">
       <div class="slip-stat"><strong>--</strong><span>Accuracy</span></div>
-      <div class="slip-stat"><strong>--</strong><span>Settled slips</span></div>
-      <div class="slip-stat"><strong>--</strong><span>Virtual ROI</span></div>
+      <div class="slip-stat"><strong>--</strong><span>Tracked picks</span></div>
+      <div class="slip-stat"><strong>--</strong><span>Demo ROI</span></div>
       <div class="slip-stat"><strong>--</strong><span>Net result</span></div>
       <a class="slip-track" href="#history">View track record →</a>
     </div>
     <div id="slips-row" style="display:flex;gap:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:6px 2px 14px;scroll-snap-type:x proximity;">
-      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:40px;text-align:center;color:var(--text3);font-family:var(--fm);font-size:12px;flex:1;min-width:280px;">Loading virtual picks…</div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:40px;text-align:center;color:var(--text3);font-family:var(--fm);font-size:12px;flex:1;min-width:280px;">Loading pick snapshots…</div>
     </div>
     <style>
       .slip-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;gap:10px;align-items:stretch;margin:18px 0 16px;}
@@ -1793,8 +1793,8 @@ footer{
         const net = stats.settled ? fmtMoney(stats.net || 0) : '--';
         statsEl.innerHTML = [
           statTile('Accuracy', stats.accuracy == null ? '--' : `${stats.accuracy}%`),
-          statTile('Settled slips', String(stats.settled || '--')),
-          statTile('Virtual ROI', roi, stats.roi > 0 ? 'good' : stats.roi < 0 ? 'bad' : ''),
+          statTile('Tracked picks', String(stats.settled || '--')),
+          statTile('Demo ROI', roi, stats.roi > 0 ? 'good' : stats.roi < 0 ? 'bad' : ''),
           statTile('Net result', net, stats.net > 0 ? 'good' : stats.net < 0 ? 'bad' : ''),
           `<a class="slip-track" href="${esc(d?.track_record_url || '#history')}">Add to / view track record →</a>`,
         ].join('');
@@ -1804,7 +1804,7 @@ footer{
         if (!d) { row.innerHTML = empty('Picks will appear once today’s match is featured.'); return; }
         renderStats(d);
         const all = [...(d.running || []), ...(d.recent || [])];
-        if (!all.length) { row.innerHTML = empty('No virtual picks yet — check back after 10:00 MYT when today’s slip is published.'); return; }
+        if (!all.length) { row.innerHTML = empty('No pick snapshots yet — check back after 10:00 MYT when today’s pick is published.'); return; }
         row.innerHTML = all.map(c => {
           const flag = LEAGUE_EMOJI[c.league_id] || '⚽';
           const lg = LEAGUE_SHORT[c.league_id] || 'Football';
@@ -1813,7 +1813,7 @@ footer{
           return `
             <a class="scard" href="${slipPath(c)}?status=${esc(c.status)}&stake=${c.stake}" target="_blank" rel="noopener">
               <div class="scard-head">
-                <div class="scard-stake"><span class="sn">RM</span>${c.stake}</div>
+                <div class="scard-stake"><span class="sn">Demo</span>${c.stake}</div>
                 <div class="scard-badge ${esc(c.status)}">${esc(c.status.toUpperCase())}</div>
               </div>
               <div class="scard-body">
@@ -1826,8 +1826,8 @@ footer{
                 ${hasScore ? `<div class="scard-score">FT&nbsp;&nbsp;${esc(c.score_home)} — ${esc(c.score_away)}</div>` : ''}
               </div>
               <div class="scard-foot">
-                <div><div class="scard-fl">Stake</div><div class="scard-fv">${c.stake}</div></div>
-                <div><div class="scard-fl">Payout</div><div class="scard-fv ${payClass}">${esc(c.payout.toFixed(2))}</div></div>
+                <div><div class="scard-fl">Demo stake</div><div class="scard-fv">${c.stake}</div></div>
+                <div><div class="scard-fl">Projected return</div><div class="scard-fv ${payClass}">${esc(c.payout.toFixed(2))}</div></div>
               </div>
             </a>`;
         }).join('');
@@ -1845,7 +1845,7 @@ footer{
     <div class="track-note fu">
       <div><strong>Result-first trust</strong><span>Finished picks are shown with final score and outcome before visitors browse today&apos;s calls.</span></div>
       <div><strong>Major football only</strong><span>Records focus on the same EPL, UCL and international matches shown on the homepage.</span></div>
-      <div><strong>Virtual slip proof</strong><span>Stake and payout records are demo tracking only, built to make wins and losses easy to audit.</span></div>
+      <div><strong>Odds snapshot record</strong><span>Sampled odds are shown for demo tracking only. Real platform odds, bet IDs and ticket layouts can differ.</span></div>
     </div>
     <div class="agrid fu" id="tr-stats">
       <!-- populated from /api/track-record -->
@@ -2321,13 +2321,13 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     if (statsEl) {
       statsEl.innerHTML = [
         ['Settled accuracy', acc],
-        ['Verified slips', String(settled.length || '--')],
+        ['Tracked picks', String(settled.length || '--')],
         ['Winning picks', String(wins || '--')],
       ].map(([label, value]) => `<div class="proof-stat"><strong>${esc(value)}</strong><span>${esc(label)}</span></div>`).join('');
     }
     if (!listEl) return;
     if (!settled.length) {
-      listEl.innerHTML = `<div class="proof-pick"><div class="out">BUILDING</div><div class="match">No settled virtual picks yet</div><div class="sel">Results will appear after finished matches are checked.</div></div>`;
+      listEl.innerHTML = `<div class="proof-pick"><div class="out">BUILDING</div><div class="match">No settled pick snapshots yet</div><div class="sel">Results will appear after finished matches are checked.</div></div>`;
       return;
     }
     listEl.innerHTML = settled.slice(0, 6).map(x => `
@@ -2549,7 +2549,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     const awayName = fx.teams.away.name || 'Away';
     const fullAnalysis = ai?.body_en ? plainText(ai.body_en) : '';
     const completedReason = slip
-      ? `Final score ${slip.score_home}-${slip.score_away}. This virtual pick was marked ${slip.status === 'won' ? 'WIN' : slip.status === 'lost' ? 'LOSS' : 'PENDING'} in the public record.`
+      ? `Final score ${slip.score_home}-${slip.score_away}. This tracked pick was marked ${slip.status === 'won' ? 'WIN' : slip.status === 'lost' ? 'LOSS' : 'PENDING'} in the public record.`
       : 'Completed match. Result is shown for customer reference.';
     const shortReason = completed ? completedReason : firstSentence(fullAnalysis, 'Pro analysis updates daily at 07:00 MYT. Check the kickoff time and come back before the match starts.');
     const pickLabel = slip?.selection || pickOf(ai, homeName, awayName);
