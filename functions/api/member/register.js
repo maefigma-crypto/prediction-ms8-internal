@@ -1,5 +1,5 @@
 const DEFAULT_API_BASE = 'https://67864891qp14api.238968.com';
-const DEFAULT_PARTNER_URL = 'https://ocs8my.com/';
+const DEFAULT_PARTNER_URL = 'https://pp88fs.ocs8winwinwin.shop/';
 
 function json(body, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -71,9 +71,18 @@ function isMobile(request) {
   return /android|iphone|ipad|mobile/i.test(request.headers.get('user-agent') || '');
 }
 
-function readTrackingUrl(request, body) {
-  const fallback = request.headers.get('referer') || request.headers.get('origin') || DEFAULT_PARTNER_URL;
-  return cleanText(body.url) || fallback;
+function readSourceUrl(request, body) {
+  return cleanText(body.url) || request.headers.get('referer') || request.headers.get('origin') || '';
+}
+
+function partnerTrackingUrl(env, aff, affcampaign) {
+  const base = env.OCS8_PARTNER_URL || DEFAULT_PARTNER_URL;
+  const url = new URL(base);
+  url.searchParams.set('country', 'MY');
+  url.searchParams.set('lang', 'en');
+  if (affcampaign) url.searchParams.set('affcampaign', affcampaign);
+  if (aff) url.searchParams.set('aff', aff);
+  return url.toString();
 }
 
 async function handlePost({ request, env }) {
@@ -98,7 +107,20 @@ async function handlePost({ request, env }) {
     return json({ success: false, message: ['Please enter a valid Malaysia phone number.'] }, 422);
   }
 
-  const landingUrl = readTrackingUrl(request, body);
+  const sourceUrl = readSourceUrl(request, body);
+  let sourceAff = '';
+  let sourceCampaign = '';
+  try {
+    const parsed = new URL(sourceUrl);
+    sourceAff = parsed.searchParams.get('aff') || parsed.searchParams.get('ref') || parsed.searchParams.get('referral') || '';
+    sourceCampaign = parsed.searchParams.get('affcampaign') || parsed.searchParams.get('campaign') || '';
+  } catch (_) {
+    // Source attribution is optional.
+  }
+
+  const bodyAff = cleanText(body.aff || body.ref || body.referral || sourceAff).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 32);
+  const bodyCampaign = cleanText(body.affcampaign || body.campaign || sourceCampaign).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64);
+  const landingUrl = partnerTrackingUrl(env, bodyAff, bodyCampaign);
   const payload = {
     username,
     country_code: 'MY',
@@ -109,20 +131,8 @@ async function handlePost({ request, env }) {
     affcampaign: null,
   };
 
-  const bodyAff = cleanText(body.aff || body.ref || body.referral).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 32);
-  const bodyCampaign = cleanText(body.affcampaign || body.campaign).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64);
   if (bodyAff) payload.aff = bodyAff;
   if (bodyCampaign) payload.affcampaign = bodyCampaign;
-
-  try {
-    const parsed = new URL(landingUrl);
-    const aff = parsed.searchParams.get('aff') || parsed.searchParams.get('ref');
-    const affcampaign = parsed.searchParams.get('affcampaign') || parsed.searchParams.get('campaign');
-    if (!payload.aff && aff) payload.aff = aff;
-    if (!payload.affcampaign && affcampaign) payload.affcampaign = affcampaign;
-  } catch (_) {
-    // Keep raw attribution URL even if parsing fails.
-  }
 
   const rawBody = JSON.stringify(payload);
   const timestamp = Math.floor(Date.now() / 1000).toString();
