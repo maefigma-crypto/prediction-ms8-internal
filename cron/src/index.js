@@ -630,19 +630,31 @@ async function findYoutubeHighlight(env, fx) {
   const away = fx?.teams?.away?.name || '';
   const score = `${fx?.goals?.home ?? ''}-${fx?.goals?.away ?? ''}`;
   const q = `${home} ${score} ${away} highlights`;
-  const params = new URLSearchParams({
-    part: 'snippet',
-    type: 'video',
-    maxResults: '5',
-    order: 'relevance',
-    q,
-    key: env.YOUTUBE_API_KEY,
-  });
+  const channelIds = String(env.YOUTUBE_CHANNEL_IDS || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
   try {
-    const res = await fetch(`${YOUTUBE_SEARCH_API}?${params.toString()}`);
-    if (!res.ok) return null;
-    const data = await res.json();
-    const video = (data.items || []).find(item => item?.id?.videoId);
+    let items = [];
+    const searches = channelIds.length ? channelIds : [null];
+    for (const channelId of searches) {
+      const params = new URLSearchParams({
+        part: 'snippet',
+        type: 'video',
+        maxResults: '5',
+        order: 'date',
+        q,
+        key: env.YOUTUBE_API_KEY,
+      });
+      if (channelId) params.set('channelId', channelId);
+      const res = await fetch(`${YOUTUBE_SEARCH_API}?${params.toString()}`);
+      if (!res.ok) continue;
+      const data = await res.json();
+      items = items.concat(data.items || []);
+    }
+    const video = items
+      .filter(item => item?.id?.videoId)
+      .sort((a, b) => new Date(b.snippet?.publishedAt || 0) - new Date(a.snippet?.publishedAt || 0))[0];
     if (!video) return null;
     return {
       url: `https://www.youtube.com/watch?v=${video.id.videoId}`,
