@@ -597,8 +597,9 @@ html,body{overflow-x:hidden;max-width:100vw;}
   #predictions .live-pick-value{font-size:23px;}
   #predictions .live-reason{font-size:15px;}
   .detail-grid{grid-template-columns:1fr;}
-  .detail-topic{grid-template-columns:1fr;justify-items:center;text-align:center;}
-  .detail-team,.detail-team.away{justify-content:center;text-align:center;flex-direction:column;}
+  .detail-topic{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);justify-items:stretch;text-align:initial;gap:8px;padding:12px 10px;}
+  .detail-team,.detail-team.away{flex-direction:column;justify-content:center;text-align:center;gap:6px;}
+  .detail-team-name{font-size:18px;}
   .h2h-row{grid-template-columns:1fr;gap:4px;}
   .h2h-score{font-size:18px;}
   .wgrid{grid-template-columns:1fr;}
@@ -615,9 +616,11 @@ html,body{overflow-x:hidden;max-width:100vw;}
   .pgrid{grid-template-columns:1fr;}
   .live-grid{grid-template-columns:1fr;}
   .live-head{align-items:flex-start;flex-direction:column;}
-  .live-teams{grid-template-columns:1fr;gap:10px;}
+  .live-teams{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:8px;}
   .live-team,.live-team.away{justify-content:center;text-align:center;flex-direction:column;}
-  .live-scorebox{order:2;}
+  .live-team img{width:42px;height:42px;}
+  .live-scorebox{order:initial;min-width:54px;}
+  .live-scorebox strong{font-size:30px;}
   .proof-panel{grid-template-columns:1fr;}
   .proof-stats{grid-template-columns:repeat(3,1fr);}
   .badminton-note{grid-template-columns:1fr;}
@@ -2445,17 +2448,62 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
 
   async function getJSON(path) { try { const r = await fetch(path); return r.ok ? await r.json() : null; } catch { return null; } }
 
-  /* Pro pick lookup: cron content at /api/content/today indexed by fixture id */
-  async function loadAIMap() {
+  function analysisWindowText(iso) {
+    const kickoff = new Date(iso || 0).getTime();
+    if (!Number.isFinite(kickoff)) return 'Pro analysis opens 12 hours before kickoff.';
+    const openAt = kickoff - 12 * 3600 * 1000;
+    const now = Date.now();
+    if (now < openAt) return `Pro analysis opens 12 hours before kickoff (${mytTime(new Date(openAt).toISOString())}).`;
+    if (now < kickoff) return 'Pro analysis is being prepared now. Refresh again before kickoff.';
+    return 'Pro analysis appears here when the match data is updated.';
+  }
+
+  function normalizePredictionPayload(data) {
+    if (!data || data.error) return null;
+    return {
+      ...data,
+      title_en: data.pending ? 'Pro analysis pending' : (data.pickLabel || data.pick || ''),
+      body_en: data.analysis || data.body_en || '',
+      confidence: data.confidence ?? null,
+    };
+  }
+
+  /* Pro pick lookup: cron content plus on-demand analysis inside the 12-hour window */
+  async function loadAIMap(fixtures = []) {
     const map = {};
     const data = await getJSON(API + '/content/today');
-    if (!data || data.status === 'empty') return map;
-    const items = [];
-    if (data.top) items.push(data.top);
-    for (const p of (data.previews || [])) items.push(p);
-    for (const it of items) {
-      const id = it?.fixture?.fixture?.id;
-      if (id) map[id] = it.content || {};
+    if (data && data.status !== 'empty') {
+      const items = [];
+      if (data.top) items.push(data.top);
+      for (const p of (data.previews || [])) items.push(p);
+      for (const it of items) {
+        const id = it?.fixture?.fixture?.id;
+        if (id) map[id] = it.content || {};
+      }
+    }
+    const now = Date.now();
+    const candidates = fixtures
+      .filter(fx => {
+        const id = fx?.fixture?.id;
+        const kickoff = new Date(fx?.fixture?.date || 0).getTime();
+        return id && !map[id] && kickoff > now && kickoff - now <= 12 * 3600 * 1000;
+      })
+      .slice(0, 6);
+    await Promise.all(candidates.map(async fx => {
+      const id = fx.fixture.id;
+      const data = await getJSON(`${API}/predictions?fixture_id=${encodeURIComponent(id)}`);
+      const normalized = normalizePredictionPayload(data);
+      if (normalized) map[id] = normalized;
+    }));
+    for (const fx of fixtures) {
+      const id = fx?.fixture?.id;
+      if (!id || map[id]) continue;
+      map[id] = {
+        pending: true,
+        title_en: 'Pro analysis pending',
+        body_en: analysisWindowText(fx.fixture.date),
+        confidence: null,
+      };
     }
     return map;
   }
@@ -2511,6 +2559,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
   }
 
   function confidenceOf(ai) {
+    if (Number.isFinite(Number(ai?.confidence))) return Math.max(0, Math.min(100, Number(ai.confidence)));
     const joined = `${ai?.confidence || ''} ${ai?.title_en || ''} ${ai?.body_en || ''}`;
     const match = joined.match(/(\d{2,3})\s*%/);
     if (!match) return null;
@@ -2641,7 +2690,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     const conf = slip?.confidence ?? confidenceOf(ai);
     const reason = completed && slip
       ? `Final score ${slip.score_home}-${slip.score_away}. Pick result: ${slip.status === 'won' ? 'WIN' : slip.status === 'lost' ? 'LOSS' : 'PENDING'}.`
-      : firstSentence(ai?.body_en, 'Prediction appears here when the pro analysis is updated.');
+      : firstSentence(ai?.body_en, analysisWindowText(primary.fixture.date));
     const badge = live_ ? `<span class="blive"><span class="ldot"></span>LIVE</span>` : completed ? `<span class="result-strip final" style="margin:0;padding:3px 8px;font-size:10px;">FT</span>` : `<span class="bpred">NEXT</span>`;
 
     if (main) {
@@ -2708,7 +2757,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     const completedReason = slip
       ? `Final score ${slip.score_home}-${slip.score_away}. This tracked pick was marked ${slip.status === 'won' ? 'WIN' : slip.status === 'lost' ? 'LOSS' : 'PENDING'} in the public record.`
       : 'Completed match. Result is shown for customer reference.';
-    const shortReason = completed ? completedReason : firstSentence(fullAnalysis, 'Pro analysis updates daily at 07:00 MYT. Check the kickoff time and come back before the match starts.');
+    const shortReason = completed ? completedReason : firstSentence(fullAnalysis, analysisWindowText(fx.fixture.date));
     const pickLabel = slip?.selection || pickOf(ai, homeName, awayName);
     const confValue = slip?.confidence ?? confidenceOf(ai);
     const confText = confValue == null ? '--' : `${confValue}%`;
@@ -2897,14 +2946,14 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
   }
 
   async function main() {
-    const [fixtures, standings, topScorers, aiMap, slipBundle] = await Promise.all([
+    const [fixtures, standings, topScorers, slipBundle] = await Promise.all([
       getJSON(API + '/fixtures'),
       getJSON(API + '/standings?league=39&season=2025'),
       getJSON(API + '/topscorers?league=39&season=2025'),
-      loadAIMap(),
       loadSlipMap(),
     ]);
     const all = flattenFixtures(fixtures);
+    const aiMap = await loadAIMap(all);
     const state = { all, aiMap, slipMap: slipBundle.map };
     window.predictionState = state;
     window.renderPredictionMode = () => renderPreds(state.all || [], state.aiMap || {}, state.slipMap || {});

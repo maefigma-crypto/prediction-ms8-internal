@@ -170,11 +170,30 @@ async function handlePredictions(env, url) {
   const fixtureId = url.searchParams.get('fixture_id');
   if (!fixtureId) return { error: 'fixture_id required', status: 400 };
 
-  return cached(env, `prediction:${fixtureId}`, TTL.predictions, async () => {
-    const fixtureData = await afGet(env, '/fixtures', { id: fixtureId });
-    const fx = fixtureData.response?.[0];
-    if (!fx) throw new Error('fixture not found');
+  const fixtureData = await afGet(env, '/fixtures', { id: fixtureId });
+  const fx = fixtureData.response?.[0];
+  if (!fx) throw new Error('fixture not found');
 
+  const kickoffMs = new Date(fx.fixture?.date || 0).getTime();
+  const msUntilKickoff = kickoffMs - Date.now();
+  const analysisWindowMs = 12 * 3600 * 1000;
+  const isFinishedOrLive = ['1H','2H','HT','ET','BT','P','LIVE','FT','AET','PEN'].includes(fx.fixture?.status?.short);
+  if (!isFinishedOrLive && Number.isFinite(msUntilKickoff) && msUntilKickoff > analysisWindowMs) {
+    return { data: {
+      updated: Date.now(),
+      fixtureId,
+      pending: true,
+      opensAt: kickoffMs - analysisWindowMs,
+      analysisWindowHours: 12,
+      pick: '',
+      pickLabel: 'Pro analysis pending',
+      confidence: null,
+      risk: 'PENDING',
+      analysis: 'Pro analysis opens 12 hours before kickoff.',
+    }, source: 'pending' };
+  }
+
+  return cached(env, `prediction:${fixtureId}`, TTL.predictions, async () => {
     const home = fx.teams.home.id;
     const away = fx.teams.away.id;
     const h2hData = await afGet(env, '/fixtures/headtohead', { h2h: `${home}-${away}`, last: 5 });

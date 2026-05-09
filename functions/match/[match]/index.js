@@ -46,7 +46,7 @@ export async function onRequest(context) {
   const origin = new URL(context.request.url).origin;
   const [detail, pickRaw] = await Promise.all([
     fetchJson(origin, `/api/match-detail?fixture_id=${fixtureId}`),
-    context.env.CACHE?.get(`prediction:${fixtureId}`, 'json').catch(() => null),
+    fetchJson(origin, `/api/predictions?fixture_id=${fixtureId}`),
   ]);
 
   const fx = detail?.fixture || {};
@@ -77,7 +77,7 @@ export async function onRequest(context) {
 
   const pickLabel = pickRaw?.pickLabel || pickRaw?.pick || 'Pro analysis pending';
   const confidence = pickRaw?.confidence != null ? pickRaw.confidence + '%' : '—';
-  const reason = pickRaw?.reason || pickRaw?.analysis || '';
+  const reason = pickRaw?.reason || pickRaw?.analysis || 'Pro analysis opens 12 hours before kickoff.';
 
   // Head-to-head & summary
   const summary = detail?.summary || {};
