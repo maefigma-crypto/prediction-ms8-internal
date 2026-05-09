@@ -492,17 +492,20 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeBurger();});
   async function getJSON(path) { try { const r = await fetch(path); return r.ok ? await r.json() : null; } catch { return null; } }
 
   function matchCard(fx) {
-    const live = isLive(fx);
+    const liveStatus = isLive(fx);
+    const staleLive = liveStatus && Date.now() - new Date(fx.fixture?.date || 0).getTime() > 3 * 3600 * 1000;
+    const live = liveStatus && !staleLive;
     const status = fx.fixture?.status?.short;
+    const done = ['FT','AET','PEN'].includes(status) || staleLive;
     const hScore = fx.goals?.home ?? 0, aScore = fx.goals?.away ?? 0;
     const kickoff = mytTime(fx.fixture.date);
     const date = mytDate(fx.fixture.date);
     const badge = live
       ? `<span class="blive"><span class="ldot"></span>LIVE ${fx.fixture.status.elapsed||''}'</span>`
-      : status === 'FT'
+      : done
         ? `<span class="bpred" style="color:var(--text2);background:rgba(255,255,255,.05);border-color:var(--border)">FT</span>`
         : `<span class="bpred">AI PICK</span>`;
-    const scoreBlock = (live || status === 'FT')
+    const scoreBlock = (live || done)
       ? `<div class="vs-score">${hScore} — ${aScore}</div><div class="vs-time" style="color:${live?'var(--red)':'var(--text3)'}">${live ? '● '+(fx.fixture.status.elapsed||'')+"'" : 'FT'}</div>`
       : `<div class="vs-score" style="font-size:24px;color:var(--text2)">VS</div><div class="vs-time">${esc(kickoff)} MYT</div>`;
     const logo = url => url ? `<img src="${esc(url)}" onerror="this.style.display='none';this.parentElement.textContent='⚽'" style="width:44px;height:44px;border-radius:50%;object-fit:contain;">` : '⚽';

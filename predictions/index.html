@@ -105,8 +105,10 @@ function flatten(payload, league){
 }
 function card(fx){
   const status = fx.fixture?.status?.short || '';
-  const done = ['FT','AET','PEN'].includes(status);
-  const live = ['1H','2H','HT','ET','BT','P','LIVE'].includes(status);
+  const liveStatus = ['1H','2H','HT','ET','BT','P','LIVE'].includes(status);
+  const staleLive = liveStatus && Date.now() - new Date(fx.fixture?.date || 0).getTime() > 3 * 3600 * 1000;
+  const done = ['FT','AET','PEN'].includes(status) || staleLive;
+  const live = liveStatus && !staleLive;
   const score = done || live ? `${fx.goals?.home ?? 0}-${fx.goals?.away ?? 0}` : 'VS';
   const label = live ? `LIVE ${fx.fixture.status?.elapsed || ''}'` : done ? 'FT' : mytDate(fx.fixture.date);
   const home = fx.teams.home.name || 'Home';
@@ -131,7 +133,11 @@ function render(){
   const today = klToday();
   const now = Date.now();
   let list = all.slice();
-  if (mode === 'upcoming') list = list.filter(fx => new Date(fx.fixture.date).getTime() >= now || ['1H','2H','HT','LIVE'].includes(fx.fixture?.status?.short));
+  if (mode === 'upcoming') list = list.filter(fx => {
+    const kickoff = new Date(fx.fixture.date).getTime();
+    const liveStatus = ['1H','2H','HT','LIVE'].includes(fx.fixture?.status?.short);
+    return kickoff >= now || (liveStatus && now - kickoff <= 3 * 3600 * 1000);
+  });
   if (mode === 'today') list = list.filter(fx => klDateKey(fx.fixture.date) === today);
   if (mode === 'completed') list = list.filter(fx => ['FT','AET','PEN'].includes(fx.fixture?.status?.short));
   if (q) list = list.filter(fx => `${fx.teams.home.name} ${fx.teams.away.name} ${leagueName(fx)}`.toLowerCase().includes(q));

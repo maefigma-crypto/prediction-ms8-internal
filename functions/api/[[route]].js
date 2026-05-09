@@ -18,7 +18,7 @@ const ODDS_SPORT = 'soccer_epl';
 
 const TTL = {
   live: 60,
-  fixtures: 6 * 3600,
+  fixtures: 5 * 60,
   standings: 24 * 3600,
   topscorers: 24 * 3600,
   odds: 5 * 60,
@@ -75,7 +75,7 @@ async function handleFixtures(env, url) {
   if (leagueParam) {
     const id = parseInt(leagueParam, 10);
     if (!id) return { data: { error: 'invalid league id' }, source: 'error' };
-    return cached(env, `fixtures:league:${id}:${season}`, TTL.fixtures, async () => {
+    return cached(env, `fixtures:v2:league:${id}:${season}`, TTL.fixtures, async () => {
       const today = new Date().toISOString().slice(0, 10);
       const [next, last, todayMatches] = await Promise.all([
         afGet(env, '/fixtures', { league: id, season, next: 10 }),
@@ -95,7 +95,7 @@ async function handleFixtures(env, url) {
   }
 
   // Default: fetch all 4 primary leagues at once (homepage behaviour).
-  return cached(env, `fixtures:${season}`, TTL.fixtures, async () => {
+  return cached(env, `fixtures:v2:${season}`, TTL.fixtures, async () => {
     const today = new Date().toISOString().slice(0, 10);
     const results = await Promise.all(
       Object.entries(LEAGUES).map(async ([name, id]) => {
