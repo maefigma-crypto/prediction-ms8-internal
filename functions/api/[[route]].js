@@ -4,6 +4,15 @@ const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
 const CLAUDE_MODEL = 'claude-sonnet-4-6';
 
 const LEAGUES = { EPL: 39, UCL: 2, WC: 1 };
+const HIGHLIGHT_LEAGUES = [
+  { id: 39, key: 'EPL', name: 'Premier League' },
+  { id: 2, key: 'UCL', name: 'UEFA Champions League' },
+  { id: 140, key: 'LALIGA', name: 'La Liga' },
+  { id: 135, key: 'SERIEA', name: 'Serie A' },
+  { id: 78, key: 'BUNDESLIGA', name: 'Bundesliga' },
+  { id: 61, key: 'LIGUE1', name: 'Ligue 1' },
+  { id: 1, key: 'WC', name: 'FIFA World Cup' },
+];
 const DEFAULT_SEASON = '2025';
 const ODDS_SPORT = 'soccer_epl';
 
@@ -15,6 +24,7 @@ const TTL = {
   odds: 5 * 60,
   predictions: 12 * 3600,
   matchDetail: 24 * 3600,
+  highlights: 30 * 60,
 };
 
 function json(body, status = 200, extraHeaders = {}) {
@@ -258,6 +268,152 @@ Respond with exactly this JSON shape:
 Probabilities must sum to 100. Risk is LOW if confidence>=70, MEDIUM if 50-69, HIGH if <50.`;
 }
 
+const HIGHLIGHT_FINISHED = new Set(['FT', 'AET', 'PEN']);
+
+function highlightScore(fx) {
+  const home = fx?.goals?.home ?? fx?.score?.fulltime?.home;
+  const away = fx?.goals?.away ?? fx?.score?.fulltime?.away;
+  if (home == null || away == null) return '';
+  return `${home}-${away}`;
+}
+
+function highlightImagePath(fx) {
+  const params = new URLSearchParams({
+    home: fx?.teams?.home?.name || 'Home',
+    away: fx?.teams?.away?.name || 'Away',
+    league: fx?.league?.name || 'Football',
+    score: highlightScore(fx),
+    date: fx?.fixture?.date || '',
+  });
+  if (fx?.teams?.home?.logo) params.set('home_logo', fx.teams.home.logo);
+  if (fx?.teams?.away?.logo) params.set('away_logo', fx.teams.away.logo);
+  return `/og/highlight?${params.toString()}`;
+}
+
+function highlightSearchUrl(fx) {
+  const score = highlightScore(fx);
+  const query = `${fx?.teams?.home?.name || ''} ${score} ${fx?.teams?.away?.name || ''} highlights`.trim();
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+}
+
+function normalizeHighlightFixture(fx, source = 'api-football') {
+  return {
+    fixture_id: fx?.fixture?.id,
+    kickoff_iso: fx?.fixture?.date,
+    league_id: fx?.league?.id || null,
+    league: fx?.league?.name || 'Football',
+    league_logo: fx?.league?.logo || null,
+    home: fx?.teams?.home?.name || 'Home',
+    away: fx?.teams?.away?.name || 'Away',
+    home_logo: fx?.teams?.home?.logo || null,
+    away_logo: fx?.teams?.away?.logo || null,
+    score_home: fx?.goals?.home ?? fx?.score?.fulltime?.home ?? null,
+    score_away: fx?.goals?.away ?? fx?.score?.fulltime?.away ?? null,
+    status: fx?.fixture?.status?.short || null,
+    image_url: highlightImagePath(fx),
+    youtube_url: null,
+    youtube_search_url: highlightSearchUrl(fx),
+    source,
+    ts: fx?.fixture?.timestamp ? fx.fixture.timestamp * 1000 : Date.now(),
+  };
+}
+
+async function handleHighlights(env, url) {
+  const limit = Math.max(1, Math.min(12, parseInt(url.searchParams.get('limit') || '6', 10) || 6));
+  const season = url.searchParams.get('season') || DEFAULT_SEASON;
+  const refresh = url.searchParams.get('refresh') === '1';
+  let list = [];
+
+  try {
+    const raw = await env.CACHE.get('highlights:latest');
+    if (raw) list = JSON.parse(raw);
+  } catch {}
+
+  const existingIds = new Set(list.map(h => String(h.fixture_id)).filter(Boolean));
+  const needsBackfill = refresh || list.length < limit;
+  let fallback = [];
+
+  if (needsBackfill) {
+    try {
+      const result = await cached(env, `highlights:fallback:${season}`, TTL.highlights, async () => {
+        const settled = [];
+        const batches = await Promise.allSettled(
+          HIGHLIGHT_LEAGUES.map(async league => {
+            const data = await afGet(env, '/fixtures', { league: league.id, season, last: 8 });
+            return (data.response || [])
+              .filter(fx => HIGHLIGHT_FINISHED.has(fx?.fixture?.status?.short))
+              .map(fx => normalizeHighlightFixture(fx, 'recent-finished'));
+          })
+        );
+        for (const batch of batches) {
+          if (batch.status === 'fulfilled') settled.push(...batch.value);
+        }
+        settled.sort((a, b) => new Date(b.kickoff_iso || 0) - new Date(a.kickoff_iso || 0));
+        return { updated: Date.now(), highlights: settled.slice(0, 24) };
+      }, { refresh });
+      fallback = result.data?.highlights || [];
+    } catch {}
+  }
+
+  for (const item of fallback) {
+    const id = String(item.fixture_id || '');
+    if (!id || existingIds.has(id)) continue;
+    list.push(item);
+    existingIds.add(id);
+  }
+
+  // Backfill from track history so the section can render immediately
+  // on older KV data before the next FT cron write.
+  if (!list.length) {
+    try {
+      const raw = await env.CACHE.get('history:matches');
+      const history = raw ? JSON.parse(raw) : [];
+      list = history.slice(0, limit).map(h => {
+        const score = h.score_home != null ? `${h.score_home}-${h.score_away}` : '';
+        const params = new URLSearchParams({
+          home: h.home || 'Home',
+          away: h.away || 'Away',
+          league: 'Football',
+          score,
+          date: h.kickoff_iso || '',
+        });
+        return {
+          fixture_id: h.fixture_id,
+          kickoff_iso: h.kickoff_iso,
+          league_id: h.league_id || null,
+          league: 'Football',
+          home: h.home,
+          away: h.away,
+          home_logo: null,
+          away_logo: null,
+          score_home: h.score_home,
+          score_away: h.score_away,
+          status: 'FT',
+          image_url: `/og/highlight?${params.toString()}`,
+          youtube_url: null,
+          youtube_search_url: `https://www.youtube.com/results?search_query=${encodeURIComponent(`${h.home} ${score} ${h.away} highlights`)}`,
+          source: 'history-backfill',
+          ts: h.ts || Date.now(),
+        };
+      });
+    } catch {}
+  }
+
+  list.sort((a, b) => (b.ts || new Date(b.kickoff_iso || 0).getTime()) - (a.ts || new Date(a.kickoff_iso || 0).getTime()));
+
+  return {
+    updated: Date.now(),
+    count: list.length,
+    highlights: list.slice(0, limit),
+    youtube_matching: 'cron-or-search',
+    sources: {
+      saved: list.filter(h => h.source === 'ft-cron').length,
+      recent_finished: list.filter(h => h.source === 'recent-finished').length,
+      history: list.filter(h => h.source === 'history-backfill').length,
+    },
+  };
+}
+
 async function callClaude(env, prompt) {
   const res = await fetch(ANTHROPIC_API, {
     method: 'POST',
@@ -387,55 +543,7 @@ export async function onRequest(context) {
         });
       }
       case 'highlights': {
-        const limit = Math.max(1, Math.min(12, parseInt(url.searchParams.get('limit') || '6', 10) || 6));
-        let list = [];
-        try {
-          const raw = await env.CACHE.get('highlights:latest');
-          if (raw) list = JSON.parse(raw);
-        } catch {}
-
-        // Backfill from track history so the section can render immediately
-        // on older KV data before the next FT cron write.
-        if (!list.length) {
-          try {
-            const raw = await env.CACHE.get('history:matches');
-            const history = raw ? JSON.parse(raw) : [];
-            list = history.slice(0, limit).map(h => {
-              const score = h.score_home != null ? `${h.score_home}-${h.score_away}` : '';
-              const params = new URLSearchParams({
-                home: h.home || 'Home',
-                away: h.away || 'Away',
-                league: 'Football',
-                score,
-                date: h.kickoff_iso || '',
-              });
-              return {
-                fixture_id: h.fixture_id,
-                kickoff_iso: h.kickoff_iso,
-                league_id: h.league_id || null,
-                league: 'Football',
-                home: h.home,
-                away: h.away,
-                home_logo: null,
-                away_logo: null,
-                score_home: h.score_home,
-                score_away: h.score_away,
-                image_url: `/og/highlight?${params.toString()}`,
-                youtube_url: null,
-                youtube_search_url: `https://www.youtube.com/results?search_query=${encodeURIComponent(`${h.home} ${score} ${h.away} highlights`)}`,
-                source: 'history-backfill',
-                ts: h.ts || Date.now(),
-              };
-            });
-          } catch {}
-        }
-
-        return json({
-          updated: Date.now(),
-          count: list.length,
-          highlights: list.slice(0, limit),
-          youtube_matching: 'pending',
-        });
+        return json(await handleHighlights(env, url));
       }
       case 'content/today': {
         // MYT date so reads match cron's writes (cron runs at 23:00 UTC =
