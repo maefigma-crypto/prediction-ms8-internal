@@ -1090,7 +1090,7 @@ footer{
   <a href="#" class="nav-logo"><img src="/logo.png" alt="ScoreOcs8"></a>
   <ul class="nav-links">
     <li><a href="#" class="active">🏠 Home</a></li>
-    <li><a href="#predictions">📊 Match Prediction</a></li>
+    <li><a href="/predictions/">📊 Match Prediction</a></li>
     <li class="nav-dropdown">
       <a href="#blog">📋 League Blog ▾</a>
       <div class="dm">
@@ -1165,7 +1165,7 @@ footer{
       <button onclick="closeBurger()" aria-label="Close menu">×</button>
     </div>
     <a href="/" class="dr-link">🏠 Home</a>
-    <a href="/#predictions" class="dr-link">📊 Match Predictions</a>
+    <a href="/predictions/" class="dr-link">📊 Match Predictions</a>
     <a href="/#highlights" class="dr-link">📅 Match Schedule</a>
     <a href="/blog/" class="dr-link">📝 Blog</a>
     <div class="dr-section">Leagues</div>
@@ -1206,7 +1206,7 @@ footer{
       <p class="hero-sub" id="hl-herosub">ScoreOcs8 focuses on major football matches only. Check upcoming fixtures, simple pro picks, H2H context, and settled pick results in one place.</p>
       <div class="hero-btns">
         <a href="#highlights" class="btn-p" id="hl-btn2">📅 Match Schedule</a>
-        <a href="#predictions" class="btn-o" id="hl-btn1">📊 Match Prediction</a>
+        <a href="/predictions/" class="btn-o" id="hl-btn1">📊 Match Prediction</a>
         <a href="#" class="btn-o" id="hl-btn3" onclick="event.preventDefault();openHiw();">💡 How It Works</a>
       </div>
       <div class="hstats">
@@ -1849,6 +1849,52 @@ footer{
   </div>
 </section>
 
+<section id="testimonials" style="position:relative;z-index:1;background:var(--bg);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+  <div class="sec">
+    <div class="stag">Customer Proof</div>
+    <h2 class="stitle">What Our Users Say</h2>
+    <p class="ssub">Real customer reactions after ScoreOcs8 calls land. Use this section for WhatsApp proof, Telegram feedback and correct-score wins.</p>
+    <div class="proof-grid fu">
+      <article class="proof-feature">
+        <div class="proof-phone">
+          <div class="proof-chat-head"><span>ScoreOcs8 Member</span><strong>online</strong></div>
+          <div class="proof-chat">
+            <div class="bubble left">Boss, your AI prediction for the Arsenal match got correct score?</div>
+            <div class="bubble left">Your prediction is much more accurate than others.</div>
+            <div class="bubble left">The correct score also landed this time.</div>
+            <div class="bubble right">Yes, because we check form, odds movement and H2H before posting.</div>
+            <div class="bubble right">Thanks for the support.</div>
+          </div>
+        </div>
+        <blockquote>AI prediction was too accurate. Even the correct score landed.</blockquote>
+        <div class="proof-author">- MJ</div>
+      </article>
+      <article class="proof-card"><div class="proof-k">Correct Score</div><p>Customers can see the same result proof, final score and pick outcome after every tracked match.</p></article>
+      <article class="proof-card"><div class="proof-k">Major Matches</div><p>No small-league noise. ScoreOcs8 focuses on major football fixtures customers actually care about.</p></article>
+      <article class="proof-card"><div class="proof-k">Transparent Record</div><p>Prediction cards connect to match detail pages, track record and result history for cleaner trust.</p></article>
+    </div>
+  </div>
+  <style>
+    .proof-grid{display:grid;grid-template-columns:minmax(0,1.35fr) repeat(3,minmax(0,1fr));gap:16px;align-items:stretch;}
+    .proof-feature,.proof-card{background:rgba(255,255,255,.035);border:1px solid rgba(249,115,22,.22);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.26);}
+    .proof-feature{padding:20px;grid-row:span 2;}
+    .proof-phone{background:#111;border:1px solid rgba(249,115,22,.26);border-radius:16px;overflow:hidden;min-height:390px;display:flex;flex-direction:column;}
+    .proof-chat-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#075e54;color:#fff;font-family:var(--fb);font-size:13px;}
+    .proof-chat-head strong{font-family:var(--fm);font-size:10px;color:#b8f5d1;text-transform:uppercase;letter-spacing:.08em;}
+    .proof-chat{flex:1;padding:18px;background:#efe7d7;background-image:radial-gradient(rgba(0,0,0,.05) 1px,transparent 1px);background-size:18px 18px;display:flex;flex-direction:column;gap:8px;}
+    .bubble{max-width:76%;padding:9px 11px;border-radius:10px;font-size:13px;line-height:1.45;color:#1f2933;box-shadow:0 1px 2px rgba(0,0,0,.08);}
+    .bubble.left{align-self:flex-start;background:#fff;border-top-left-radius:3px;}
+    .bubble.right{align-self:flex-end;background:#dcf8c6;border-top-right-radius:3px;}
+    .proof-feature blockquote{font-family:var(--ff);font-size:25px;font-weight:700;line-height:1.2;color:var(--text);margin:18px 0 8px;}
+    .proof-author{font-family:var(--ff);font-size:17px;font-weight:800;color:var(--accent);}
+    .proof-card{padding:20px;display:flex;flex-direction:column;justify-content:center;min-height:170px;}
+    .proof-k{font-family:var(--ff);font-size:24px;font-weight:800;color:var(--accent);margin-bottom:8px;}
+    .proof-card p{font-size:14px;line-height:1.65;color:var(--text2);}
+    @media(max-width:1100px){.proof-grid{grid-template-columns:1fr 1fr}.proof-feature{grid-column:1/-1;grid-row:auto;}.proof-phone{min-height:330px;}}
+    @media(max-width:640px){.proof-grid{grid-template-columns:1fr}.proof-feature{padding:14px}.proof-phone{min-height:300px}.proof-feature blockquote{font-size:21px}.proof-card{min-height:auto}}
+  </style>
+</section>
+
 <section id="history" style="position:relative;z-index:1;">
   <div class="sec">
     <div class="stag">Transparency</div>
@@ -1993,7 +2039,7 @@ footer{
 <a href="https://tiktok.com/@scoreocs8" target="_blank" rel="noopener" class="fsi" aria-label="TikTok" title="TikTok @scoreocs8"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a>
 <a href="https://facebook.com/scoreocs8" target="_blank" rel="noopener" class="fsi" aria-label="Facebook" title="Facebook /scoreocs8"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
 </div></div>
-      <div class="fcol"><div class="fct">Quick Links</div><ul><li><a href="/">Home</a></li><li><a href="#predictions">Match Prediction</a></li><li><a href="/blog/">Blog</a></li><li><a href="#faq">FAQ</a></li></ul></div>
+      <div class="fcol"><div class="fct">Quick Links</div><ul><li><a href="/">Home</a></li><li><a href="/predictions/">Match Prediction</a></li><li><a href="/blog/">Blog</a></li><li><a href="#faq">FAQ</a></li></ul></div>
       <div class="fcol"><div class="fct">Resources</div><ul><li><a href="/blog/">Latest Articles</a></li><li><a href="#history">Accuracy Stats</a></li><li><a href="#highlights">Match Schedule</a></li><li><a href="#" onclick="event.preventDefault();openHiw();">How It Works</a></li></ul></div>
       <div class="fcol"><div class="fct">Connect</div><ul><li><a href="https://t.me/scoreocs8" target="_blank" rel="noopener">Telegram @scoreocs8</a></li><li><a href="https://instagram.com/scoreocs8" target="_blank" rel="noopener">Instagram</a></li><li><a href="https://x.com/scoreocs8" target="_blank" rel="noopener">X / Twitter</a></li><li><a href="https://threads.net/@scoreocs8" target="_blank" rel="noopener">Threads</a></li><li><a href="https://tiktok.com/@scoreocs8" target="_blank" rel="noopener">TikTok</a></li></ul></div>
     </div>
@@ -2267,7 +2313,7 @@ window.addEventListener('load',()=>{
         <div style="font-family:var(--fm);font-size:10px;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Step 3 of 3</div>
         <div style="font-family:var(--ff);font-size:20px;font-weight:700;color:var(--text);margin-bottom:6px;">Track & Win</div>
         <div style="font-size:13px;color:var(--text2);line-height:1.65;margin-bottom:18px;">Check results daily. Follow <strong style="color:var(--accent);">@scoreocs8</strong> on Telegram for instant alerts before every match. Free forever.</div>
-        <a href="#predictions" onclick="closeHiw()" style="display:block;text-decoration:none;"><button style="width:100%;background:var(--green);color:var(--bg);font-family:var(--ff);font-size:15px;font-weight:700;border:none;border-radius:10px;padding:14px;cursor:pointer;">See Today's Predictions 🚀</button></a>
+        <a href="/predictions/" onclick="closeHiw()" style="display:block;text-decoration:none;"><button style="width:100%;background:var(--green);color:var(--bg);font-family:var(--ff);font-size:15px;font-weight:700;border:none;border-radius:10px;padding:14px;cursor:pointer;">See Today's Predictions 🚀</button></a>
       </div>
     </div>
 

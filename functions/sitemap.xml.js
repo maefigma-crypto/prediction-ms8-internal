@@ -16,6 +16,7 @@ export async function onRequestGet({ env, request }) {
   const urls = [
     { loc: `${SITE_URL}/`,                                priority: '1.0', changefreq: 'daily',  lastmod: today },
     { loc: `${SITE_URL}/blog/`,                           priority: '0.9', changefreq: 'daily',  lastmod: today },
+    { loc: `${SITE_URL}/predictions/`,                    priority: '0.9', changefreq: 'daily',  lastmod: today },
     { loc: `${SITE_URL}/predictions/premier-league/`,     priority: '0.9', changefreq: 'daily',  lastmod: today },
     { loc: `${SITE_URL}/predictions/champions-league/`,   priority: '0.9', changefreq: 'daily',  lastmod: today },
     { loc: `${SITE_URL}/predictions/la-liga/`,            priority: '0.9', changefreq: 'daily',  lastmod: today },
