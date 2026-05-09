@@ -3153,7 +3153,11 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     const live = all.filter(isLive);
     const today = all.filter(fx => klDateKey(fx.fixture.date) === klToday());
     const upcoming = all.filter(fx => new Date(fx.fixture.date).getTime() > now && !isLive(fx));
-    const primary = live[0] || today.find(fx => new Date(fx.fixture.date).getTime() > now) || upcoming[0] || all[0];
+    const recentCompleted = all
+      .filter(fx => fx.fixture?.status?.short === 'FT')
+      .sort((a,b) => new Date(b.fixture.date) - new Date(a.fixture.date));
+    const nearUpcoming = upcoming.filter(fx => new Date(fx.fixture.date).getTime() - now <= 7 * 24 * 3600 * 1000);
+    const primary = live[0] || today.find(fx => new Date(fx.fixture.date).getTime() > now) || nearUpcoming[0] || recentCompleted[0] || upcoming[0] || all[0];
 
     if (!primary) {
       if (main) main.innerHTML = `<div style="padding:28px;text-align:center;color:var(--text3);font-family:var(--fm);font-size:12px;">No live or upcoming matches right now.</div>`;
@@ -3192,7 +3196,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     }
 
     if (side) {
-      const minis = [...live.slice(1), ...today.filter(fx => fx.fixture.id !== primary.fixture.id), ...upcoming.filter(fx => fx.fixture.id !== primary.fixture.id)].slice(0, 5);
+      const minis = [...live.slice(1), ...today.filter(fx => fx.fixture.id !== primary.fixture.id), ...nearUpcoming.filter(fx => fx.fixture.id !== primary.fixture.id), ...recentCompleted.filter(fx => fx.fixture.id !== primary.fixture.id), ...upcoming.filter(fx => fx.fixture.id !== primary.fixture.id)].slice(0, 5);
       side.innerHTML = minis.length ? minis.map(fx => {
         const isLiveMatch = isLive(fx);
         const miniScore = isLiveMatch || fx.fixture?.status?.short === 'FT' ? `${fx.goals?.home ?? 0}-${fx.goals?.away ?? 0}` : mytTime(fx.fixture.date);
@@ -3317,7 +3321,12 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     const grid = document.getElementById('pred-grid'); if (!grid) return;
     const now = Date.now();
     const mode = window.predictionMode || 'upcoming';
-    let list = all.filter(fx => new Date(fx.fixture.date).getTime() > now || isLive(fx));
+    const upcoming = all.filter(fx => new Date(fx.fixture.date).getTime() > now || isLive(fx));
+    const nearUpcoming = upcoming.filter(fx => isLive(fx) || new Date(fx.fixture.date).getTime() - now <= 7 * 24 * 3600 * 1000);
+    const recentCompleted = all
+      .filter(fx => fx.fixture?.status?.short === 'FT')
+      .sort((a,b) => new Date(b.fixture.date) - new Date(a.fixture.date));
+    let list = [...nearUpcoming, ...recentCompleted, ...upcoming.filter(fx => !nearUpcoming.includes(fx))];
     if (mode === 'today') list = all.filter(fx => klDateKey(fx.fixture.date) === klToday());
     if (mode === 'completed') list = all.filter(fx => fx.fixture?.status?.short === 'FT');
     list = list.slice(0, 6);
