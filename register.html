@@ -68,7 +68,7 @@ body{background:radial-gradient(circle at 18% 12%,rgba(249,115,22,.18),transpare
 <div class="card">
   <div class="logo"><img src="/logo.png" alt="ScoreOcs8"></div>
   <div class="title">OCS8 <span class="hl">Register</span></div>
-  <p class="sub">Create your OCS8 account here, then login at the partner site to claim the sports welcome bonus.</p>
+  <p class="sub">Registration and login happen on the official OCS8 money-site domain. ScoreOcs8 keeps the predictions, alerts, and match links here.</p>
 
   <div class="bonus">
     <div><strong>128%</strong><span>Bonus</span></div>
@@ -76,7 +76,10 @@ body{background:radial-gradient(circle at 18% 12%,rgba(249,115,22,.18),transpare
     <div><strong>RM128</strong><span>Max Bonus</span></div>
   </div>
 
-  <form class="register-form" id="ocs-register-form">
+  <a class="cta-primary" id="partner-register-link" href="https://pp88fs.ocs8winwinwin.shop/?country=MY&lang=en&affcampaign=LAVCNR&aff=AFFLSAHYM" target="_blank" rel="noopener">Open OCS8 Register</a>
+  <a class="cta-secondary" id="partner-login-link" href="https://pp88fs.ocs8winwinwin.shop/?country=MY&lang=en&affcampaign=LAVCNR&aff=AFFLSAHYM" target="_blank" rel="noopener">Login on OCS8</a>
+
+  <form class="register-form" id="ocs-register-form" style="display:none">
     <div class="field">
       <label for="reg-username">Username</label>
       <input id="reg-username" name="username" autocomplete="username" minlength="6" maxlength="16" pattern="(?=.*[A-Za-z])[A-Za-z0-9]{6,16}" required placeholder="scoreocs8">
@@ -103,8 +106,6 @@ body{background:radial-gradient(circle at 18% 12%,rgba(249,115,22,.18),transpare
     <button class="cta-primary" id="register-submit" type="submit">Create OCS8 Account</button>
   </form>
 
-  <a class="cta-secondary" id="partner-login-link" href="https://pp88fs.ocs8winwinwin.shop/?country=MY&lang=en&affcampaign=LAVCNR&aff=AFFLSAHYM" target="_blank" rel="noopener">Login</a>
-
   <a class="cta-secondary telegram" href="https://t.me/scoreocs8" target="_blank" rel="noopener">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M21.944 2.506a1.5 1.5 0 0 0-1.521-.234L2.43 9.288a1.5 1.5 0 0 0 .09 2.813l4.193 1.398 1.638 5.113a1.5 1.5 0 0 0 2.567.515l2.33-2.803 4.573 3.37a1.5 1.5 0 0 0 2.352-1.01l2.25-14.25a1.5 1.5 0 0 0-.479-1.928Z"/></svg>
     Telegram updates
@@ -112,9 +113,9 @@ body{background:radial-gradient(circle at 18% 12%,rgba(249,115,22,.18),transpare
 
   <div class="benefits">
     <ul>
-      <li>Same username and password for the OCS8 partner site</li>
+      <li>Register and login directly on the OCS8 money-site domain</li>
       <li>Welcome bonus on first deposit</li>
-      <li>Bet directly on every ScoreOcs8 prediction</li>
+      <li>Use ScoreOcs8 predictions here, then place bets on OCS8</li>
       <li>Telegram channel posts free daily picks before kickoff</li>
     </ul>
   </div>
@@ -132,6 +133,7 @@ const form = document.getElementById('ocs-register-form');
 const statusEl = document.getElementById('register-status');
 const submitBtn = document.getElementById('register-submit');
 const referralInput = document.getElementById('reg-referral');
+const registerLink = document.getElementById('partner-register-link');
 const loginLink = document.getElementById('partner-login-link');
 
 function cleanReferral(value) {
@@ -157,6 +159,7 @@ function partnerUrl() {
 }
 
 function updateReferralLinks() {
+  registerLink.href = partnerUrl();
   loginLink.href = partnerUrl();
 }
 
