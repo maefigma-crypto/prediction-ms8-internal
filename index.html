@@ -1941,12 +1941,70 @@ footer{
   <div class="sec">
     <div class="stag">Transparency</div>
     <h2 class="stitle">Our Track Record</h2>
-    <p class="ssub">Every prediction logged. Every result shown. Zero hiding.</p>
+    <p class="ssub">Performance is reviewed weekly. We show example tickets, settled picks and final outcomes so customers understand the record before following the next prediction.</p>
     <div class="track-note fu">
-      <div><strong>Result-first trust</strong><span>Finished picks are shown with final score and outcome before visitors browse today&apos;s calls.</span></div>
+      <div><strong>Weekly performance update</strong><span>Accuracy, streak and recent results are reviewed every week after settled matches are checked.</span></div>
       <div><strong>Major football only</strong><span>Records focus on the same EPL, UCL and international matches shown on the homepage.</span></div>
-      <div><strong>Odds snapshot record</strong><span>Sampled odds are shown for demo tracking only. Real platform odds, bet IDs and ticket layouts can differ.</span></div>
+      <div><strong>Ticket examples only</strong><span>Example stakes and returns show how picks can look on a slip. Real odds and platform tickets can differ.</span></div>
     </div>
+    <div class="ticket-grid fu">
+      <article class="ticket-card win">
+        <div class="ticket-top"><span>Demo Ticket</span><strong>WIN</strong></div>
+        <div class="ticket-match">Arsenal vs Atletico Madrid</div>
+        <div class="ticket-pick">Pick: Arsenal Win</div>
+        <div class="ticket-row"><span>Stake</span><b>RM100</b></div>
+        <div class="ticket-row"><span>Odds</span><b>2.25</b></div>
+        <div class="ticket-row return"><span>Return</span><b>RM225.00</b></div>
+      </article>
+      <article class="ticket-card win">
+        <div class="ticket-top"><span>Demo Ticket</span><strong>WIN</strong></div>
+        <div class="ticket-match">Bayern München vs PSG</div>
+        <div class="ticket-pick">Pick: Draw</div>
+        <div class="ticket-row"><span>Stake</span><b>RM80</b></div>
+        <div class="ticket-row"><span>Odds</span><b>3.10</b></div>
+        <div class="ticket-row return"><span>Return</span><b>RM248.00</b></div>
+      </article>
+      <article class="ticket-card win">
+        <div class="ticket-top"><span>Demo Ticket</span><strong>WIN</strong></div>
+        <div class="ticket-match">Torino vs Sassuolo</div>
+        <div class="ticket-pick">Pick: Torino Win</div>
+        <div class="ticket-row"><span>Stake</span><b>RM150</b></div>
+        <div class="ticket-row"><span>Odds</span><b>1.92</b></div>
+        <div class="ticket-row return"><span>Return</span><b>RM288.00</b></div>
+      </article>
+      <article class="ticket-card pending">
+        <div class="ticket-top"><span>Demo Ticket</span><strong>PENDING</strong></div>
+        <div class="ticket-match">Premier League Feature</div>
+        <div class="ticket-pick">Pick: Home Win</div>
+        <div class="ticket-row"><span>Stake</span><b>RM50</b></div>
+        <div class="ticket-row"><span>Odds</span><b>2.05</b></div>
+        <div class="ticket-row return"><span>Possible Return</span><b>RM102.50</b></div>
+      </article>
+      <article class="ticket-card lost">
+        <div class="ticket-top"><span>Demo Ticket</span><strong>LOSS</strong></div>
+        <div class="ticket-match">Bundesliga Feature</div>
+        <div class="ticket-pick">Pick: Away Win</div>
+        <div class="ticket-row"><span>Stake</span><b>RM60</b></div>
+        <div class="ticket-row"><span>Odds</span><b>2.40</b></div>
+        <div class="ticket-row return"><span>Return</span><b>RM0.00</b></div>
+      </article>
+    </div>
+    <style>
+      .ticket-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin:18px 0;}
+      .ticket-card{background:rgba(255,255,255,.035);border:1px solid rgba(249,115,22,.22);border-radius:8px;padding:14px;box-shadow:0 12px 32px rgba(0,0,0,.22);}
+      .ticket-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;font-family:var(--fm);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;}
+      .ticket-top strong{color:var(--green);background:rgba(0,229,160,.10);border:1px solid rgba(0,229,160,.22);border-radius:3px;padding:3px 6px;}
+      .ticket-card.pending .ticket-top strong{color:var(--amber);background:rgba(245,166,35,.10);border-color:rgba(245,166,35,.24);}
+      .ticket-card.lost .ticket-top strong{color:var(--red);background:rgba(255,71,87,.10);border-color:rgba(255,71,87,.24);}
+      .ticket-match{font-family:var(--ff);font-size:18px;font-weight:800;line-height:1.1;color:var(--text);margin-bottom:8px;}
+      .ticket-pick{font-size:12px;line-height:1.45;color:var(--accent);background:rgba(249,115,22,.07);border:1px solid rgba(249,115,22,.18);border-radius:5px;padding:7px 8px;margin-bottom:10px;}
+      .ticket-row{display:flex;align-items:center;justify-content:space-between;font-family:var(--fm);font-size:10px;color:var(--text3);padding:5px 0;border-bottom:1px solid rgba(255,255,255,.06);}
+      .ticket-row b{font-family:var(--ff);font-size:14px;color:var(--text);}
+      .ticket-row.return{border-bottom:0;}
+      .ticket-row.return b{color:var(--amber);}
+      @media(max-width:1180px){.ticket-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
+      @media(max-width:760px){.ticket-grid{grid-template-columns:1fr;}}
+    </style>
     <div class="agrid fu" id="tr-stats">
       <!-- populated from /api/track-record -->
       <div class="ac"><div class="acv">—</div><div class="acl">Overall</div><div class="act">Loading</div></div>
