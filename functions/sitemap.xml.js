@@ -4,11 +4,12 @@ const slugify = s => String(s||'').toLowerCase().normalize('NFKD').replace(/[̀-
 
 export async function onRequestGet({ env, request }) {
   const origin = new URL(request.url).origin;
-  const [githubPosts, kvPosts, settings, fixtures] = await Promise.all([
+  const [githubPosts, kvPosts, settings, fixtures, highlights] = await Promise.all([
     listPosts(env),
     listKvContent(env, 30),
     getSettings(env),
     fetch(origin + '/api/fixtures').then(r => r.ok ? r.json() : null).catch(() => null),
+    fetch(origin + '/api/highlights?limit=12').then(r => r.ok ? r.json() : null).catch(() => null),
   ]);
   const posts = [...kvPosts, ...githubPosts];
 
@@ -44,6 +45,22 @@ export async function onRequestGet({ env, request }) {
         lastmod: (fx?.fixture?.date || new Date().toISOString()).slice(0, 10),
       });
     }
+  }
+
+  // Dynamic highlight pages: /highlights/<id>-<home>-vs-<away>/
+  const seenHighlightIds = new Set();
+  for (const h of (highlights?.highlights || [])) {
+    const id = h?.fixture_id;
+    if (!id || seenHighlightIds.has(id)) continue;
+    seenHighlightIds.add(id);
+    const slug = slugify(`${h.home || ''}-vs-${h.away || ''}`);
+    const path = slug ? `/highlights/${id}-${slug}/` : `/highlights/${id}/`;
+    urls.push({
+      loc: SITE_URL + path,
+      priority: '0.7',
+      changefreq: 'weekly',
+      lastmod: (h.kickoff_iso || new Date().toISOString()).slice(0, 10),
+    });
   }
 
   for (const p of posts) {

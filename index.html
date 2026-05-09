@@ -1479,6 +1479,12 @@ footer{
     .highlight-card:hover{transform:translateY(-3px);border-color:rgba(249,115,22,.36);}
     .highlight-art{position:relative;aspect-ratio:16/9;background:#0b1119;overflow:hidden;border-bottom:1px solid rgba(249,115,22,.18);}
     .highlight-art img.result-bg{width:100%;height:100%;object-fit:cover;display:block;}
+    .highlight-score-card{position:absolute;left:9%;right:9%;top:50%;transform:translateY(-50%);z-index:1;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;background:#fff4ee;color:#101824;border-radius:9px;padding:14px 12px;box-shadow:0 18px 42px rgba(0,0,0,.30);}
+    .highlight-team{min-width:0;text-align:center;}
+    .highlight-team img{width:46px;height:46px;object-fit:contain;border-radius:50%;background:#f2f2f2;padding:5px;margin:0 auto 4px;display:block;}
+    .highlight-team b{display:block;font-family:var(--ff);font-size:15px;font-weight:900;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .highlight-score{font-family:var(--ff);font-size:36px;font-weight:900;color:#a92b25;white-space:nowrap;text-align:center;}
+    .highlight-score span{display:block;font-family:var(--fm);font-size:7px;letter-spacing:.30em;text-transform:uppercase;color:#af8178;margin-top:2px;}
     .highlight-art.yt img.result-bg{filter:saturate(1.05) contrast(1.04);}
     .highlight-art.yt::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(3,7,18,.04),rgba(3,7,18,.50));pointer-events:none;}
     .highlight-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;width:58px;height:40px;border-radius:12px;background:rgba(249,115,22,.94);box-shadow:0 16px 34px rgba(249,115,22,.32);display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--ff);font-size:20px;line-height:1;}
@@ -1504,7 +1510,7 @@ footer{
       const score = `${h.score_home ?? '-'}-${h.score_away ?? '-'}`;
       const title = `${short(h.home)} ${score} ${short(h.away)}`;
       const link = h.youtube_url || h.youtube_search_url || `https://www.youtube.com/results?search_query=${encodeURIComponent(`${h.home} ${score} ${h.away} highlights`)}`;
-      const label = h.youtube_url ? 'Watch Highlights' : 'Find YouTube';
+      const highlightSlug = `${encodeURIComponent(h.fixture_id)}-${encodeURIComponent(`${short(h.home)}-vs-${short(h.away)}`.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''))}`;
       const hasVideo = !!h.youtube_url;
       const image = hasVideo && h.youtube_thumbnail ? h.youtube_thumbnail : (h.image_url || '/og/default');
       const sub = hasVideo
@@ -1513,6 +1519,11 @@ footer{
       return `<article class="highlight-card">
         <div class="highlight-art ${hasVideo ? 'yt' : ''}">
           <img class="result-bg" src="${esc(image)}" alt="${esc(title)} highlights">
+          <div class="highlight-score-card">
+            <div class="highlight-team">${h.home_logo ? `<img src="${esc(h.home_logo)}" alt="${esc(h.home)} logo" onerror="this.style.display='none'">` : ''}<b>${esc(short(h.home))}</b></div>
+            <div class="highlight-score">${esc(score)}<span>Full Time</span></div>
+            <div class="highlight-team">${h.away_logo ? `<img src="${esc(h.away_logo)}" alt="${esc(h.away)} logo" onerror="this.style.display='none'">` : ''}<b>${esc(short(h.away))}</b></div>
+          </div>
           ${hasVideo ? `<div class="highlight-play">▶</div><div class="highlight-source"><span>${esc(h.youtube_channel || 'YouTube')}</span><b>Matched</b></div>` : ''}
         </div>
         <div class="highlight-body">
@@ -1520,7 +1531,7 @@ footer{
           <div class="highlight-title">${esc(title)}</div>
           <div class="highlight-sub">${esc(sub)}</div>
           <div class="highlight-actions">
-            <a class="${h.youtube_url?'watch':''}" href="${esc(link)}" target="_blank" rel="noopener">${label}</a>
+            <a class="${h.youtube_url?'watch':''}" href="/highlights/${highlightSlug}/">${h.youtube_url ? 'Watch Highlights' : 'Highlight Page'}</a>
             <a href="/match/${encodeURIComponent(h.fixture_id)}-${encodeURIComponent(`${short(h.home)}-vs-${short(h.away)}`.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''))}/">Match Detail</a>
           </div>
         </div>
