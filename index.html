@@ -1748,121 +1748,6 @@ footer{
 </section>
 
 <!-- ── RECENT ODDS SNAPSHOTS ── -->
-<section id="slips" style="position:relative;z-index:1;">
-  <div class="sec">
-    <div class="stag">Tracking</div>
-    <h2 class="stitle">Recent Odds Snapshots</h2>
-    <p class="ssub">Tracked picks with sampled odds and final result · Tap any card for the full snapshot · Odds vary by platform</p>
-    <div class="slip-stats" id="slip-stats">
-      <div class="slip-stat"><strong>--</strong><span>Accuracy</span></div>
-      <div class="slip-stat"><strong>--</strong><span>Tracked picks</span></div>
-      <div class="slip-stat"><strong>--</strong><span>Demo ROI</span></div>
-      <div class="slip-stat"><strong>--</strong><span>Net result</span></div>
-      <a class="slip-track" href="#history">View track record →</a>
-    </div>
-    <div id="slips-row" style="display:flex;gap:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:6px 2px 14px;scroll-snap-type:x proximity;">
-      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:40px;text-align:center;color:var(--text3);font-family:var(--fm);font-size:12px;flex:1;min-width:280px;">Loading pick snapshots…</div>
-    </div>
-    <style>
-      .slip-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;gap:10px;align-items:stretch;margin:18px 0 16px;}
-      .slip-stat{background:rgba(255,255,255,.035);border:1px solid var(--border);border-radius:8px;padding:12px 14px;}
-      .slip-stat strong{display:block;font-family:var(--ff);font-size:28px;line-height:1;color:var(--accent);}
-      .slip-stat span{display:block;font-family:var(--fm);font-size:9px;color:var(--text3);letter-spacing:.09em;text-transform:uppercase;margin-top:6px;}
-      .slip-stat.good strong{color:var(--green);}
-      .slip-stat.bad strong{color:var(--red);}
-      .slip-track{display:flex;align-items:center;justify-content:center;min-height:68px;padding:12px 16px;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.26);border-radius:8px;color:var(--accent);font-family:var(--fm);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;white-space:nowrap;}
-      .slip-track:hover{border-color:rgba(249,115,22,.45);background:rgba(249,115,22,.12);}
-      #slips-row::-webkit-scrollbar{height:6px;}
-      #slips-row::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
-      .scard{flex:0 0 280px;background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;text-decoration:none;color:inherit;display:flex;flex-direction:column;scroll-snap-align:start;transition:border-color .2s,transform .15s;}
-      .scard:hover{border-color:rgba(249,115,22,.4);transform:translateY(-2px);}
-      .scard-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--card2);border-bottom:1px solid var(--border);}
-      .scard-stake{font-family:var(--ff);font-size:14px;font-weight:700;color:var(--text);}
-      .scard-stake .sn{color:var(--accent);margin-right:4px;}
-      .scard-badge{font-family:var(--ff);font-size:10px;font-weight:700;letter-spacing:.06em;padding:3px 8px;border-radius:3px;}
-      .scard-badge.running{background:rgba(249,115,22,.12);color:var(--accent);border:1px solid rgba(249,115,22,.3);}
-      .scard-badge.won{background:rgba(0,229,160,.14);color:var(--green);border:1px solid rgba(0,229,160,.34);}
-      .scard-badge.lost{background:rgba(255,71,87,.14);color:var(--red);border:1px solid rgba(255,71,87,.34);}
-      .scard-body{padding:14px;display:flex;flex-direction:column;gap:8px;flex:1;}
-      .scard-pick{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
-      .scard-sel{font-family:var(--ff);font-size:18px;font-weight:700;color:var(--text);line-height:1.2;flex:1;min-width:0;word-break:break-word;}
-      .scard-odds{font-family:var(--ff);font-size:18px;font-weight:700;color:var(--accent);flex-shrink:0;}
-      .scard-market{font-family:var(--fm);font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.04em;text-transform:uppercase;}
-      .scard-match{font-family:var(--ff);font-size:13px;font-weight:600;color:var(--accent);background:rgba(249,115,22,.06);border:1px solid rgba(249,115,22,.18);border-radius:4px;padding:8px 10px;line-height:1.3;}
-      .scard-score{font-family:var(--ff);font-size:13px;font-weight:700;color:var(--text);text-align:center;padding:6px;background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.18);border-radius:4px;}
-      .scard-foot{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--border);padding:10px 14px;}
-      .scard-fl{font-family:var(--fm);font-size:9px;font-weight:600;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;}
-      .scard-fv{font-family:var(--ff);font-size:18px;font-weight:700;color:var(--text);margin-top:2px;}
-      .scard-fv.pay{color:var(--green);}
-      .scard-fv.pay-run{color:var(--amber);}
-      .scard-fv.pay-lost{color:var(--red);text-decoration:line-through;}
-      @media(max-width:900px){.slip-stats{grid-template-columns:repeat(2,minmax(0,1fr));}.slip-track{grid-column:1/-1;}}
-      @media(max-width:520px){.slip-stats{grid-template-columns:1fr;}.slip-track{min-height:48px;}}
-    </style>
-    <script>
-    (function(){
-      const LEAGUE_EMOJI = {39:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',2:'⭐',1:'🏆',278:'🇲🇾',140:'🇪🇸',78:'🇩🇪',135:'🇮🇹',61:'🇫🇷'};
-      const LEAGUE_SHORT = {39:'EPL',2:'UCL',1:'World Cup',140:'La Liga',78:'Bundesliga',135:'Serie A',61:'Ligue 1'};
-      const esc = s => String(s ?? '').replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
-      const row = document.getElementById('slips-row');
-      const statsEl = document.getElementById('slip-stats');
-      const empty = msg => `<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:40px;text-align:center;color:var(--text3);font-family:var(--fm);font-size:12px;flex:1;min-width:280px;">${esc(msg)}</div>`;
-      const slugify = s => String(s||'').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,64);
-      const slipPath = c => { const sl = slugify(`${c.home}-vs-${c.away}`); return sl ? `/slip/${encodeURIComponent(c.fixture_id)}-${sl}/` : `/slip/${encodeURIComponent(c.fixture_id)}/`; };
-      const fmtMoney = n => `${n >= 0 ? '+' : '-'}RM ${Math.abs(Number(n) || 0).toFixed(2)}`;
-      const statTile = (label, value, cls = '') => `<div class="slip-stat ${cls}"><strong>${esc(value)}</strong><span>${esc(label)}</span></div>`;
-
-      function renderStats(d) {
-        if (!statsEl) return;
-        const stats = d?.stats || {};
-        const roi = stats.roi == null ? '--' : `${stats.roi > 0 ? '+' : ''}${stats.roi}%`;
-        const net = stats.settled ? fmtMoney(stats.net || 0) : '--';
-        statsEl.innerHTML = [
-          statTile('Accuracy', stats.accuracy == null ? '--' : `${stats.accuracy}%`),
-          statTile('Tracked picks', String(stats.settled || '--')),
-          statTile('Demo ROI', roi, stats.roi > 0 ? 'good' : stats.roi < 0 ? 'bad' : ''),
-          statTile('Net result', net, stats.net > 0 ? 'good' : stats.net < 0 ? 'bad' : ''),
-          `<a class="slip-track" href="${esc(d?.track_record_url || '#history')}">Add to / view track record →</a>`,
-        ].join('');
-      }
-
-      fetch('/api/slips').then(r => r.ok ? r.json() : null).then(d => {
-        if (!d) { row.innerHTML = empty('Picks will appear once today’s match is featured.'); return; }
-        renderStats(d);
-        const all = [...(d.running || []), ...(d.recent || [])];
-        if (!all.length) { row.innerHTML = empty('No pick snapshots yet — check back after 10:00 MYT when today’s pick is published.'); return; }
-        row.innerHTML = all.map(c => {
-          const flag = LEAGUE_EMOJI[c.league_id] || '⚽';
-          const lg = LEAGUE_SHORT[c.league_id] || 'Football';
-          const hasScore = c.score_home != null && c.score_away != null;
-          const payClass = c.status === 'lost' ? 'pay-lost' : (c.status === 'running' ? 'pay-run' : 'pay');
-          return `
-            <a class="scard" href="${slipPath(c)}?status=${esc(c.status)}&stake=${c.stake}" target="_blank" rel="noopener">
-              <div class="scard-head">
-                <div class="scard-stake"><span class="sn">Demo</span>${c.stake}</div>
-                <div class="scard-badge ${esc(c.status)}">${esc(c.status.toUpperCase())}</div>
-              </div>
-              <div class="scard-body">
-                <div class="scard-pick">
-                  <div class="scard-sel">${esc(c.selection)}</div>
-                  <div class="scard-odds">${esc(c.odds)}</div>
-                </div>
-                <div class="scard-market">FT.1X2 · ${flag} ${esc(lg)}</div>
-                <div class="scard-match">${esc(c.home)} vs ${esc(c.away)}</div>
-                ${hasScore ? `<div class="scard-score">FT&nbsp;&nbsp;${esc(c.score_home)} — ${esc(c.score_away)}</div>` : ''}
-              </div>
-              <div class="scard-foot">
-                <div><div class="scard-fl">Demo stake</div><div class="scard-fv">${c.stake}</div></div>
-                <div><div class="scard-fl">Projected return</div><div class="scard-fv ${payClass}">${esc(c.payout.toFixed(2))}</div></div>
-              </div>
-            </a>`;
-        }).join('');
-      }).catch(() => { row.innerHTML = empty('Picks temporarily unavailable. Try again in a minute.'); });
-    })();
-    </script>
-  </div>
-</section>
-
 <section id="testimonials" style="position:relative;z-index:1;background:var(--bg);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
   <div class="sec">
     <div class="stag">Customer Proof</div>
@@ -2402,13 +2287,6 @@ const SCOREOCS8_I18N = {
       topScorers: 'Top Scorers',
       upcomingMatches: 'Upcoming Matches',
       latestResults: 'Latest Results',
-      tracking: 'Tracking',
-      oddsTitle: 'Recent Odds Snapshots',
-      oddsSub: 'Tracked picks with sampled odds and final result · Tap any card for the full snapshot · Odds vary by platform',
-      trackedPicks: 'Tracked picks',
-      demoRoi: 'Demo ROI',
-      netResult: 'Net result',
-      viewTrack: 'Add to / view track record →',
       customerProof: 'Customer Proof',
       usersSay: 'What Our Users Say',
       usersSaySub: 'Five customer-style proof examples from WhatsApp and Telegram. Replace the sample text with real screenshots or verified messages anytime.',
@@ -2525,13 +2403,6 @@ const SCOREOCS8_I18N = {
       topScorers: 'Penjaring Terbanyak',
       upcomingMatches: 'Perlawanan Akan Datang',
       latestResults: 'Keputusan Terkini',
-      tracking: 'Tracking',
-      oddsTitle: 'Snapshot Odds Terkini',
-      oddsSub: 'Pilihan direkod dengan contoh odds dan keputusan akhir · Tekan kad untuk snapshot penuh · Odds berbeza ikut platform',
-      trackedPicks: 'Pilihan direkod',
-      demoRoi: 'ROI Demo',
-      netResult: 'Keputusan bersih',
-      viewTrack: 'Tambah / lihat track record →',
       customerProof: 'Bukti Pelanggan',
       usersSay: 'Apa Kata Pengguna Kami',
       usersSaySub: 'Lima contoh proof gaya pelanggan daripada WhatsApp dan Telegram. Tukar teks sampel kepada screenshot sebenar atau mesej disahkan bila-bila masa.',
@@ -2648,13 +2519,6 @@ const SCOREOCS8_I18N = {
       topScorers: '射手榜',
       upcomingMatches: '即将开赛',
       latestResults: '最新赛果',
-      tracking: '追踪',
-      oddsTitle: '近期赔率快照',
-      oddsSub: '记录推荐、样本赔率和最终赛果 · 点击卡片查看完整快照 · 赔率因平台而异',
-      trackedPicks: '已追踪推荐',
-      demoRoi: 'Demo ROI',
-      netResult: '净结果',
-      viewTrack: '加入 / 查看记录 →',
       customerProof: '客户证明',
       usersSay: '用户怎么说',
       usersSaySub: '五个 WhatsApp 和 Telegram 风格的客户证明示例。之后可随时替换成真实截图或已验证消息。',
@@ -2778,11 +2642,6 @@ function setLang(lang) {
   i18nSetText('#highlights .ssub', d.matchScheduleSub);
   i18nSetAll('#highlights .msc-card-h span:last-child', [d.liveTable, d.topScorers, d.upcomingMatches, d.latestResults]);
 
-  i18nSetText('#slips .stag', d.tracking);
-  i18nSetText('#slips .stitle', d.oddsTitle);
-  i18nSetText('#slips .ssub', d.oddsSub);
-  i18nSetAll('#slip-stats .slip-stat span', [d.accuracy, d.trackedPicks, d.demoRoi, d.netResult]);
-  i18nSetText('#slip-stats .slip-track', d.viewTrack);
   i18nSetText('#testimonials .stag', d.customerProof);
   i18nSetText('#testimonials .stitle', d.usersSay);
   i18nSetText('#testimonials .ssub', d.usersSaySub);
