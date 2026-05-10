@@ -132,8 +132,8 @@ body > nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-it
 .nav-links a:hover,.nav-links a.active{color:var(--accent);background:rgba(249,115,22,0.07);}
 @media(max-width:900px){.nav-links{display:none;}}
 .ni{width:15px;height:15px;flex-shrink:0;stroke-width:2;}
-.nav-dropdown{position:relative;}.nav-dropdown .dm{display:none;position:absolute;top:calc(100% + 8px);left:0;background:var(--card2);border:1px solid var(--border2);border-radius:6px;min-width:200px;overflow:hidden;z-index:300;}
-.nav-dropdown:hover .dm{display:block;}.dm a{display:block;padding:10px 16px;font-size:13px;color:var(--text2);text-decoration:none;border-bottom:1px solid var(--border);transition:all .2s;}
+.nav-dropdown{position:relative;}.nav-dropdown .dm{display:none;position:absolute;top:100%;left:0;background:var(--card2);border:1px solid var(--border2);border-radius:6px;min-width:200px;overflow:hidden;z-index:300;box-shadow:0 16px 38px rgba(0,0,0,.42);}
+.nav-dropdown.open .dm{display:block;}.dm a{display:block;padding:12px 16px;font-size:14px;color:var(--text2);text-decoration:none;border-bottom:1px solid var(--border);transition:all .2s;}
 .dm a:last-child{border-bottom:none;}.dm a:hover{color:var(--accent);background:rgba(249,115,22,0.06);}
 .nav-right{display:flex;align-items:center;gap:8px;}
 .lang-btn{background:transparent;border:1px solid var(--border2);color:var(--text2);font-family:var(--fb);font-size:12px;padding:5px 10px;border-radius:4px;cursor:pointer;transition:all .2s;}
@@ -1094,8 +1094,8 @@ footer{
   <ul class="nav-links">
     <li><a href="#" class="active">🏠 Home</a></li>
     <li><a href="/predictions/">📊 Match Prediction</a></li>
-    <li class="nav-dropdown">
-      <a href="#blog">📋 League Blog ▾</a>
+    <li class="nav-dropdown" id="league-dropdown">
+      <a href="#blog" onclick="toggleLeagueDropdown(event)" aria-expanded="false">📋 League Blog ▾</a>
       <div class="dm">
         <a href="/predictions/premier-league/">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</a>
         <a href="/predictions/champions-league/">⭐ Champions League</a>
@@ -1304,26 +1304,6 @@ footer{
           </div>
         </div>
       </div>
-    </div>
-    <div class="proof-panel fu v">
-      <div class="proof-box">
-        <div class="proof-kicker">Customer proof</div>
-        <div class="proof-title">Settled picks, shown before today&apos;s calls</div>
-        <div class="proof-sub">Recent picks are logged with final score, selected outcome and sampled odds so visitors can judge the record before reading the next prediction. Platform odds and ticket layouts can differ.</div>
-      </div>
-      <div class="proof-box">
-        <div class="proof-stats" id="pred-proof-stats">
-          <div class="proof-stat"><strong>--</strong><span>Accuracy</span></div>
-          <div class="proof-stat"><strong>--</strong><span>Football</span></div>
-          <div class="proof-stat"><strong>--</strong><span>Streak</span></div>
-        </div>
-      </div>
-      <div class="proof-box" style="grid-column:1/-1;">
-        <div class="proof-list" id="pred-proof-list">
-          <div class="proof-pick"><div class="out">LOADING</div><div class="match">Tracked picks record</div><div class="sel">Loading latest settled snapshots...</div></div>
-        </div>
-      </div>
-      <div class="proof-footnote">Odds snapshot only. Platform odds and ticket layouts can differ. No real-money bet is stored or implied.</div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px;">
       <div style="display:flex;align-items:center;gap:10px;">
@@ -2198,11 +2178,12 @@ fetch('/api/auth/me').then(r=>r.json()).then(d=>{
   }
 }).catch(()=>{});
 function toggleLangMenu(){const m=document.getElementById('lang-menu');m.style.display=m.style.display==='none'?'block':'none';}
+function toggleLeagueDropdown(event){event.preventDefault();event.stopPropagation();const dd=document.getElementById('league-dropdown');if(!dd)return;const open=!dd.classList.contains('open');document.querySelectorAll('.nav-dropdown.open').forEach(el=>el.classList.remove('open'));dd.classList.toggle('open',open);const a=dd.querySelector('a');if(a)a.setAttribute('aria-expanded',open?'true':'false');}
 function toggleBurger(){document.getElementById('nav-drawer').classList.toggle('open');}
 function closeBurger(){document.getElementById('nav-drawer').classList.remove('open');}
 document.addEventListener('click',e=>{if(e.target.classList&&e.target.classList.contains('dr-link'))closeBurger();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeBurger();});
-document.addEventListener('click',e=>{const li=document.getElementById('auth-logged-in');const lw=document.getElementById('lang-wrap');const am=document.getElementById('auth-modal');if(li&&!li.contains(e.target))document.getElementById('profile-dropdown').style.display='none';if(lw&&!lw.contains(e.target)){const lm=document.getElementById('lang-menu');if(lm)lm.style.display='none';}if(e.target===am)closeModal();});
+document.addEventListener('click',e=>{const li=document.getElementById('auth-logged-in');const lw=document.getElementById('lang-wrap');const am=document.getElementById('auth-modal');const ld=document.getElementById('league-dropdown');if(li&&!li.contains(e.target))document.getElementById('profile-dropdown').style.display='none';if(lw&&!lw.contains(e.target)){const lm=document.getElementById('lang-menu');if(lm)lm.style.display='none';}if(ld&&!ld.contains(e.target)){ld.classList.remove('open');const a=ld.querySelector('a');if(a)a.setAttribute('aria-expanded','false');}if(e.target===am)closeModal();});
 function setLang(lang,flag){document.getElementById('lang-current').textContent='🌐 '+lang;document.getElementById('lang-menu').style.display='none';
 const t={EN:{hero1:'Pro Match',hero2:'Predictions',hero3:'Live Picks',herosub:"See today's best match first, then read simple pro picks with confidence, H2H history, live score context, and settled result proof.",btn1:'View Predictions',btn2:'Live Streaming',acc:'Accuracy',users:'Active Users',matches:'Matches Analysed',sat:'Satisfaction',predtitle:'Match Predictions',predsub:'Updated daily 08:00 MYT · Major leagues only · Powered by ScoreOcs8 Pro Analysis',motdtitle:'Match of the Day',tgtitle:'Get Picks on Telegram',tgsub:'Join @scoreocs8 — predictions auto-posted before every match. Free forever.'},
 BM:{hero1:'Ramalan Pro',hero2:'Perlawanan',hero3:'Pilihan Live',herosub:'Lihat perlawanan terbaik hari ini dahulu, kemudian baca pilihan pro ringkas dengan keyakinan, sejarah H2H, skor live dan bukti keputusan.',btn1:'Lihat Ramalan',btn2:'Siaran Langsung',acc:'Ketepatan',users:'Pengguna Aktif',matches:'Perlawanan Dianalisa',sat:'Kepuasan',predtitle:'Ramalan Perlawanan',predsub:'Dikemas kini harian 08:00 MYT · Liga utama sahaja · Dikuasakan oleh ScoreOcs8 Pro Analysis',motdtitle:'Perlawanan Hari Ini',tgtitle:'Dapatkan Pilihan di Telegram',tgsub:'Sertai @scoreocs8 — ramalan dipos automatik sebelum setiap perlawanan. Percuma selamanya.'},
@@ -2255,9 +2236,6 @@ const SCOREOCS8_I18N = {
       liveSub: 'Live first · Today next · Prediction shown in one place',
       autoUpdated: 'AUTO UPDATED',
       nextMatches: 'Next matches',
-      proofKicker: 'Customer proof',
-      proofTitle: "Settled picks, shown before today's calls",
-      proofSub: 'Recent picks are logged with final score, selected outcome and sampled odds so visitors can judge the record before reading the next prediction. Platform odds and ticket layouts can differ.',
       easy: 'EASY-READ SOCCER PICKS',
       previews: '✓ 2 FREE previews',
       alerts: '🔔 free alerts available',
@@ -2371,9 +2349,6 @@ const SCOREOCS8_I18N = {
       liveSub: 'Live dahulu · Hari ini seterusnya · Ramalan dipaparkan di satu tempat',
       autoUpdated: 'AUTO UPDATE',
       nextMatches: 'Perlawanan seterusnya',
-      proofKicker: 'Bukti pelanggan',
-      proofTitle: 'Pilihan selesai, ditunjukkan sebelum call hari ini',
-      proofSub: 'Pilihan terkini direkod bersama skor akhir, keputusan pilihan dan contoh odds supaya pelawat boleh menilai rekod sebelum membaca ramalan seterusnya. Odds platform dan layout tiket mungkin berbeza.',
       easy: 'PILIHAN BOLA MUDAH BACA',
       previews: '✓ 2 preview PERCUMA',
       alerts: '🔔 alert percuma tersedia',
@@ -2487,9 +2462,6 @@ const SCOREOCS8_I18N = {
       liveSub: '实时优先 · 今日其次 · 预测集中显示',
       autoUpdated: '自动更新',
       nextMatches: '下一场比赛',
-      proofKicker: '客户证明',
-      proofTitle: '今日推荐前，先展示已结算记录',
-      proofSub: '近期推荐会记录最终比分、选择结果和样本赔率，让访客在阅读下一场预测前先判断记录。不同平台的赔率和票据样式可能不同。',
       easy: '易读足球推荐',
       previews: '✓ 2 个免费预览',
       alerts: '🔔 可免费接收提醒',
@@ -2614,9 +2586,6 @@ function setLang(lang) {
   i18nSetText('#predictions .live-sub', d.liveSub);
   i18nSetText('#predictions .bpred', d.autoUpdated);
   i18nSetText('#predictions .live-side-title', d.nextMatches);
-  i18nSetText('#predictions .proof-kicker', d.proofKicker);
-  i18nSetText('#predictions .proof-title', d.proofTitle);
-  i18nSetText('#predictions .proof-sub', d.proofSub);
   const easyRow = document.querySelector('#predictions a[href="#subscribe"]')?.parentElement?.querySelector('div');
   const easyBits = easyRow ? easyRow.querySelectorAll('span') : [];
   if (easyBits[0]) easyBits[0].textContent = d.easy;
@@ -2856,33 +2825,6 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     const items = [...(data?.running || []), ...(data?.recent || [])];
     for (const it of items) if (it?.fixture_id) map[it.fixture_id] = it;
     return { data, map };
-  }
-
-  function renderProof(data) {
-    const statsEl = document.getElementById('pred-proof-stats');
-    const listEl = document.getElementById('pred-proof-list');
-    if (!statsEl && !listEl) return;
-    const settled = (data?.recent || []).filter(x => x.status === 'won' || x.status === 'lost');
-    const wins = settled.filter(x => x.status === 'won').length;
-    const acc = settled.length ? Math.round((wins / settled.length) * 100) + '%' : '--';
-    if (statsEl) {
-      statsEl.innerHTML = [
-        ['Settled accuracy', acc],
-        ['Tracked picks', String(settled.length || '--')],
-        ['Winning picks', String(wins || '--')],
-      ].map(([label, value]) => `<div class="proof-stat"><strong>${esc(value)}</strong><span>${esc(label)}</span></div>`).join('');
-    }
-    if (!listEl) return;
-    if (!settled.length) {
-      listEl.innerHTML = `<div class="proof-pick"><div class="out">BUILDING</div><div class="match">No settled pick snapshots yet</div><div class="sel">Results will appear after finished matches are checked.</div></div>`;
-      return;
-    }
-    listEl.innerHTML = settled.slice(0, 6).map(x => `
-      <div class="proof-pick ${esc(x.status)}">
-        <div class="out">${x.status === 'won' ? 'WIN' : 'LOSS'} · FT ${esc(x.score_home)}-${esc(x.score_away)}</div>
-        <div class="match">${esc(x.home)} vs ${esc(x.away)}</div>
-        <div class="sel">Pick: ${esc(x.selection)} · Odds ${esc(x.odds)}</div>
-      </div>`).join('');
   }
 
   function plainText(s) {
@@ -3308,7 +3250,6 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     const state = { all, aiMap, slipMap: slipBundle.map };
     window.predictionState = state;
     window.renderPredictionMode = () => renderPreds(state.all || [], state.aiMap || {}, state.slipMap || {});
-    renderProof(slipBundle.data);
     renderLiveCenter(all, aiMap, state.slipMap);
     renderPreds(all, aiMap, state.slipMap);
     renderMotd(all);
