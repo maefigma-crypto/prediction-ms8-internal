@@ -122,18 +122,18 @@
 <style>
 :root{--bg:#080b10;--bg2:#0d1117;--bg3:#111820;--card:#0f1620;--card2:#141e2a;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);--accent:#f97316;--accent2:#ea6a0a;--green:#00e5a0;--red:#ff4757;--blue:#3d8fff;--amber:#f5a623;--text:#e8edf5;--text2:#8a9ab5;--text3:#4a5a72;--ff:'Rajdhani',sans-serif;--fb:'Outfit',sans-serif;--fm:'DM Mono',monospace;}
 *{margin:0;padding:0;box-sizing:border-box;}html{scroll-behavior:smooth;}
-body{background:#050811;color:var(--text);font-family:var(--fb);font-size:15px;line-height:1.6;overflow-x:hidden;}
+body{background:#050811;color:var(--text);font-family:var(--fb);font-size:16px;line-height:1.68;overflow-x:hidden;}
 body::before{content:'';position:fixed;inset:0;z-index:-2;pointer-events:none;background:radial-gradient(ellipse 900px 700px at 12% 8%,rgba(249,115,22,0.20),transparent 60%),radial-gradient(ellipse 800px 600px at 88% 22%,rgba(249,115,22,0.12),transparent 60%),radial-gradient(ellipse 1100px 800px at 50% 95%,rgba(249,115,22,0.08),transparent 65%),linear-gradient(180deg,#050811 0%,#0a0e1c 45%,#070a16 100%);}
 body::after{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,0.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.018) 1px,transparent 1px);background-size:48px 48px;}
 body > nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:62px;background:rgba(8,11,16,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
 .nav-logo{display:flex;align-items:center;text-decoration:none;height:42px;}.nav-logo img{height:34px;width:auto;display:block;}
 .nav-links{display:flex;align-items:center;gap:2px;list-style:none;}
-.nav-links a{font-size:13px;font-weight:500;color:var(--text2);text-decoration:none;padding:6px 11px;border-radius:4px;transition:all .2s;display:flex;align-items:center;gap:5px;}
+.nav-links a{font-size:14px;font-weight:500;color:var(--text2);text-decoration:none;padding:6px 11px;border-radius:4px;transition:all .2s;display:flex;align-items:center;gap:5px;}
 .nav-links a:hover,.nav-links a.active{color:var(--accent);background:rgba(249,115,22,0.07);}
 @media(max-width:900px){.nav-links{display:none;}}
 .ni{width:15px;height:15px;flex-shrink:0;stroke-width:2;}
 .nav-dropdown{position:relative;}.nav-dropdown .dm{display:none;position:absolute;top:100%;left:0;background:var(--card2);border:1px solid var(--border2);border-radius:6px;min-width:200px;overflow:hidden;z-index:300;box-shadow:0 16px 38px rgba(0,0,0,.42);}
-.nav-dropdown.open .dm{display:block;}.dm a{display:block;padding:12px 16px;font-size:14px;color:var(--text2);text-decoration:none;border-bottom:1px solid var(--border);transition:all .2s;}
+.nav-dropdown.open .dm{display:block;}.dm a{display:block;padding:12px 16px;font-size:15px;color:var(--text2);text-decoration:none;border-bottom:1px solid var(--border);transition:all .2s;}
 .dm a:last-child{border-bottom:none;}.dm a:hover{color:var(--accent);background:rgba(249,115,22,0.06);}
 .nav-right{display:flex;align-items:center;gap:8px;}
 .lang-btn{background:transparent;border:1px solid var(--border2);color:var(--text2);font-family:var(--fb);font-size:12px;padding:5px 10px;border-radius:4px;cursor:pointer;transition:all .2s;}
@@ -225,7 +225,7 @@ body > nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-it
 .stag{font-family:var(--fm);font-size:10px;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.5rem;display:flex;align-items:center;gap:8px;}
 .stag::before{content:'';display:block;width:20px;height:1px;background:var(--accent);}
 .stitle{font-family:var(--ff);font-size:36px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;margin-bottom:.4rem;}
-.ssub{font-size:14px;color:var(--text2);margin-bottom:2rem;}
+.ssub{font-size:16px;color:var(--text2);margin-bottom:2rem;}
 .mtabs{display:flex;gap:0;margin-bottom:1.25rem;background:var(--card);border:1px solid var(--border);border-radius:6px;overflow:hidden;width:fit-content;}
 .mtab{font-family:var(--ff);font-size:14px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:10px 24px;border:none;background:transparent;color:var(--text3);cursor:pointer;transition:all .2s;border-right:1px solid var(--border);}
 .mtab:last-child{border-right:none;}.mtab.active{background:var(--accent);color:#fff;}
@@ -1566,49 +1566,71 @@ footer{
 
     <style>
       .msc-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
-      .msc-tab{font-family:var(--ff);font-size:13px;font-weight:600;letter-spacing:.04em;padding:9px 16px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.04);color:var(--text2);border-radius:999px;backdrop-filter:blur(12px);cursor:pointer;transition:all .2s;white-space:nowrap;}
+      .msc-tab{font-family:var(--ff);font-size:16px;font-weight:700;letter-spacing:.03em;padding:11px 18px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.04);color:var(--text2);border-radius:999px;backdrop-filter:blur(12px);cursor:pointer;transition:all .2s;white-space:nowrap;}
       .msc-tab:hover{background:rgba(255,255,255,0.08);color:var(--text);border-color:rgba(249,115,22,0.30);}
       .msc-tab.active{background:linear-gradient(180deg,#ff9c4a 0%,#f97316 50%,#c75808 100%);color:#fff;border-color:transparent;box-shadow:0 4px 14px rgba(249,115,22,0.40),inset 0 1px 0 rgba(255,255,255,0.30);}
       .msc-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
       @media(max-width:760px){.msc-grid{grid-template-columns:1fr;}}
       .msc-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);border-radius:18px;backdrop-filter:blur(18px) saturate(160%);box-shadow:0 14px 40px rgba(0,0,0,0.32),inset 0 1px 0 rgba(255,255,255,0.08);overflow:hidden;position:relative;}
       .msc-card::before{content:'';position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.30),transparent);}
-      .msc-card-h{padding:14px 18px;display:flex;align-items:center;gap:10px;font-family:var(--ff);font-size:14px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text);border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);}
-      .msc-card-icon{font-size:16px;}
-      .msc-card-b{padding:6px 0;max-height:380px;overflow-y:auto;}
+      .msc-card-h{padding:16px 18px;display:flex;align-items:center;gap:10px;font-family:var(--ff);font-size:18px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text);border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);}
+      .msc-card-icon{font-size:19px;}
+      .msc-card-b{padding:8px 0;max-height:440px;overflow-y:auto;}
       .msc-card-b::-webkit-scrollbar{width:6px;}
       .msc-card-b::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.10);border-radius:3px;}
-      .msc-loading,.msc-empty{padding:32px 18px;text-align:center;color:var(--text3);font-family:var(--fm);font-size:11px;letter-spacing:.06em;}
+      .msc-loading,.msc-empty{padding:32px 18px;text-align:center;color:var(--text3);font-family:var(--fm);font-size:14px;letter-spacing:.04em;}
       /* Live table rows */
-      .msc-row{display:grid;align-items:center;gap:10px;padding:9px 18px;border-top:1px solid rgba(255,255,255,0.04);font-size:13px;}
+      .msc-row{display:grid;align-items:center;gap:12px;padding:13px 18px;border-top:1px solid rgba(255,255,255,0.04);font-size:16px;}
       .msc-row:first-child{border-top:none;}
-      .msc-row.t-table{grid-template-columns:24px 1fr 28px 28px 28px 36px;}
-      .msc-rank{font-family:var(--fm);font-size:11px;color:var(--text3);text-align:center;}
+      .msc-row.t-table{grid-template-columns:32px minmax(0,1fr) 42px 42px 42px 52px;}
+      .msc-rank{font-family:var(--fm);font-size:15px;color:var(--text3);text-align:center;}
       .msc-rank.top{color:var(--accent);font-weight:700;}
-      .msc-team{display:flex;align-items:center;gap:8px;min-width:0;}
-      .msc-team img{width:18px;height:18px;object-fit:contain;flex-shrink:0;}
-      .msc-team-name{font-family:var(--ff);font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-      .msc-stat{font-family:var(--fm);font-size:11px;color:var(--text2);text-align:center;}
-      .msc-pts{font-family:var(--ff);font-size:14px;font-weight:700;color:var(--accent);text-align:center;}
-      .msc-head{display:grid;grid-template-columns:24px 1fr 28px 28px 28px 36px;gap:10px;padding:8px 18px;font-family:var(--fm);font-size:9px;letter-spacing:.10em;color:var(--text3);text-transform:uppercase;border-top:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);}
+      .msc-team{display:flex;align-items:center;gap:10px;min-width:0;}
+      .msc-team img{width:24px;height:24px;object-fit:contain;flex-shrink:0;}
+      .msc-team-name{font-family:var(--ff);font-size:18px;font-weight:700;line-height:1.15;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+      .msc-stat{font-family:var(--fm);font-size:15px;color:var(--text2);text-align:center;}
+      .msc-pts{font-family:var(--ff);font-size:18px;font-weight:700;color:var(--accent);text-align:center;}
+      .msc-head{display:grid;grid-template-columns:32px minmax(0,1fr) 42px 42px 42px 52px;gap:12px;padding:10px 18px;font-family:var(--fm);font-size:11px;letter-spacing:.08em;color:var(--text3);text-transform:uppercase;border-top:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);}
       /* Top scorers */
-      .msc-row.t-scorer{grid-template-columns:24px 1fr 36px;}
-      .msc-pl{display:flex;align-items:center;gap:9px;min-width:0;}
-      .msc-pl img{width:28px;height:28px;border-radius:50%;object-fit:cover;background:rgba(255,255,255,0.06);flex-shrink:0;}
+      .msc-row.t-scorer{grid-template-columns:32px minmax(0,1fr) 52px;}
+      .msc-pl{display:flex;align-items:center;gap:11px;min-width:0;}
+      .msc-pl img{width:36px;height:36px;border-radius:50%;object-fit:cover;background:rgba(255,255,255,0.06);flex-shrink:0;}
       .msc-pl-info{min-width:0;}
-      .msc-pl-name{font-family:var(--ff);font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-      .msc-pl-club{font-family:var(--fm);font-size:10px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-      .msc-goals{font-family:var(--ff);font-size:15px;font-weight:700;color:var(--accent);text-align:center;}
+      .msc-pl-name{font-family:var(--ff);font-size:17px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+      .msc-pl-club{font-family:var(--fm);font-size:13px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+      .msc-goals{font-family:var(--ff);font-size:19px;font-weight:700;color:var(--accent);text-align:center;}
       /* Fixtures / results */
-      .msc-fx{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:11px 18px;border-top:1px solid rgba(255,255,255,0.04);}
+      .msc-fx{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:14px 18px;border-top:1px solid rgba(255,255,255,0.04);}
       .msc-fx:first-child{border-top:none;}
-      .msc-fx-date{font-family:var(--fm);font-size:9px;letter-spacing:.10em;color:var(--accent);text-transform:uppercase;background:rgba(249,115,22,0.10);border:1px solid rgba(249,115,22,0.22);border-radius:999px;padding:3px 9px;white-space:nowrap;}
-      .msc-fx-teams{font-family:var(--ff);font-size:13px;font-weight:600;color:var(--text);min-width:0;}
+      .msc-fx-date{font-family:var(--fm);font-size:12px;letter-spacing:.08em;color:var(--accent);text-transform:uppercase;background:rgba(249,115,22,0.10);border:1px solid rgba(249,115,22,0.22);border-radius:999px;padding:4px 10px;white-space:nowrap;}
+      .msc-fx-teams{font-family:var(--ff);font-size:17px;font-weight:700;color:var(--text);min-width:0;}
       .msc-fx-vs{color:var(--text3);font-weight:400;margin:0 6px;}
-      .msc-fx-meta{font-family:var(--fm);font-size:10px;color:var(--text3);margin-top:2px;}
-      .msc-fx-time{font-family:var(--fm);font-size:11px;color:var(--amber);white-space:nowrap;text-align:right;}
-      .msc-fx-score{font-family:var(--ff);font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;text-align:right;}
+      .msc-fx-meta{font-family:var(--fm);font-size:13px;color:var(--text3);margin-top:2px;}
+      .msc-fx-time{font-family:var(--fm);font-size:14px;color:var(--amber);white-space:nowrap;text-align:right;}
+      .msc-fx-score{font-family:var(--ff);font-size:19px;font-weight:700;color:var(--text);white-space:nowrap;text-align:right;}
       .msc-fx-score .win{color:var(--green);}
+      @media(max-width:640px){
+        .msc-card-h{font-size:16px;padding:15px 16px;}
+        .msc-card-b{max-height:420px;}
+        .msc-row{gap:9px;padding:12px 14px;}
+        .msc-row.t-table,.msc-head{grid-template-columns:28px minmax(0,1fr) 34px 34px 34px 42px;}
+        .msc-head{gap:9px;padding:9px 14px;font-size:10px;}
+        .msc-team{gap:8px;}
+        .msc-team img{width:22px;height:22px;}
+        .msc-team-name{font-size:16px;}
+        .msc-stat,.msc-rank{font-size:13px;}
+        .msc-pts{font-size:16px;}
+        .msc-row.t-scorer{grid-template-columns:28px minmax(0,1fr) 44px;}
+        .msc-pl img{width:32px;height:32px;}
+        .msc-pl-name{font-size:16px;}
+        .msc-pl-club{font-size:12px;}
+        .msc-goals{font-size:17px;}
+        .msc-fx{grid-template-columns:1fr;gap:7px;padding:14px;}
+        .msc-fx-date{width:max-content;font-size:11px;}
+        .msc-fx-teams{font-size:16px;}
+        .msc-fx-meta{font-size:12px;}
+        .msc-fx-time,.msc-fx-score{text-align:left;}
+      }
     </style>
 
     <script>
