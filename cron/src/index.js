@@ -22,6 +22,7 @@ const CLAUDE_MODEL = 'claude-haiku-4-5-20251001';
 const MAX_TOKENS_PER_REQ = 2000;
 const DAILY_TOKEN_BUDGET = 8000;
 const SITE_URL = 'https://scoreocs8.pages.dev';
+const PUBLIC_SITE_URL = 'https://scoreocs8.com';
 
 const LEAGUE_PRIORITY = [
   { key: 'UCL', id: 2 },
@@ -491,6 +492,154 @@ async function postToTelegram(env, photoBytes, caption, date) {
   }
 }
 
+function escHtml(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function fmtMYT(iso) {
+  try {
+    return new Date(iso).toLocaleString('en-MY', {
+      timeZone: 'Asia/Kuala_Lumpur',
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+  } catch {
+    return 'MYT';
+  }
+}
+
+async function sendTemplateMessage(env, { text, buttonText, buttonUrl }) {
+  if (!env.TG_BOT_TOKEN || !env.TG_CHANNEL_ID) {
+    return { status: 'skipped', reason: 'TG_BOT_TOKEN/TG_CHANNEL_ID not configured' };
+  }
+  const body = {
+    chat_id: env.TG_CHANNEL_ID,
+    text,
+    parse_mode: 'HTML',
+    disable_web_page_preview: false,
+  };
+  if (buttonText && buttonUrl) {
+    body.reply_markup = { inline_keyboard: [[{ text: buttonText, url: buttonUrl }]] };
+  }
+  const res = await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!data.ok) return { status: 'error', error: data.description || `Telegram ${res.status}` };
+  return { status: 'ok', messageId: data.result?.message_id };
+}
+
+async function fetchWebsitePage(path = '/') {
+  const url = `${PUBLIC_SITE_URL}${path}`;
+  try {
+    const res = await fetch(url, { headers: { 'user-agent': 'ScoreOCS8-Cron/1.0' } });
+    const html = await res.text();
+    const title = html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)/i)?.[1]
+      || html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]
+      || 'ScoreOCS8';
+    const description = html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)/i)?.[1]
+      || html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)/i)?.[1]
+      || '';
+    return {
+      url,
+      title: title.replace(/&amp;/g, '&').trim(),
+      description: description.replace(/&amp;/g, '&').trim(),
+    };
+  } catch {
+    return { url, title: 'ScoreOCS8', description: 'Latest football predictions, highlights, proof, and blog updates are live.' };
+  }
+}
+
+function firstPickLine(item) {
+  const fx = item?.fx;
+  if (!fx) return 'Latest AI pick is ready on ScoreOCS8.';
+  const home = fx.teams?.home?.name || 'Home';
+  const away = fx.teams?.away?.name || 'Away';
+  const league = fx.league?.name || 'Football';
+  const pick = item.pick?.pickLabel || item.pick?.pick || 'Pro analysis pending';
+  const conf = item.pick?.confidence != null ? ` (${item.pick.confidence}%)` : '';
+  return `${league} · ${home} vs ${away}\nKickoff: ${fmtMYT(fx.fixture?.date)} MYT\nPick: ${pick}${conf}`;
+}
+
+async function postSportsbookTemplateTest(env) {
+  const report = { status: 'init', results: [] };
+  const { date, picks } = await loadFeaturedWithPicks(env);
+  const predictionPage = await fetchWebsitePage('/predictions/');
+  const blogPage = await fetchWebsitePage('/blog/');
+  const homePage = await fetchWebsitePage('/');
+
+  const top = picks[0] || null;
+  const pickRows = picks.length
+    ? picks.slice(0, 3).map(p => `• ${escHtml(firstPickLine(p)).replace(/\n/g, ' · ')}`).join('\n')
+    : escHtml(predictionPage.description || 'Latest match predictions are ready on ScoreOCS8.');
+
+  let highlights = [];
+  try { highlights = JSON.parse(await env.CACHE.get('highlights:latest') || '[]'); } catch {}
+  const h = highlights[0];
+
+  const templates = [
+    {
+      key: 'prediction',
+      buttonText: "View Today's Picks",
+      buttonUrl: `${PUBLIC_SITE_URL}/predictions/`,
+      text: `<b>TEST PREVIEW - AI Prediction</b>\n\n${escHtml(firstPickLine(top))}\n\nOpen the website for full AI analysis before placing your bet.`,
+    },
+    {
+      key: 'upcoming',
+      buttonText: 'See Upcoming Matches',
+      buttonUrl: `${PUBLIC_SITE_URL}/predictions/`,
+      text: `<b>TEST PREVIEW - Upcoming Matches</b>\n\n${pickRows}\n\nAll kickoff times follow Malaysia Time.`,
+    },
+    {
+      key: 'reminder',
+      buttonText: 'Place Bet Now',
+      buttonUrl: `${PUBLIC_SITE_URL}/predictions/`,
+      text: `<b>TEST PREVIEW - Pre-Kickoff Reminder</b>\n\n${escHtml(firstPickLine(top))}\n\nCheck the AI prediction and odds snapshot now. Bet responsibly.`,
+    },
+    {
+      key: 'result',
+      buttonText: 'Watch Highlights',
+      buttonUrl: `${PUBLIC_SITE_URL}/#match-highlights`,
+      text: `<b>TEST PREVIEW - Result + Highlights</b>\n\n${h ? `${escHtml(h.home)} ${escHtml(h.score_home)}-${escHtml(h.score_away)} ${escHtml(h.away)}\n${escHtml(h.league || 'Football')}` : escHtml(homePage.description)}\n\nOpen ScoreOCS8 for result cards and official highlight links.`,
+    },
+    {
+      key: 'proof',
+      buttonText: 'View Customer Proof',
+      buttonUrl: `${PUBLIC_SITE_URL}/#testimonials`,
+      text: `<b>TEST PREVIEW - What Our Users Say</b>\n\nCustomers can review proof examples, weekly performance notes, and tracked results directly on ScoreOCS8.\n\nSource: ${escHtml(homePage.title)}`,
+    },
+    {
+      key: 'blog',
+      buttonText: 'Read Blog',
+      buttonUrl: `${PUBLIC_SITE_URL}/blog/`,
+      text: `<b>TEST PREVIEW - Blog</b>\n\n${escHtml(blogPage.title)}\n\n${escHtml(blogPage.description)}\n\nRead the latest football analysis before choosing your picks.`,
+    },
+  ];
+
+  for (const tpl of templates) {
+    await new Promise(resolve => setTimeout(resolve, 700));
+    const result = await sendTemplateMessage(env, tpl);
+    report.results.push({ key: tpl.key, ...result });
+  }
+
+  report.status = 'ok';
+  report.date = date;
+  report.sent = report.results.filter(r => r.status === 'ok').length;
+  report.failed = report.results.filter(r => r.status === 'error').length;
+  await env.CACHE.put(`post:telegram:sportsbook-test:${Date.now()}`, JSON.stringify(report), {
+    expirationTtl: 14 * 24 * 3600,
+  });
+  return report;
+}
+
 async function postToX(env, photoBytes, text, date) {
   if (!env.X_API_KEY) return { status: 'skipped', reason: 'not configured' };
   try {
@@ -898,10 +1047,11 @@ export default {
     if (url.searchParams.get('key') !== env.CRON_SECRET) {
       return new Response('unauthorized', { status: 401 });
     }
-    // Manual triggers: &task=generate | post | check
+    // Manual triggers: &task=generate | post | check | sportsbook-test
     const task = url.searchParams.get('task') || 'generate';
     let result;
-    if (task === 'post') result = await postDailyToAll(env);
+    if (task === 'sportsbook-test') result = await postSportsbookTemplateTest(env);
+    else if (task === 'post') result = await postDailyToAll(env);
     else if (task === 'check') result = await checkFinishedMatches(env);
     else result = await generateDaily(env);
     return new Response(JSON.stringify(result, null, 2), {
