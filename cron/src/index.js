@@ -569,71 +569,130 @@ function firstPickLine(item) {
   return `${league} · ${home} vs ${away}\nKickoff: ${fmtMYT(fx.fixture?.date)} MYT\nPick: ${pick}${conf}`;
 }
 
-async function postSportsbookTemplateTest(env) {
-  const report = { status: 'init', results: [] };
-  const { date, picks } = await loadFeaturedWithPicks(env);
-  const predictionPage = await fetchWebsitePage('/predictions/');
-  const blogPage = await fetchWebsitePage('/blog/');
-  const homePage = await fetchWebsitePage('/');
+// ─── Sportsbook autopost ─────────────────────────────────────────────────────
+// Templates come from KV `sportsbook:config` (written by the panel Worker).
+// Hardcoded defaults are used for any missing template keys, or when KV is
+// empty — so this endpoint always returns a usable preview.
 
+const SPORTSBOOK_TEMPLATE_KEYS = ['prediction', 'upcoming', 'reminder', 'result', 'proof', 'blog'];
+
+const SPORTSBOOK_DEFAULTS = {
+  prediction: {
+    button: "View Today's Picks",
+    url: `${PUBLIC_SITE_URL}/predictions/`,
+    text: `<b>TEST PREVIEW - AI Prediction</b>\n\n{firstPick}\n\nOpen ScoreOCS8 for full AI analysis before placing your bet.`,
+  },
+  upcoming: {
+    button: 'See Upcoming Matches',
+    url: `${PUBLIC_SITE_URL}/predictions/`,
+    text: `<b>TEST PREVIEW - Upcoming Matches</b>\n\n{pickRows}\n\nAll kickoff times follow Malaysia Time.`,
+  },
+  reminder: {
+    button: 'Place Bet Now',
+    url: `${PUBLIC_SITE_URL}/predictions/`,
+    text: `<b>TEST PREVIEW - Pre-Kickoff Reminder</b>\n\n{firstPick}\n\nCheck the AI prediction and odds snapshot now. Bet responsibly.`,
+  },
+  result: {
+    button: 'Watch Highlights',
+    url: `${PUBLIC_SITE_URL}/#match-highlights`,
+    text: `<b>TEST PREVIEW - Result + Highlights</b>\n\n{resultLine}\n\nOpen ScoreOCS8 for result cards and official highlight links.`,
+  },
+  proof: {
+    button: 'View Customer Proof',
+    url: `${PUBLIC_SITE_URL}/#testimonials`,
+    text: `<b>TEST PREVIEW - What Our Users Say</b>\n\nCustomers can review proof examples, weekly performance notes, and tracked results directly on ScoreOCS8.\n\nSource: {websiteTitle}`,
+  },
+  blog: {
+    button: 'Read Blog',
+    url: `${PUBLIC_SITE_URL}/blog/`,
+    text: `<b>TEST PREVIEW - Blog</b>\n\n{websiteTitle}\n\n{websiteDescription}\n\nRead the latest football analysis before choosing your picks.`,
+  },
+};
+
+const SPORTSBOOK_PAGE_BY_KEY = {
+  prediction: '/predictions/',
+  upcoming: '/predictions/',
+  reminder: '/predictions/',
+  result: '/',
+  proof: '/',
+  blog: '/blog/',
+};
+
+async function readSportsbookConfigFromKV(env) {
+  try {
+    const raw = await env.CACHE.get('sportsbook:config');
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : null;
+  } catch { return null; }
+}
+
+function fillSportsbookPlaceholders(text, ctx) {
+  // Leaves unknown placeholders intact so authors can spot typos in the preview.
+  return String(text || '').replace(/\{(\w+)\}/g, (m, k) => (k in ctx ? String(ctx[k] ?? '') : m));
+}
+
+async function postSportsbookTemplateTest(env) {
+  const report = { status: 'init', source: 'defaults', results: [] };
+  const config = await readSportsbookConfigFromKV(env);
+  if (config && config.templates) report.source = 'kv';
+
+  // Pull live data once; reuse across templates.
+  const { date, picks } = await loadFeaturedWithPicks(env);
   const top = picks[0] || null;
   const pickRows = picks.length
     ? picks.slice(0, 3).map(p => `• ${escHtml(firstPickLine(p)).replace(/\n/g, ' · ')}`).join('\n')
-    : escHtml(predictionPage.description || 'Latest match predictions are ready on ScoreOCS8.');
+    : 'Latest match predictions are ready on ScoreOCS8.';
 
   let highlights = [];
   try { highlights = JSON.parse(await env.CACHE.get('highlights:latest') || '[]'); } catch {}
   const h = highlights[0];
 
-  const templates = [
-    {
-      key: 'prediction',
-      buttonText: "View Today's Picks",
-      buttonUrl: `${PUBLIC_SITE_URL}/predictions/`,
-      text: `<b>TEST PREVIEW - AI Prediction</b>\n\n${escHtml(firstPickLine(top))}\n\nOpen the website for full AI analysis before placing your bet.`,
-    },
-    {
-      key: 'upcoming',
-      buttonText: 'See Upcoming Matches',
-      buttonUrl: `${PUBLIC_SITE_URL}/predictions/`,
-      text: `<b>TEST PREVIEW - Upcoming Matches</b>\n\n${pickRows}\n\nAll kickoff times follow Malaysia Time.`,
-    },
-    {
-      key: 'reminder',
-      buttonText: 'Place Bet Now',
-      buttonUrl: `${PUBLIC_SITE_URL}/predictions/`,
-      text: `<b>TEST PREVIEW - Pre-Kickoff Reminder</b>\n\n${escHtml(firstPickLine(top))}\n\nCheck the AI prediction and odds snapshot now. Bet responsibly.`,
-    },
-    {
-      key: 'result',
-      buttonText: 'Watch Highlights',
-      buttonUrl: `${PUBLIC_SITE_URL}/#match-highlights`,
-      text: `<b>TEST PREVIEW - Result + Highlights</b>\n\n${h ? `${escHtml(h.home)} ${escHtml(h.score_home)}-${escHtml(h.score_away)} ${escHtml(h.away)}\n${escHtml(h.league || 'Football')}` : escHtml(homePage.description)}\n\nOpen ScoreOCS8 for result cards and official highlight links.`,
-    },
-    {
-      key: 'proof',
-      buttonText: 'View Customer Proof',
-      buttonUrl: `${PUBLIC_SITE_URL}/#testimonials`,
-      text: `<b>TEST PREVIEW - What Our Users Say</b>\n\nCustomers can review proof examples, weekly performance notes, and tracked results directly on ScoreOCS8.\n\nSource: ${escHtml(homePage.title)}`,
-    },
-    {
-      key: 'blog',
-      buttonText: 'Read Blog',
-      buttonUrl: `${PUBLIC_SITE_URL}/blog/`,
-      text: `<b>TEST PREVIEW - Blog</b>\n\n${escHtml(blogPage.title)}\n\n${escHtml(blogPage.description)}\n\nRead the latest football analysis before choosing your picks.`,
-    },
-  ];
+  // Cache fetched pages — multiple templates often share a source.
+  const pageCache = new Map();
+  const fetchPageCached = async (path) => {
+    if (pageCache.has(path)) return pageCache.get(path);
+    const p = fetchWebsitePage(path);
+    pageCache.set(path, p);
+    return p;
+  };
 
-  for (const tpl of templates) {
+  for (const key of SPORTSBOOK_TEMPLATE_KEYS) {
+    const userTpl = config?.templates?.[key];
+    if (userTpl && userTpl.enabled === false) {
+      report.results.push({ key, status: 'skipped', reason: 'template disabled' });
+      continue;
+    }
+
+    const fallback = SPORTSBOOK_DEFAULTS[key];
+    const rawText = userTpl?.text || fallback.text;
+    const buttonText = userTpl?.button || fallback.button;
+    const buttonUrl = userTpl?.url || fallback.url;
+
+    const page = await fetchPageCached(SPORTSBOOK_PAGE_BY_KEY[key] || '/');
+    const placeholders = {
+      websiteTitle: escHtml(page.title || ''),
+      websiteDescription: escHtml(page.description || ''),
+      websiteUrl: page.url || `${PUBLIC_SITE_URL}/`,
+      firstPick: top ? escHtml(firstPickLine(top)) : 'Latest AI pick is ready on ScoreOCS8.',
+      pickRows,
+      resultLine: h
+        ? `${escHtml(h.home)} ${escHtml(h.score_home)}-${escHtml(h.score_away)} ${escHtml(h.away)}\n${escHtml(h.league || 'Football')}`
+        : escHtml(page.description || 'Latest results are live on ScoreOCS8.'),
+    };
+
+    const text = fillSportsbookPlaceholders(rawText, placeholders);
+
     await new Promise(resolve => setTimeout(resolve, 700));
-    const result = await sendTemplateMessage(env, tpl);
-    report.results.push({ key: tpl.key, ...result });
+    const result = await sendTemplateMessage(env, { text, buttonText, buttonUrl });
+    report.results.push({ key, ...result });
   }
 
   report.status = 'ok';
   report.date = date;
   report.sent = report.results.filter(r => r.status === 'ok').length;
   report.failed = report.results.filter(r => r.status === 'error').length;
+  report.skipped = report.results.filter(r => r.status === 'skipped').length;
   await env.CACHE.put(`post:telegram:sportsbook-test:${Date.now()}`, JSON.stringify(report), {
     expirationTtl: 14 * 24 * 3600,
   });
