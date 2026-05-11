@@ -701,11 +701,13 @@ function defaultImageStrategy(key, topFx, topPick, hasHighlight, batchToken) {
       away:    topFx.teams?.away?.name || 'Away',
       league:  topFx.league?.name || 'Football',
       date:    topFx.fixture?.date || '',
-      tag:     topPick?.pickLabel || topPick?.pick || 'AI PREDICTION',
+      tag:     topPick?.pickLabel || topPick?.pick || 'PRO PICK',
       v:       String(batchToken),
     });
     if (topPick?.confidence != null) params.set('confidence', String(topPick.confidence));
-    return `screenshot:${PUBLIC_SITE_URL}/og/match?${params.toString()}`;
+    if (topFx.teams?.home?.logo) params.set('home_logo', topFx.teams.home.logo);
+    if (topFx.teams?.away?.logo) params.set('away_logo', topFx.teams.away.logo);
+    return `screenshot:${PUBLIC_SITE_URL}/og/tg-prediction?${params.toString()}`;
   }
   if (key === 'result' && hasHighlight) return 'highlight';
   if (key === 'upcoming' || key === 'reminder') return 'off';
@@ -832,14 +834,29 @@ async function postSportsbookTemplateTest(env) {
     } else if (/^(off|none|no)$/i.test(rawImage)) {
       // text-only — leave both image vars empty
     } else if (/^highlight$/i.test(rawImage)) {
-      // Codex's /og/highlight endpoint returns SVG. Telegram's sendPhoto rejects
-      // SVG URLs, so we rasterize via Browser Rendering → PNG bytes.
-      const srcUrl = h?.image_url;
-      if (srcUrl) {
+      // Build a Telegram-optimized result card URL (/og/tg-result returns SVG;
+      // we rasterize to PNG via Browser Rendering). Falls back to the older
+      // /og/highlight URL stored in KV if we can't construct fresh params.
+      let cardUrl = h?.image_url || '';
+      if (h) {
+        const params = new URLSearchParams({
+          home:   h.home || 'Home',
+          away:   h.away || 'Away',
+          league: h.league || 'Football',
+          score:  `${h.score_home ?? 0}-${h.score_away ?? 0}`,
+          date:   h.kickoff_iso || '',
+        });
+        if (h.home_logo) params.set('home_logo', h.home_logo);
+        if (h.away_logo) params.set('away_logo', h.away_logo);
+        if (h.correct === true)  params.set('pick_was', 'correct');
+        if (h.correct === false) params.set('pick_was', 'wrong');
+        cardUrl = `${PUBLIC_SITE_URL}/og/tg-result?${params.toString()}`;
+      }
+      if (cardUrl) {
         try {
           imageBytes = await screenshot(env, {
-            url: srcUrl,
-            viewport: { width: 1200, height: 630 },
+            url: cardUrl,
+            viewport: { width: 1280, height: 720 },
             waitUntil: 'networkidle0',
             timeoutMs: 25000,
           });
@@ -855,7 +872,7 @@ async function postSportsbookTemplateTest(env) {
       try {
         imageBytes = await screenshot(env, {
           url: targetUrl,
-          viewport: { width: 720, height: 1280 },
+          viewport: { width: 1280, height: 720 },
           waitUntil: 'networkidle0',
           timeoutMs: 25000,
         });
