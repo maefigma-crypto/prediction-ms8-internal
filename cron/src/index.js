@@ -514,24 +514,43 @@ function fmtMYT(iso) {
   }
 }
 
-async function sendTemplateMessage(env, { text, buttonText, buttonUrl, imageUrl }) {
+async function sendTemplateMessage(env, { text, buttonText, buttonUrl, imageUrl, imageBytes }) {
   if (!env.TG_BOT_TOKEN || !env.TG_CHANNEL_ID) {
     return { status: 'skipped', reason: 'TG_BOT_TOKEN/TG_CHANNEL_ID not configured' };
   }
 
-  const useImage = imageUrl && /^https?:\/\//i.test(imageUrl);
+  const useUrlImage = imageUrl && /^https?:\/\//i.test(imageUrl);
+  const useBytesImage = imageBytes && imageBytes.byteLength > 0;
   const replyMarkup = (buttonText && buttonUrl)
     ? { inline_keyboard: [[{ text: buttonText, url: buttonUrl }]] }
     : undefined;
 
   // Telegram caps: sendMessage 4096 / sendPhoto caption 1024.
-  // Truncate caption if we're sending a photo so the API doesn't reject it.
   const captionMax = 1024;
-  const captionText = useImage && text.length > captionMax
+  const captionText = (useUrlImage || useBytesImage) && text.length > captionMax
     ? text.slice(0, captionMax - 3) + '...'
     : text;
 
-  if (useImage) {
+  // sendPhoto path A: PNG bytes via multipart (used for live screenshots)
+  if (useBytesImage) {
+    const form = new FormData();
+    form.append('chat_id', env.TG_CHANNEL_ID);
+    form.append('parse_mode', 'HTML');
+    if (captionText) form.append('caption', captionText);
+    if (replyMarkup) form.append('reply_markup', JSON.stringify(replyMarkup));
+    form.append('photo', new Blob([imageBytes], { type: 'image/png' }), 'snap.png');
+    const res = await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendPhoto`, {
+      method: 'POST',
+      body: form,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (data.ok) return { status: 'ok', messageId: data.result?.message_id };
+    // fall through to text-only fallback below
+    var bytesFailReason = data.description || `Telegram ${res.status}`;
+  }
+
+  // sendPhoto path B: image URL via JSON
+  if (useUrlImage) {
     const body = {
       chat_id: env.TG_CHANNEL_ID,
       photo: imageUrl,
@@ -546,25 +565,10 @@ async function sendTemplateMessage(env, { text, buttonText, buttonUrl, imageUrl 
     });
     const data = await res.json().catch(() => ({}));
     if (data.ok) return { status: 'ok', messageId: data.result?.message_id };
-    // sendPhoto failed (bad image URL, host blocks Telegram, etc.) — fall back
-    // to text-only so the post still ships. Preserves the inline button.
-    const fallbackBody = {
-      chat_id: env.TG_CHANNEL_ID,
-      text,
-      parse_mode: 'HTML',
-      disable_web_page_preview: false,
-    };
-    if (replyMarkup) fallbackBody.reply_markup = replyMarkup;
-    const res2 = await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(fallbackBody),
-    });
-    const data2 = await res2.json().catch(() => ({}));
-    if (data2.ok) return { status: 'ok', messageId: data2.result?.message_id, fallback: 'photo→text: ' + (data.description || 'unknown') };
-    return { status: 'error', error: 'photo + text both failed: ' + (data.description || res.status) + ' / ' + (data2.description || res2.status) };
+    var urlFailReason = data.description || `Telegram ${res.status}`;
   }
 
+  // Text-only fallback (either no image was requested, or all photo attempts failed)
   const body = {
     chat_id: env.TG_CHANNEL_ID,
     text,
@@ -579,7 +583,10 @@ async function sendTemplateMessage(env, { text, buttonText, buttonUrl, imageUrl 
   });
   const data = await res.json().catch(() => ({}));
   if (!data.ok) return { status: 'error', error: data.description || `Telegram ${res.status}` };
-  return { status: 'ok', messageId: data.result?.message_id };
+  const fallback = (typeof bytesFailReason !== 'undefined' || typeof urlFailReason !== 'undefined')
+    ? `photo→text: ${bytesFailReason || urlFailReason}`
+    : undefined;
+  return { status: 'ok', messageId: data.result?.message_id, ...(fallback ? { fallback } : {}) };
 }
 
 function absolutizeImageUrl(raw, baseUrl) {
@@ -639,32 +646,32 @@ const SPORTSBOOK_DEFAULTS = {
   prediction: {
     button: "View Today's Picks",
     url: `${PUBLIC_SITE_URL}/predictions/`,
-    text: `<b>TEST PREVIEW - AI Prediction</b>\n\n{firstPick}\n\nOpen ScoreOCS8 for full AI analysis before placing your bet.`,
+    text: `<b>Who Will Win?</b>\n\n⚽ {firstPickName}\n🏆 {firstPickLeague} · {firstPickKickoff}\n\nAI pick: <b>{firstPickLabel}</b> ({firstPickConfidence})\n\nOpen ScoreOCS8 for the full breakdown before placing your bet.`,
   },
   upcoming: {
     button: 'See Upcoming Matches',
     url: `${PUBLIC_SITE_URL}/predictions/`,
-    text: `<b>TEST PREVIEW - Upcoming Matches</b>\n\n{pickRows}\n\nAll kickoff times follow Malaysia Time.`,
+    text: `<b>Upcoming Matches</b>\n\n{upcomingList}\n\nAll kickoff times in Malaysia Time (MYT).`,
   },
   reminder: {
     button: 'Place Bet Now',
     url: `${PUBLIC_SITE_URL}/predictions/`,
-    text: `<b>TEST PREVIEW - Pre-Kickoff Reminder</b>\n\n{firstPick}\n\nCheck the AI prediction and odds snapshot now. Bet responsibly.`,
+    text: `<b>1 Hour Reminder</b>\n\n⚽ {firstPickName}\n🏆 {firstPickLeague} · {firstPickKickoff}\n\nAI pick: <b>{firstPickLabel}</b> ({firstPickConfidence})\n\nCheck the AI analysis and odds snapshot before kickoff. Bet responsibly.`,
   },
   result: {
     button: 'Watch Highlights',
     url: `${PUBLIC_SITE_URL}/#match-highlights`,
-    text: `<b>TEST PREVIEW - Result + Highlights</b>\n\n{resultLine}\n\nOpen ScoreOCS8 for result cards and official highlight links.`,
+    text: `<b>Full Time</b>\n\n⚽ {resultScore}\n🏆 {resultLeague}\n\nFull results and highlights are live on ScoreOCS8.`,
   },
   proof: {
     button: 'View Customer Proof',
     url: `${PUBLIC_SITE_URL}/#testimonials`,
-    text: `<b>TEST PREVIEW - What Our Users Say</b>\n\nCustomers can review proof examples, weekly performance notes, and tracked results directly on ScoreOCS8.\n\nSource: {websiteTitle}`,
+    text: `<b>What Our Users Say</b>\n\nCustomers can review proof examples, weekly performance notes, and tracked results directly on ScoreOCS8.\n\nSource: {websiteTitle}`,
   },
   blog: {
     button: 'Read Blog',
     url: `${PUBLIC_SITE_URL}/blog/`,
-    text: `<b>TEST PREVIEW - Blog</b>\n\n{websiteTitle}\n\n{websiteDescription}\n\nRead the latest football analysis before choosing your picks.`,
+    text: `<b>{websiteTitle}</b>\n\n{websiteDescription}\n\nRead the latest football analysis before choosing your picks.`,
   },
 };
 
@@ -699,10 +706,20 @@ async function postSportsbookTemplateTest(env) {
   // Pull live data once; reuse across templates.
   const { date, picks } = await loadFeaturedWithPicks(env);
   const top = picks[0] || null;
+  const topFx = top?.fx;
+  const topPick = top?.pick;
+
+  // Per-fixture preview line used by upcoming list.
   const pickRows = picks.length
     ? picks.slice(0, 3).map(p => `• ${escHtml(firstPickLine(p)).replace(/\n/g, ' · ')}`).join('\n')
     : 'Latest match predictions are ready on ScoreOCS8.';
 
+  // Upcoming list. For now this mirrors today's featured picks (3 max). When
+  // tomorrow/day+2 content keys exist in KV (content:YYYY-MM-DD), extend this
+  // to read those and concatenate. The same {upcomingList} placeholder is used.
+  const upcomingList = pickRows;
+
+  // Latest finished match (for result + highlight templates).
   let highlights = [];
   try { highlights = JSON.parse(await env.CACHE.get('highlights:latest') || '[]'); } catch {}
   const h = highlights[0];
@@ -729,33 +746,79 @@ async function postSportsbookTemplateTest(env) {
     const buttonUrl = userTpl?.url || fallback.url;
 
     const page = await fetchPageCached(SPORTSBOOK_PAGE_BY_KEY[key] || '/');
+
     const placeholders = {
+      // Website metadata (used by blog, proof, generic templates)
       websiteTitle: escHtml(page.title || ''),
       websiteDescription: escHtml(page.description || ''),
       websiteUrl: page.url || `${PUBLIC_SITE_URL}/`,
+
+      // Top featured pick — used by prediction / reminder
       firstPick: top ? escHtml(firstPickLine(top)) : 'Latest AI pick is ready on ScoreOCS8.',
+      firstPickName: topFx
+        ? `${escHtml(topFx.teams?.home?.name || 'Home')} vs ${escHtml(topFx.teams?.away?.name || 'Away')}`
+        : '',
+      firstPickLeague: escHtml(topFx?.league?.name || ''),
+      firstPickKickoff: topFx?.fixture?.date ? `${fmtMYT(topFx.fixture.date)} MYT` : '',
+      firstPickConfidence: topPick?.confidence != null ? `${topPick.confidence}%` : '',
+      firstPickLabel: escHtml(topPick?.pickLabel || topPick?.pick || 'Pending'),
+
+      // Fixture lists
       pickRows,
+      upcomingList,
+
+      // Result / highlight (latest finished match)
       resultLine: h
         ? `${escHtml(h.home)} ${escHtml(h.score_home)}-${escHtml(h.score_away)} ${escHtml(h.away)}\n${escHtml(h.league || 'Football')}`
         : escHtml(page.description || 'Latest results are live on ScoreOCS8.'),
+      resultScore: h
+        ? `${escHtml(h.home)} ${escHtml(h.score_home)}-${escHtml(h.score_away)} ${escHtml(h.away)}`
+        : '',
+      resultLeague: h ? escHtml(h.league || 'Football') : '',
+      youtubeUrl: h?.youtube_url || '',
     };
 
     const text = fillSportsbookPlaceholders(rawText, placeholders);
 
-    // Image resolution per template. `image` field in KV controls:
-    //   ''  / unset  → auto-use the page's og:image (default)
-    //   'off' / 'none' / 'no' → text-only
-    //   any URL      → use that URL directly
+    // Image resolution per template. `image` field controls strategy:
+    //   ''  / unset             → page's og:image (default)
+    //   'off' / 'none' / 'no'   → text-only
+    //   'highlight'             → highlights:latest[0].image_url (Codex's pre-rendered card)
+    //   'screenshot:<url>'      → live screenshot via Cloudflare Browser Rendering
+    //                             (returns PNG bytes; sent via multipart)
+    //   any explicit https URL  → use that URL directly
     const rawImage = String(userTpl?.image ?? '').trim();
     let imageUrl = '';
+    let imageBytes = null;
+    let imageError = null;
+
     if (!rawImage) {
       imageUrl = page.ogImage || '';
-    } else if (!/^(off|none|no)$/i.test(rawImage)) {
+    } else if (/^(off|none|no)$/i.test(rawImage)) {
+      // text-only — leave both image vars empty
+    } else if (/^highlight$/i.test(rawImage)) {
+      imageUrl = h?.image_url || page.ogImage || '';
+    } else if (/^screenshot:/i.test(rawImage)) {
+      const targetUrl = rawImage.replace(/^screenshot:/i, '').trim() || `${PUBLIC_SITE_URL}/`;
+      try {
+        imageBytes = await screenshot(env, {
+          url: targetUrl,
+          viewport: { width: 720, height: 1280 },
+          waitUntil: 'networkidle0',
+          timeoutMs: 25000,
+        });
+      } catch (e) {
+        imageError = 'screenshot failed: ' + (e.message || String(e));
+        // Fall back to og:image so the post still ships with an image
+        imageUrl = page.ogImage || '';
+      }
+    } else {
       imageUrl = rawImage;
     }
 
     await new Promise(resolve => setTimeout(resolve, 700));
-    const result = await sendTemplateMessage(env, { text, buttonText, buttonUrl, imageUrl });
+    const result = await sendTemplateMessage(env, { text, buttonText, buttonUrl, imageUrl, imageBytes });
+    if (imageError) result.imageError = imageError;
     report.results.push({ key, ...result });
   }
 
