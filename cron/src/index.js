@@ -686,22 +686,26 @@ const SPORTSBOOK_PAGE_BY_KEY = {
 
 // Smart per-key image default — used when the user leaves the panel "Image"
 // field blank. Two images per batch (prediction + result), everything else
-// text-only or og:image. This keeps the Telegram channel visually balanced
-// (image-heavy posts at the start and end of a match cycle, lightweight
-// text-only reminders + upcoming in between) and uses ≤1 Browser Rendering
-// screenshot per batch.
-//   prediction → live screenshot of the bet-slip page for the top pick
-//                (1 Browser Rendering call)
-//   result     → use Codex's pre-rendered highlight card (no API call, just KV)
+// text-only or og:image. Each image uses Codex's existing /og/* card endpoints
+// (rendered as SVG, rasterized to PNG via Browser Rendering for Telegram):
+//   prediction → /og/match card with team names, league, kickoff, AI pick tag
+//   result     → /og/highlight card with score, teams, league
 //   upcoming   → text-only (multi-match list doesn't fit one image)
 //   reminder   → text-only (kickoff alert, image not essential)
 //   blog       → og:image from /blog/
 //   proof      → og:image from /  (user will typically disable this template)
-function defaultImageStrategy(key, topFx, hasHighlight, batchToken) {
+function defaultImageStrategy(key, topFx, topPick, hasHighlight, batchToken) {
   if (key === 'prediction' && topFx?.fixture?.id) {
-    const home = topFx.teams?.home?.name || 'home';
-    const away = topFx.teams?.away?.name || 'away';
-    return `screenshot:${PUBLIC_SITE_URL}${slipPath(topFx.fixture.id, home, away)}?status=upcoming&stake=100&v=${batchToken}`;
+    const params = new URLSearchParams({
+      home:    topFx.teams?.home?.name || 'Home',
+      away:    topFx.teams?.away?.name || 'Away',
+      league:  topFx.league?.name || 'Football',
+      date:    topFx.fixture?.date || '',
+      tag:     topPick?.pickLabel || topPick?.pick || 'AI PREDICTION',
+      v:       String(batchToken),
+    });
+    if (topPick?.confidence != null) params.set('confidence', String(topPick.confidence));
+    return `screenshot:${PUBLIC_SITE_URL}/og/match?${params.toString()}`;
   }
   if (key === 'result' && hasHighlight) return 'highlight';
   if (key === 'upcoming' || key === 'reminder') return 'off';
@@ -817,7 +821,7 @@ async function postSportsbookTemplateTest(env) {
     //                             (returns PNG bytes; sent via multipart)
     //   any explicit https URL  → use that URL directly
     const userImage = String(userTpl?.image ?? '').trim();
-    const rawImage = userImage || defaultImageStrategy(key, topFx, !!h, batchToken);
+    const rawImage = userImage || defaultImageStrategy(key, topFx, topPick, !!h, batchToken);
 
     let imageUrl = '';
     let imageBytes = null;
@@ -828,7 +832,24 @@ async function postSportsbookTemplateTest(env) {
     } else if (/^(off|none|no)$/i.test(rawImage)) {
       // text-only — leave both image vars empty
     } else if (/^highlight$/i.test(rawImage)) {
-      imageUrl = h?.image_url || page.ogImage || '';
+      // Codex's /og/highlight endpoint returns SVG. Telegram's sendPhoto rejects
+      // SVG URLs, so we rasterize via Browser Rendering → PNG bytes.
+      const srcUrl = h?.image_url;
+      if (srcUrl) {
+        try {
+          imageBytes = await screenshot(env, {
+            url: srcUrl,
+            viewport: { width: 1200, height: 630 },
+            waitUntil: 'networkidle0',
+            timeoutMs: 25000,
+          });
+        } catch (e) {
+          imageError = 'highlight rasterize failed: ' + (e.message || String(e));
+          imageUrl = page.ogImage || '';
+        }
+      } else {
+        imageUrl = page.ogImage || '';
+      }
     } else if (/^screenshot:/i.test(rawImage)) {
       const targetUrl = rawImage.replace(/^screenshot:/i, '').trim() || `${PUBLIC_SITE_URL}/`;
       try {
