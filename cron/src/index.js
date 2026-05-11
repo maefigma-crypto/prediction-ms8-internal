@@ -514,19 +514,64 @@ function fmtMYT(iso) {
   }
 }
 
-async function sendTemplateMessage(env, { text, buttonText, buttonUrl }) {
+async function sendTemplateMessage(env, { text, buttonText, buttonUrl, imageUrl }) {
   if (!env.TG_BOT_TOKEN || !env.TG_CHANNEL_ID) {
     return { status: 'skipped', reason: 'TG_BOT_TOKEN/TG_CHANNEL_ID not configured' };
   }
+
+  const useImage = imageUrl && /^https?:\/\//i.test(imageUrl);
+  const replyMarkup = (buttonText && buttonUrl)
+    ? { inline_keyboard: [[{ text: buttonText, url: buttonUrl }]] }
+    : undefined;
+
+  // Telegram caps: sendMessage 4096 / sendPhoto caption 1024.
+  // Truncate caption if we're sending a photo so the API doesn't reject it.
+  const captionMax = 1024;
+  const captionText = useImage && text.length > captionMax
+    ? text.slice(0, captionMax - 3) + '...'
+    : text;
+
+  if (useImage) {
+    const body = {
+      chat_id: env.TG_CHANNEL_ID,
+      photo: imageUrl,
+      caption: captionText,
+      parse_mode: 'HTML',
+    };
+    if (replyMarkup) body.reply_markup = replyMarkup;
+    const res = await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendPhoto`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (data.ok) return { status: 'ok', messageId: data.result?.message_id };
+    // sendPhoto failed (bad image URL, host blocks Telegram, etc.) — fall back
+    // to text-only so the post still ships. Preserves the inline button.
+    const fallbackBody = {
+      chat_id: env.TG_CHANNEL_ID,
+      text,
+      parse_mode: 'HTML',
+      disable_web_page_preview: false,
+    };
+    if (replyMarkup) fallbackBody.reply_markup = replyMarkup;
+    const res2 = await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(fallbackBody),
+    });
+    const data2 = await res2.json().catch(() => ({}));
+    if (data2.ok) return { status: 'ok', messageId: data2.result?.message_id, fallback: 'photo→text: ' + (data.description || 'unknown') };
+    return { status: 'error', error: 'photo + text both failed: ' + (data.description || res.status) + ' / ' + (data2.description || res2.status) };
+  }
+
   const body = {
     chat_id: env.TG_CHANNEL_ID,
     text,
     parse_mode: 'HTML',
     disable_web_page_preview: false,
   };
-  if (buttonText && buttonUrl) {
-    body.reply_markup = { inline_keyboard: [[{ text: buttonText, url: buttonUrl }]] };
-  }
+  if (replyMarkup) body.reply_markup = replyMarkup;
   const res = await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -535,6 +580,14 @@ async function sendTemplateMessage(env, { text, buttonText, buttonUrl }) {
   const data = await res.json().catch(() => ({}));
   if (!data.ok) return { status: 'error', error: data.description || `Telegram ${res.status}` };
   return { status: 'ok', messageId: data.result?.message_id };
+}
+
+function absolutizeImageUrl(raw, baseUrl) {
+  if (!raw) return '';
+  if (/^https?:\/\//i.test(raw)) return raw;
+  if (raw.startsWith('//')) return 'https:' + raw;
+  if (raw.startsWith('/')) return PUBLIC_SITE_URL + raw;
+  return baseUrl.replace(/\/[^\/]*$/, '/') + raw;
 }
 
 async function fetchWebsitePage(path = '/') {
@@ -548,13 +601,19 @@ async function fetchWebsitePage(path = '/') {
     const description = html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)/i)?.[1]
       || html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)/i)?.[1]
       || '';
+    // og:image first, twitter:image fallback, then first <img> in page.
+    const rawImage = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)/i)?.[1]
+      || html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)/i)?.[1]
+      || html.match(/<img[^>]+src=["']([^"']+)["']/i)?.[1]
+      || '';
     return {
       url,
       title: title.replace(/&amp;/g, '&').trim(),
       description: description.replace(/&amp;/g, '&').trim(),
+      ogImage: absolutizeImageUrl(rawImage, url),
     };
   } catch {
-    return { url, title: 'ScoreOCS8', description: 'Latest football predictions, highlights, proof, and blog updates are live.' };
+    return { url, title: 'ScoreOCS8', description: 'Latest football predictions, highlights, proof, and blog updates are live.', ogImage: '' };
   }
 }
 
@@ -683,8 +742,20 @@ async function postSportsbookTemplateTest(env) {
 
     const text = fillSportsbookPlaceholders(rawText, placeholders);
 
+    // Image resolution per template. `image` field in KV controls:
+    //   ''  / unset  → auto-use the page's og:image (default)
+    //   'off' / 'none' / 'no' → text-only
+    //   any URL      → use that URL directly
+    const rawImage = String(userTpl?.image ?? '').trim();
+    let imageUrl = '';
+    if (!rawImage) {
+      imageUrl = page.ogImage || '';
+    } else if (!/^(off|none|no)$/i.test(rawImage)) {
+      imageUrl = rawImage;
+    }
+
     await new Promise(resolve => setTimeout(resolve, 700));
-    const result = await sendTemplateMessage(env, { text, buttonText, buttonUrl });
+    const result = await sendTemplateMessage(env, { text, buttonText, buttonUrl, imageUrl });
     report.results.push({ key, ...result });
   }
 
