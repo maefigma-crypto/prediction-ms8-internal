@@ -685,20 +685,26 @@ const SPORTSBOOK_PAGE_BY_KEY = {
 };
 
 // Smart per-key image default — used when the user leaves the panel "Image"
-// field blank. Each template gets the strategy that fits its content best:
-//   prediction / reminder → live screenshot of the bet-slip page for the top pick
-//                           (shows the exact match the text references)
-//   result                → use Codex's pre-rendered highlight card
-//   upcoming              → text-only (a single image can't show 3 matches well)
-//   blog / proof          → og:image from the associated page
+// field blank. Two images per batch (prediction + result), everything else
+// text-only or og:image. This keeps the Telegram channel visually balanced
+// (image-heavy posts at the start and end of a match cycle, lightweight
+// text-only reminders + upcoming in between) and uses ≤1 Browser Rendering
+// screenshot per batch.
+//   prediction → live screenshot of the bet-slip page for the top pick
+//                (1 Browser Rendering call)
+//   result     → use Codex's pre-rendered highlight card (no API call, just KV)
+//   upcoming   → text-only (multi-match list doesn't fit one image)
+//   reminder   → text-only (kickoff alert, image not essential)
+//   blog       → og:image from /blog/
+//   proof      → og:image from /  (user will typically disable this template)
 function defaultImageStrategy(key, topFx, hasHighlight, batchToken) {
-  if ((key === 'prediction' || key === 'reminder') && topFx?.fixture?.id) {
+  if (key === 'prediction' && topFx?.fixture?.id) {
     const home = topFx.teams?.home?.name || 'home';
     const away = topFx.teams?.away?.name || 'away';
     return `screenshot:${PUBLIC_SITE_URL}${slipPath(topFx.fixture.id, home, away)}?status=upcoming&stake=100&v=${batchToken}`;
   }
   if (key === 'result' && hasHighlight) return 'highlight';
-  if (key === 'upcoming') return 'off';
+  if (key === 'upcoming' || key === 'reminder') return 'off';
   return ''; // blog, proof, and fallbacks → og:image
 }
 
