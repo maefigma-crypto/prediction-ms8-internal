@@ -646,32 +646,32 @@ const SPORTSBOOK_DEFAULTS = {
   prediction: {
     button: "View Today's Picks",
     url: `${PUBLIC_SITE_URL}/predictions/`,
-    text: `<b>Who Will Win?</b>\n\n⚽ {firstPickName}\n🏆 {firstPickLeague} · {firstPickKickoff}\n\nAI pick: <b>{firstPickLabel}</b> ({firstPickConfidence})\n\nOpen ScoreOCS8 for the full breakdown before placing your bet.`,
+    text: `⚽ <b>AI Match Prediction · AI 智能预测</b>\n⭐ {firstPickLeague}\n\n🏟️ {firstPickName}\n🕐 Kickoff · 开赛: {firstPickKickoff}\n\n⚡ Pro Pick · 智能推荐: <b>{firstPickLabel}</b> ({firstPickConfidence})\n\n🔗 Full breakdown · 完整分析: {websiteUrl}\n\n⚠️ 18+ · AI analysis · Not betting advice\n#AIPrediction #ScoreOcs8 #足球预测`,
   },
   upcoming: {
     button: 'See Upcoming Matches',
     url: `${PUBLIC_SITE_URL}/predictions/`,
-    text: `<b>Upcoming Matches</b>\n\n{upcomingList}\n\nAll kickoff times in Malaysia Time (MYT).`,
+    text: `📅 <b>Upcoming Matches · 近期赛事预告</b>\n\n{upcomingList}\n\n🕐 All times in Malaysia Time (MYT) · 马来西亚时间\n🔗 Full list · 完整赛程: {websiteUrl}\n\n#UpcomingMatches #ScoreOcs8 #足球预测`,
   },
   reminder: {
     button: 'Place Bet Now',
     url: `${PUBLIC_SITE_URL}/predictions/`,
-    text: `<b>1 Hour Reminder</b>\n\n⚽ {firstPickName}\n🏆 {firstPickLeague} · {firstPickKickoff}\n\nAI pick: <b>{firstPickLabel}</b> ({firstPickConfidence})\n\nCheck the AI analysis and odds snapshot before kickoff. Bet responsibly.`,
+    text: `⏰ <b>1 Hour Reminder · 开赛前一小时</b>\n⭐ {firstPickLeague}\n\n🏟️ {firstPickName}\n🕐 Kickoff · 开赛: {firstPickKickoff}\n\n⚡ Pro Pick · 智能推荐: <b>{firstPickLabel}</b> ({firstPickConfidence})\n\n🔗 Odds + AI pick · 赔率分析: {websiteUrl}\n\n⚠️ 18+ · Bet responsibly · 理性投注\n#PreKickoff #ScoreOcs8 #足球预测`,
   },
   result: {
     button: 'Watch Highlights',
     url: `${PUBLIC_SITE_URL}/#match-highlights`,
-    text: `<b>Full Time</b>\n\n⚽ {resultScore}\n🏆 {resultLeague}\n\nFull results and highlights are live on ScoreOCS8.`,
+    text: `🏆 <b>Full Time · 全场比赛结束</b>\n⭐ {resultLeague}\n\n⚽ {resultScore}\n\n🎬 Highlights · 比赛集锦: {youtubeUrl}\n🔗 Full result · 比赛详情: {websiteUrl}\n\n#FullTime #ScoreOcs8 #足球预测`,
   },
   proof: {
     button: 'View Customer Proof',
     url: `${PUBLIC_SITE_URL}/#testimonials`,
-    text: `<b>What Our Users Say</b>\n\nCustomers can review proof examples, weekly performance notes, and tracked results directly on ScoreOCS8.\n\nSource: {websiteTitle}`,
+    text: `💬 <b>What Our Users Say · 用户口碑</b>\n\nCustomers can review proof examples, weekly performance notes, and tracked results directly on ScoreOcs8.\n用户评价、每周表现追踪、完整战绩记录尽在 ScoreOcs8.\n\n🔗 See proof · 查看记录: {websiteUrl}\n\n#Testimonials #ScoreOcs8 #足球预测`,
   },
   blog: {
     button: 'Read Blog',
     url: `${PUBLIC_SITE_URL}/blog/`,
-    text: `<b>{websiteTitle}</b>\n\n{websiteDescription}\n\nRead the latest football analysis before choosing your picks.`,
+    text: `📰 <b>ScoreOcs8 Blog · 最新博客</b>\n\n<b>{websiteTitle}</b>\n\n{websiteDescription}\n\n🔗 Read more · 阅读全文: {websiteUrl}\n\n#Blog #FootballAnalysis #ScoreOcs8 #足球预测`,
   },
 };
 
