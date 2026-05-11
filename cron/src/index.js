@@ -684,6 +684,24 @@ const SPORTSBOOK_PAGE_BY_KEY = {
   blog: '/blog/',
 };
 
+// Smart per-key image default — used when the user leaves the panel "Image"
+// field blank. Each template gets the strategy that fits its content best:
+//   prediction / reminder → live screenshot of the bet-slip page for the top pick
+//                           (shows the exact match the text references)
+//   result                → use Codex's pre-rendered highlight card
+//   upcoming              → text-only (a single image can't show 3 matches well)
+//   blog / proof          → og:image from the associated page
+function defaultImageStrategy(key, topFx, hasHighlight, batchToken) {
+  if ((key === 'prediction' || key === 'reminder') && topFx?.fixture?.id) {
+    const home = topFx.teams?.home?.name || 'home';
+    const away = topFx.teams?.away?.name || 'away';
+    return `screenshot:${PUBLIC_SITE_URL}${slipPath(topFx.fixture.id, home, away)}?status=upcoming&stake=100&v=${batchToken}`;
+  }
+  if (key === 'result' && hasHighlight) return 'highlight';
+  if (key === 'upcoming') return 'off';
+  return ''; // blog, proof, and fallbacks → og:image
+}
+
 async function readSportsbookConfigFromKV(env) {
   try {
     const raw = await env.CACHE.get('sportsbook:config');
@@ -702,6 +720,10 @@ async function postSportsbookTemplateTest(env) {
   const report = { status: 'init', source: 'defaults', results: [] };
   const config = await readSportsbookConfigFromKV(env);
   if (config && config.templates) report.source = 'kv';
+
+  // One token shared by all screenshot URLs in this batch — busts CF/page cache
+  // while keeping concurrent renders coherent.
+  const batchToken = Date.now();
 
   // Pull live data once; reuse across templates.
   const { date, picks } = await loadFeaturedWithPicks(env);
@@ -781,18 +803,21 @@ async function postSportsbookTemplateTest(env) {
     const text = fillSportsbookPlaceholders(rawText, placeholders);
 
     // Image resolution per template. `image` field controls strategy:
-    //   ''  / unset             → page's og:image (default)
+    //   ''  / unset             → smart default per template key (see defaultImageStrategy)
+    //   'og' / 'auto'           → force og:image from associated page
     //   'off' / 'none' / 'no'   → text-only
     //   'highlight'             → highlights:latest[0].image_url (Codex's pre-rendered card)
     //   'screenshot:<url>'      → live screenshot via Cloudflare Browser Rendering
     //                             (returns PNG bytes; sent via multipart)
     //   any explicit https URL  → use that URL directly
-    const rawImage = String(userTpl?.image ?? '').trim();
+    const userImage = String(userTpl?.image ?? '').trim();
+    const rawImage = userImage || defaultImageStrategy(key, topFx, !!h, batchToken);
+
     let imageUrl = '';
     let imageBytes = null;
     let imageError = null;
 
-    if (!rawImage) {
+    if (!rawImage || /^(og|auto)$/i.test(rawImage)) {
       imageUrl = page.ogImage || '';
     } else if (/^(off|none|no)$/i.test(rawImage)) {
       // text-only — leave both image vars empty
