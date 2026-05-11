@@ -864,6 +864,32 @@ async function postSportsbookTemplateTest(env) {
   return report;
 }
 
+// Daily cron handler. Only fires the Telegram batch when the panel's Automation
+// toggle is ON (config.enabled === true). Idempotent within a day: a per-day
+// flag in KV prevents double-firing if the cron retries.
+async function runSportsbookDaily(env) {
+  const config = await readSportsbookConfigFromKV(env);
+  if (!config || !config.enabled) {
+    return { status: 'skipped', reason: 'autopost disabled — toggle Automation ON in panel' };
+  }
+
+  const todayMyt = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' });
+  const dedupKey = `sportsbook:daily-fired:${todayMyt}`;
+  const alreadyFired = await env.CACHE.get(dedupKey);
+  if (alreadyFired) {
+    return { status: 'skipped', reason: `already fired today (${todayMyt})`, ts: alreadyFired };
+  }
+
+  // Reserve the slot BEFORE the send so a retry loop can't double-fire while
+  // we're mid-batch. TTL 36h covers any timezone weirdness.
+  await env.CACHE.put(dedupKey, String(Date.now()), { expirationTtl: 36 * 3600 });
+
+  const result = await postSportsbookTemplateTest(env);
+  result.trigger = 'daily-cron';
+  result.fired_on = todayMyt;
+  return result;
+}
+
 async function postToX(env, photoBytes, text, date) {
   if (!env.X_API_KEY) return { status: 'skipped', reason: 'not configured' };
   try {
@@ -1254,11 +1280,14 @@ async function checkFinishedMatches(env) {
 export default {
   async scheduled(event, env, ctx) {
     // Dispatch by cron pattern:
-    //   23:00 UTC  = 07:00 MYT → generate tomorrow's content
-    //   02:00 UTC  = 10:00 MYT → post today's predictions to Telegram
+    //   23:00 UTC = 07:00 MYT → generate tomorrow's content
+    //   01:00 UTC = 09:00 MYT → sportsbook daily batch (gated by panel toggle)
+    //   02:00 UTC = 10:00 MYT → post today's AI picks to Telegram
     //   */15 * UTC → check FT queue and post result slips
     const cron = event.cron || '';
-    if (cron.startsWith('0 2 ')) {
+    if (cron.startsWith('0 1 ')) {
+      ctx.waitUntil(runSportsbookDaily(env));
+    } else if (cron.startsWith('0 2 ')) {
       ctx.waitUntil(postDailyToAll(env));
     } else if (cron.startsWith('*/15 ')) {
       ctx.waitUntil(checkFinishedMatches(env));
