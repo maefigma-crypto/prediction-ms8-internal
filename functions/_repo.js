@@ -7,7 +7,7 @@ export const BRANCH = 'main';
 const RAW = `https://raw.githubusercontent.com/${REPO}/${BRANCH}`;
 const API = `https://api.github.com/repos/${REPO}/contents`;
 
-export const SITE_URL = 'https://scoreocs8.pages.dev';
+export const SITE_URL = 'https://scoreocs8.com';
 
 export async function getSettings(env) {
   const cacheKey = 'repo:settings';
@@ -49,7 +49,7 @@ export function defaultSettings() {
     default_seo_title: 'ScoreOcs8 - Pro Sports Predictions',
     default_meta_description: 'Pro football predictions, live scores, match previews and result proof.',
     default_og_image: '',
-    robots_txt: 'User-agent: *\nAllow: /\nDisallow: /admin/\nSitemap: https://scoreocs8.pages.dev/sitemap.xml',
+    robots_txt: 'User-agent: *\nAllow: /\nDisallow: /admin/\nSitemap: https://scoreocs8.com/sitemap.xml',
     google_analytics_id: '',
     search_console_verify: '',
     organisation_schema: '',

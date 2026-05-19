@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 Disallow: /admin/
-Sitemap: https://scoreocs8.pages.dev/sitemap.xml
+Sitemap: https://scoreocs8.com/sitemap.xml
