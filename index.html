@@ -395,7 +395,11 @@ body > nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-it
 .intro-points span{display:block;font-size:13px;color:var(--text2);margin-top:5px;line-height:1.35;}
 .banner-slot{border:1px solid rgba(249,115,22,.32);border-radius:10px;background:var(--card);overflow:hidden;display:block;padding:0;box-shadow:0 18px 46px rgba(0,0,0,.28);}
 .banner-slot img,.banner-slot video{width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;display:block;background:#05080c;}
-.banner-vid{pointer-events:none;}
+.banner-vid{cursor:pointer;transition:transform .25s ease;}
+.banner-slot{position:relative;}
+.banner-slot:hover .banner-vid{transform:scale(1.02);}
+.banner-expand-hint{position:absolute;bottom:10px;right:10px;display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;background:rgba(8,11,16,.72);border:1px solid rgba(255,255,255,.18);color:#fff;font-family:var(--fm);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;backdrop-filter:blur(8px);pointer-events:none;opacity:.92;}
+.banner-expand-hint svg{width:13px;height:13px;}
 .promo-grid{display:grid;grid-template-columns:1fr;gap:16px;align-items:stretch;}
 .promo-card{max-width:920px;margin:0 auto;width:100%;background:rgba(15,22,32,.92);color:var(--text);border-radius:16px;overflow:hidden;border:1px solid rgba(249,115,22,.28);box-shadow:0 22px 58px rgba(0,0,0,.34),0 0 34px rgba(249,115,22,.12);}
 .promo-art{position:relative;min-height:260px;background:#080808;overflow:hidden;border-bottom:1px solid rgba(249,115,22,.22);}
@@ -1273,9 +1277,13 @@ footer{
       </div>
     </div>
     <div class="banner-slot fu v">
-      <video class="banner-vid" muted loop playsinline preload="none" poster="/images/ocs8-powered-banner.webp" data-src="/images/ocs8-sports-reel.mp4" aria-label="Connected by OCS8, ScoreOCS8 is powered by OCS8">
+      <video class="banner-vid" muted loop playsinline preload="none" poster="/images/ocs8-powered-banner.webp" data-src="/images/ocs8-sports-reel.mp4" aria-label="Connected by OCS8 — tap to expand">
         <img src="/images/ocs8-powered-banner.webp" alt="Connected by OCS8, ScoreOCS8 is powered by OCS8">
       </video>
+      <span class="banner-expand-hint" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v6h6M20 10V4h-6M14 4l7 7M10 20l-7-7"/></svg>
+        Tap to expand
+      </span>
     </div>
     <div class="promo-grid fu v">
       <div class="promo-card">
@@ -3335,14 +3343,33 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     v.load();
     loaded = true;
   };
-  if (!('IntersectionObserver' in window)) {
-    hydrate(); v.play().catch(()=>{}); return;
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { hydrate(); v.play().catch(()=>{}); }
+      else { v.pause(); }
+    }, { threshold: 0.25 });
+    io.observe(v);
+  } else {
+    hydrate(); v.play().catch(()=>{});
   }
-  const io = new IntersectionObserver(([e]) => {
-    if (e.isIntersecting) { hydrate(); v.play().catch(()=>{}); }
-    else { v.pause(); }
-  }, { threshold: 0.25 });
-  io.observe(v);
+
+  // Tap-to-expand: enter fullscreen and unmute for the duration. Mute again
+  // on exit so the inline autoplay stays silent.
+  const enterFull = () => {
+    hydrate();
+    const req = v.requestFullscreen || v.webkitRequestFullscreen || v.webkitEnterFullscreen;
+    if (req) {
+      v.muted = false;
+      Promise.resolve(req.call(v)).catch(() => { v.muted = true; });
+    }
+  };
+  v.addEventListener('click', enterFull);
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement) v.muted = true;
+  });
+  document.addEventListener('webkitfullscreenchange', () => {
+    if (!document.webkitFullscreenElement) v.muted = true;
+  });
 })();
 
 document.addEventListener('DOMContentLoaded', () => {
