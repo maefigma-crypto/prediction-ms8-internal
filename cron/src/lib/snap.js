@@ -1,7 +1,7 @@
 // Stash PNG bytes in KV and return a public URL suitable for platforms
 // (IG / Threads) that require image_url instead of raw bytes.
 
-const SITE_URL = 'https://scoreocs8.pages.dev';
+const SITE_URL = 'https://scoreocs8.com';
 
 // Generate a URL-safe random id using Web Crypto (available in Workers).
 function randId() {

@@ -271,7 +271,7 @@ body::before{
 <body>
   <div class="wrap">
     <div class="brand">
-      <img class="logo" src="https://scoreocs8.pages.dev/logo.png" alt="ScoreOcs8">
+      <img class="logo" src="https://scoreocs8.com/logo.png" alt="ScoreOcs8">
       <div class="disclaimer">Odds Snapshot · Demo Tracking</div>
     </div>
 
@@ -317,7 +317,7 @@ body::before{
 
     <div class="cta">
       <div class="cta-t">More predictions & analysis · 更多预测分析</div>
-      <div class="cta-l">scoreocs8.pages.dev</div>
+      <div class="cta-l">scoreocs8.com</div>
       <div class="cta-d">Sampled odds only · Platform odds and ticket layouts can differ · No real betting · 18+</div>
     </div>
   </div>

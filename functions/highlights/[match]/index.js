@@ -1,4 +1,4 @@
-const SITE = 'https://scoreocs8.pages.dev';
+const SITE = 'https://scoreocs8.com';
 
 const esc = s => String(s ?? '').replace(/[<>&"']/g, c => ({
   '<': '&lt;',

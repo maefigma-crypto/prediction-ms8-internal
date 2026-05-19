@@ -5,7 +5,7 @@
 // SEO model: each fixture gets its own canonical URL ranking for queries like
 // "<home> vs <away> prediction" and "<home> vs <away> head to head".
 
-const SITE = 'https://scoreocs8.pages.dev';
+const SITE = 'https://scoreocs8.com';
 
 const LEAGUE_FLAG = { 39:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', 2:'⭐', 1:'🏆', 140:'🇪🇸', 78:'🇩🇪', 135:'🇮🇹', 61:'🇫🇷' };
 const LEAGUE_NAME = { 39:'Premier League', 2:'UEFA Champions League', 1:'FIFA World Cup', 140:'La Liga', 78:'Bundesliga', 135:'Serie A', 61:'Ligue 1' };

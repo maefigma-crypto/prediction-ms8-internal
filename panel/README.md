@@ -4,7 +4,7 @@ Multi-site Web Push broadcast control center.
 
 **Live URL (target):** `ocs-super-panel.pages.dev`
 
-**Source location:** the `panel/` subdirectory of `maefigma-crypto/prediction-ms8-internal`. The main public site (`scoreocs8.pages.dev`) blocks `/panel/*` via `_redirects` so this code is never served from the public domain.
+**Source location:** the `panel/` subdirectory of `maefigma-crypto/prediction-ms8-internal`. The main public site (`scoreocs8.com`) blocks `/panel/*` via `_redirects` so this code is never served from the public domain.
 
 ## Architecture
 

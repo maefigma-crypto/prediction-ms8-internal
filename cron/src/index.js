@@ -21,7 +21,7 @@ const DEFAULT_YOUTUBE_CHANNELS = '@stadiumastro,@beINSPORTSAsia';
 const CLAUDE_MODEL = 'claude-haiku-4-5-20251001';
 const MAX_TOKENS_PER_REQ = 2000;
 const DAILY_TOKEN_BUDGET = 8000;
-const SITE_URL = 'https://scoreocs8.pages.dev';
+const SITE_URL = 'https://scoreocs8.com';
 const PUBLIC_SITE_URL = 'https://scoreocs8.com';
 
 const LEAGUE_PRIORITY = [
@@ -220,7 +220,7 @@ async function generateDaily(env) {
   };
 }
 
-const SITE_HOST = 'scoreocs8.pages.dev';
+const SITE_HOST = 'scoreocs8.com';
 const INDEXNOW_KEY = '8c4e6d9f2b7a1e3f5c8d0a9b2e4f7c1d';
 
 async function pingIndexNow(bundle, date) {

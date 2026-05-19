@@ -165,7 +165,7 @@ async function encryptPayload(plaintext, subscriberP256dhB64, subscriberAuthB64)
 export async function sendPush(env, subscription, payload) {
   const vapidPub  = env.VAPID_PUBLIC_KEY  || env.VAPID_PUBLIC;
   const vapidPriv = env.VAPID_PRIVATE_KEY || env.VAPID_PRIVATE;
-  const vapidSub  = env.VAPID_SUBJECT     || 'mailto:admin@scoreocs8.pages.dev';
+  const vapidSub  = env.VAPID_SUBJECT     || 'mailto:admin@scoreocs8.com';
   if (!vapidPub || !vapidPriv) throw new Error('VAPID keys not configured');
 
   const endpoint = subscription.endpoint;
