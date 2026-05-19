@@ -101,6 +101,24 @@ export async function onRequest(context) {
   const homeScoreDisplay = showScore ? homeScore : '–';
   const awayScoreDisplay = showScore ? awayScore : '–';
 
+  // Team W-D-L records from league standings. Knockout comps (UCL, FIFA WC)
+  // have no league table — skip the fetch to avoid wasted API hits.
+  const KNOCKOUT_LEAGUES = new Set([1, 2]);
+  let homeRecord = null, awayRecord = null;
+  if (leagueId && homeId && awayId && !KNOCKOUT_LEAGUES.has(leagueId)) {
+    const season = fx?.league?.season || '2025';
+    const standings = await fetchJson(origin, `/api/standings?league=${leagueId}&season=${season}`);
+    const rows = (standings?.response?.[0]?.league?.standings || []).flat();
+    const fmt = id => {
+      const r = rows.find(x => x?.team?.id === id);
+      if (!r) return null;
+      const w = r.all?.win ?? 0, d = r.all?.draw ?? 0, l = r.all?.lose ?? 0;
+      return `${w}-${d}-${l}`;
+    };
+    homeRecord = fmt(homeId);
+    awayRecord = fmt(awayId);
+  }
+
   const expectedSlug = slugify(`${home}-vs-${away}`);
   const canonicalSlug = expectedSlug ? `${fixtureId}-${expectedSlug}` : `${fixtureId}`;
   const canonical = `${SITE}/match/${canonicalSlug}/`;
@@ -264,6 +282,7 @@ h1 .vs{color:var(--text3);margin:0 14px;font-weight:500;}
 .sb-crest{width:64px;height:64px;object-fit:contain;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);padding:6px;flex-shrink:0;}
 .sb-meta{min-width:0;}
 .sb-name{font-family:var(--ff);font-size:20px;font-weight:600;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-record{font-family:var(--fm);font-size:11px;color:var(--text3);letter-spacing:.06em;margin-top:3px;}
 .sb-center{display:grid;grid-template-columns:auto auto auto;align-items:center;gap:14px;padding:0 6px;}
 .sb-score{font-family:var(--ff);font-size:48px;font-weight:700;line-height:1;color:var(--text);letter-spacing:.02em;min-width:48px;text-align:center;}
 .sb-score.sb-pending{color:var(--text3);font-size:36px;}
@@ -342,7 +361,7 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
 
     <div class="scoreboard" role="group" aria-label="${esc(home)} ${showScore ? homeScore + '-' + awayScore : 'vs'} ${esc(away)}, ${esc(stateLabel)}">
       <div class="sb-team sb-home">
-        <div class="sb-meta"><div class="sb-name">${esc(home)}</div></div>
+        <div class="sb-meta"><div class="sb-name">${esc(home)}</div>${homeRecord ? `<div class="sb-record">${esc(homeRecord)}</div>` : ''}</div>
         ${homeLogo ? `<img class="sb-crest" src="${esc(homeLogo)}" alt="${esc(home)} crest" loading="eager">` : '<div class="sb-crest" aria-hidden="true">⚽</div>'}
       </div>
       <div class="sb-center">
@@ -355,7 +374,7 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
       </div>
       <div class="sb-team sb-away">
         ${awayLogo ? `<img class="sb-crest" src="${esc(awayLogo)}" alt="${esc(away)} crest" loading="eager">` : '<div class="sb-crest" aria-hidden="true">⚽</div>'}
-        <div class="sb-meta"><div class="sb-name">${esc(away)}</div></div>
+        <div class="sb-meta"><div class="sb-name">${esc(away)}</div>${awayRecord ? `<div class="sb-record">${esc(awayRecord)}</div>` : ''}</div>
       </div>
     </div>
 
