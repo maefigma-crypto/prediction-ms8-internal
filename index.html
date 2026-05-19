@@ -1273,8 +1273,7 @@ footer{
       </div>
     </div>
     <div class="banner-slot fu v">
-      <video class="banner-vid" autoplay muted loop playsinline preload="metadata" poster="/images/ocs8-powered-banner.webp" aria-label="Connected by OCS8, ScoreOCS8 is powered by OCS8">
-        <source src="/images/ocs8-sports-reel.mp4" type="video/mp4">
+      <video class="banner-vid" muted loop playsinline preload="none" poster="/images/ocs8-powered-banner.webp" data-src="/images/ocs8-sports-reel.mp4" aria-label="Connected by OCS8, ScoreOCS8 is powered by OCS8">
         <img src="/images/ocs8-powered-banner.webp" alt="Connected by OCS8, ScoreOCS8 is powered by OCS8">
       </video>
     </div>
@@ -3320,6 +3319,32 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
 </script>
 
 <script>
+// Lazy-load + lazy-play the intro banner reel. Zero bytes fetched until the
+// banner scrolls into view; pauses when scrolled away so we don't burn data
+// for users who never look at it.
+(function lazyVideo(){
+  const v = document.querySelector('video.banner-vid[data-src]');
+  if (!v) return;
+  let loaded = false;
+  const hydrate = () => {
+    if (loaded) return;
+    const s = document.createElement('source');
+    s.src = v.dataset.src;
+    s.type = 'video/mp4';
+    v.insertBefore(s, v.firstChild);
+    v.load();
+    loaded = true;
+  };
+  if (!('IntersectionObserver' in window)) {
+    hydrate(); v.play().catch(()=>{}); return;
+  }
+  const io = new IntersectionObserver(([e]) => {
+    if (e.isIntersecting) { hydrate(); v.play().catch(()=>{}); }
+    else { v.pause(); }
+  }, { threshold: 0.25 });
+  io.observe(v);
+})();
+
 document.addEventListener('DOMContentLoaded', () => {
   const intro = document.getElementById('intro');
   const predictions = document.getElementById('predictions');
