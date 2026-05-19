@@ -92,7 +92,7 @@
           "name": "How accurate are ScoreOcs8 predictions?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Our pro analysis record shows 87% overall accuracy. All predictions are logged and results published publicly in our Track Record section. We only cover major soccer leagues — English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup."
+            "text": "Our pro analysis record shows 87% overall accuracy. All predictions are logged and results published publicly. We only cover major soccer leagues — English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup."
           }
         },
         {
@@ -803,7 +803,7 @@ body > nav::before{content:'';position:absolute;top:0;left:18%;right:18%;height:
 }
 
 /* --- SECTION BACKGROUNDS (transparent so glow shows through) --- */
-#predictions,#highlights,#history,.intro-banner,.subcta,.insights-section,#motd{
+#predictions,#highlights,.intro-banner,.subcta,.insights-section,#motd{
   background:transparent !important;
   border-top:1px solid rgba(255,255,255,0.06) !important;
   border-bottom:1px solid rgba(255,255,255,0.06) !important;
@@ -1001,6 +1001,54 @@ footer{
 .bonus-cta{display:flex;align-items:center;justify-content:center;margin:0 18px 18px;min-height:48px;border-radius:9px;background:linear-gradient(180deg,#ff9c4a,#f97316,#c75808);color:#fff;text-decoration:none;font-family:var(--ff);font-size:19px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;box-shadow:0 8px 22px rgba(249,115,22,.35),inset 0 1px 0 rgba(255,255,255,.35);}
 .bonus-terms{font-size:11px;color:var(--text3);line-height:1.45;padding:0 18px 16px;}
 @media(max-width:620px){.bonus-offer-top{grid-template-columns:auto 1fr;}.bonus-badge{grid-column:1/-1;justify-self:start;margin:0;border-radius:999px;}.bonus-title{font-size:24px;}}
+
+/* === MOBILE READABILITY — bumps small text classes so members can read easily without zoom === */
+@media(max-width:600px){
+  body{font-size:17px;line-height:1.72;}
+  .ssub{font-size:17px;line-height:1.55;}
+  .hero-sub{font-size:17px;line-height:1.7;}
+  .scs{font-size:16px;}
+  .stept{font-size:17px;}
+  .stepd{font-size:15px;line-height:1.55;}
+  /* Live Match Center cards */
+  .msc-tab{font-size:16px;padding:12px 18px;}
+  .msc-card-h{font-size:17px;}
+  .msc-fresh{font-size:13px;}
+  .msc-row{font-size:17px;padding:14px 16px;}
+  .msc-team-name{font-size:17px;}
+  .msc-stat{font-size:16px;}
+  .msc-rank{font-size:16px;}
+  .msc-pts{font-size:19px;}
+  .msc-head{font-size:13px;padding:11px 16px;}
+  .msc-pl-name{font-size:17px;}
+  .msc-pl-club{font-size:15px;}
+  .msc-goals{font-size:20px;}
+  .msc-fx-teams{font-size:17px;}
+  .msc-fx-meta{font-size:14px;}
+  .msc-fx-time{font-size:16px;}
+  .msc-fx-date{font-size:13px;padding:5px 11px;}
+  .msc-fx-score{font-size:20px;}
+  .msc-loading,.msc-empty{font-size:15px;padding:28px 16px;}
+  /* Live & Today match center */
+  .live-title{font-size:18px;}
+  .live-sub{font-size:14px;}
+  /* Bonus modal copy + footer */
+  .bonus-copy{font-size:15px;line-height:1.65;}
+  .bonus-terms{font-size:13px;line-height:1.55;}
+  /* Pick cards on prediction tiles */
+  .ppred-pick{font-size:17px;}
+  .ssub,.scs,p,li,td,th{letter-spacing:.005em;}
+  /* Proof chat bubbles */
+  .bubble{font-size:15px;line-height:1.55;}
+  .proof-author{font-size:14px;}
+  /* FAQ + footer fine print */
+  .faqq{font-size:17px;}
+  .faqai{font-size:16px;line-height:1.7;}
+  /* Step indicators */
+  .stepn{font-size:13px;}
+  /* Generic nav dropdown */
+  .dm a{font-size:16px;}
+}
 </style>
 </head>
 <body>
@@ -1532,11 +1580,12 @@ footer{
       <button class="msc-tab" data-league="135" data-name="Serie A">🇮🇹 Serie A</button>
       <button class="msc-tab" data-league="78" data-name="Bundesliga">🇩🇪 Bundesliga</button>
       <button class="msc-tab" data-league="61" data-name="Ligue 1">🇫🇷 Ligue 1</button>
+      <button class="msc-tab" data-league="1" data-name="FIFA World Cup">🏆 FIFA WC</button>
     </div>
 
     <div class="msc-grid fu">
       <div class="msc-card">
-        <div class="msc-card-h"><span class="msc-card-icon">📊</span><span>Live Table</span></div>
+        <div class="msc-card-h"><span class="msc-card-icon">📊</span><span>Live Table</span><span class="msc-fresh" id="msc-table-fresh"></span></div>
         <div class="msc-card-b" id="msc-table"><div class="msc-loading">Loading league table…</div></div>
       </div>
       <div class="msc-card">
@@ -1563,6 +1612,8 @@ footer{
       .msc-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);border-radius:18px;backdrop-filter:blur(18px) saturate(160%);box-shadow:0 14px 40px rgba(0,0,0,0.32),inset 0 1px 0 rgba(255,255,255,0.08);overflow:hidden;position:relative;}
       .msc-card::before{content:'';position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.30),transparent);}
       .msc-card-h{padding:16px 18px;display:flex;align-items:center;gap:10px;font-family:var(--ff);font-size:18px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text);border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);}
+      .msc-fresh{margin-left:auto;font-family:var(--fm);font-size:11px;font-weight:500;letter-spacing:.04em;color:var(--text3);text-transform:none;}
+      .msc-fresh::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:6px;vertical-align:middle;box-shadow:0 0 6px var(--green);}
       .msc-card-icon{font-size:19px;}
       .msc-card-b{padding:8px 0;max-height:440px;overflow-y:auto;}
       .msc-card-b::-webkit-scrollbar{width:6px;}
@@ -1637,9 +1688,22 @@ footer{
 
       const empty = msg => `<div class="msc-empty">${esc(msg)}</div>`;
 
+      function fmtAgo(ms) {
+        if (!ms) return '';
+        const s = Math.max(0, Math.round((Date.now() - ms) / 1000));
+        if (s < 60) return 'updated just now';
+        const m = Math.round(s / 60);
+        if (m < 60) return `updated ${m}m ago`;
+        const h = Math.round(m / 60);
+        if (h < 24) return `updated ${h}h ago`;
+        const d = Math.round(h / 24);
+        return `updated ${d}d ago`;
+      }
       function renderTable(data) {
         try {
           const std = data?.response?.[0]?.league?.standings?.[0] || [];
+          const freshEl = document.getElementById('msc-table-fresh');
+          if (freshEl) freshEl.textContent = std.length ? fmtAgo(data?.updated) : '';
           if (!std.length) { elTable.innerHTML = empty('Standings not available for this league'); return; }
           const rows = std.slice(0, 10).map((t, i) => {
             const rankClass = i < 3 ? 'top' : '';
@@ -1816,131 +1880,6 @@ footer{
   </style>
 </section>
 
-<section id="history" style="position:relative;z-index:1;">
-  <div class="sec">
-    <div class="stag">Transparency</div>
-    <h2 class="stitle">Our Track Record</h2>
-    <p class="ssub">Performance is reviewed weekly. We show example tickets, settled picks and final outcomes so customers understand the record before following the next prediction.</p>
-    <div class="track-note fu">
-      <div><strong>Weekly performance update</strong><span>Accuracy, streak and recent results are reviewed every week after settled matches are checked.</span></div>
-      <div><strong>Major football only</strong><span>Records focus on the same EPL, UCL and international matches shown on the homepage.</span></div>
-      <div><strong>Ticket examples only</strong><span>Example stakes and returns show how picks can look on a slip. Real odds and platform tickets can differ.</span></div>
-    </div>
-    <div class="ticket-grid fu">
-      <article class="ticket-card win">
-        <div class="ticket-top"><span>Demo Ticket</span><strong>WIN</strong></div>
-        <div class="ticket-match">Arsenal vs Atletico Madrid</div>
-        <div class="ticket-pick">Pick: Arsenal Win</div>
-        <div class="ticket-row"><span>Stake</span><b>RM100</b></div>
-        <div class="ticket-row"><span>Odds</span><b>2.25</b></div>
-        <div class="ticket-row return"><span>Return</span><b>RM225.00</b></div>
-      </article>
-      <article class="ticket-card win">
-        <div class="ticket-top"><span>Demo Ticket</span><strong>WIN</strong></div>
-        <div class="ticket-match">Bayern München vs PSG</div>
-        <div class="ticket-pick">Pick: Draw</div>
-        <div class="ticket-row"><span>Stake</span><b>RM80</b></div>
-        <div class="ticket-row"><span>Odds</span><b>3.10</b></div>
-        <div class="ticket-row return"><span>Return</span><b>RM248.00</b></div>
-      </article>
-      <article class="ticket-card win">
-        <div class="ticket-top"><span>Demo Ticket</span><strong>WIN</strong></div>
-        <div class="ticket-match">Torino vs Sassuolo</div>
-        <div class="ticket-pick">Pick: Torino Win</div>
-        <div class="ticket-row"><span>Stake</span><b>RM150</b></div>
-        <div class="ticket-row"><span>Odds</span><b>1.92</b></div>
-        <div class="ticket-row return"><span>Return</span><b>RM288.00</b></div>
-      </article>
-      <article class="ticket-card pending">
-        <div class="ticket-top"><span>Demo Ticket</span><strong>PENDING</strong></div>
-        <div class="ticket-match">Premier League Feature</div>
-        <div class="ticket-pick">Pick: Home Win</div>
-        <div class="ticket-row"><span>Stake</span><b>RM50</b></div>
-        <div class="ticket-row"><span>Odds</span><b>2.05</b></div>
-        <div class="ticket-row return"><span>Possible Return</span><b>RM102.50</b></div>
-      </article>
-      <article class="ticket-card lost">
-        <div class="ticket-top"><span>Demo Ticket</span><strong>LOSS</strong></div>
-        <div class="ticket-match">Bundesliga Feature</div>
-        <div class="ticket-pick">Pick: Away Win</div>
-        <div class="ticket-row"><span>Stake</span><b>RM60</b></div>
-        <div class="ticket-row"><span>Odds</span><b>2.40</b></div>
-        <div class="ticket-row return"><span>Return</span><b>RM0.00</b></div>
-      </article>
-    </div>
-    <style>
-      .ticket-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin:18px 0;}
-      .ticket-card{background:rgba(255,255,255,.035);border:1px solid rgba(249,115,22,.22);border-radius:8px;padding:14px;box-shadow:0 12px 32px rgba(0,0,0,.22);}
-      .ticket-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;font-family:var(--fm);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;}
-      .ticket-top strong{color:var(--green);background:rgba(0,229,160,.10);border:1px solid rgba(0,229,160,.22);border-radius:3px;padding:3px 6px;}
-      .ticket-card.pending .ticket-top strong{color:var(--amber);background:rgba(245,166,35,.10);border-color:rgba(245,166,35,.24);}
-      .ticket-card.lost .ticket-top strong{color:var(--red);background:rgba(255,71,87,.10);border-color:rgba(255,71,87,.24);}
-      .ticket-match{font-family:var(--ff);font-size:18px;font-weight:800;line-height:1.1;color:var(--text);margin-bottom:8px;}
-      .ticket-pick{font-size:12px;line-height:1.45;color:var(--accent);background:rgba(249,115,22,.07);border:1px solid rgba(249,115,22,.18);border-radius:5px;padding:7px 8px;margin-bottom:10px;}
-      .ticket-row{display:flex;align-items:center;justify-content:space-between;font-family:var(--fm);font-size:10px;color:var(--text3);padding:5px 0;border-bottom:1px solid rgba(255,255,255,.06);}
-      .ticket-row b{font-family:var(--ff);font-size:14px;color:var(--text);}
-      .ticket-row.return{border-bottom:0;}
-      .ticket-row.return b{color:var(--amber);}
-      @media(max-width:1180px){.ticket-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
-      @media(max-width:760px){.ticket-grid{grid-template-columns:1fr;}}
-    </style>
-    <div class="agrid fu" id="tr-stats">
-      <!-- populated from /api/track-record -->
-      <div class="ac"><div class="acv">—</div><div class="acl">Overall</div><div class="act">Loading</div></div>
-      <div class="ac"><div class="acv">—</div><div class="acl">Soccer Picks</div><div class="act">Loading</div></div>
-      <div class="ac"><div class="acv">0</div><div class="acl">Win Streak</div><div class="act">Current</div></div>
-    </div>
-    <div class="twrap fu">
-      <table class="ht">
-        <thead><tr><th>Date (MYT)</th><th>Sport</th><th>Match</th><th>Our Pick</th><th>Result</th><th>Outcome</th></tr></thead>
-        <tbody id="tr-rows">
-          <tr><td colspan="6" style="text-align:center;padding:28px;color:var(--text3);font-family:var(--fm);font-size:11px;letter-spacing:.05em;">Loading track record…</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <script>
-    (function(){
-      fetch('/api/track-record').then(r => r.ok ? r.json() : null).then(d => {
-        if (!d) return;
-        const pctOrDash = p => p == null ? '—' : p + '%';
-        const stats = [
-          { v: pctOrDash(d.overall.pct), l: 'Overall', t: d.overall.count ? `${d.overall.count} picks logged` : 'Building record' },
-          { v: pctOrDash(d.football.pct), l: 'Soccer Picks', t: d.football.count ? `${d.football.count} picks` : 'No data yet' },
-          { v: String(d.winStreak || 0), l: 'Win Streak', t: 'Current' },
-        ];
-        const statsEl = document.getElementById('tr-stats');
-        if (statsEl) statsEl.innerHTML = stats.map(s =>
-          `<div class="ac"><div class="acv">${s.v}</div><div class="acl">${s.l}</div><div class="act">${s.t}</div></div>`
-        ).join('');
-
-        const rowsEl = document.getElementById('tr-rows');
-        if (!rowsEl) return;
-        if (!d.recent || !d.recent.length) {
-          rowsEl.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:28px;color:var(--text3);font-family:var(--fm);font-size:11px;letter-spacing:.05em;">Building record — first result lands after today's match finishes.</td></tr>`;
-          return;
-        }
-        const esc = s => String(s ?? '').replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
-        rowsEl.innerHTML = d.recent.map(m => {
-          const emoji = '⚽';
-          const outcome = m.correct === true
-            ? '<span class="rwin">WIN ✓</span>'
-            : m.correct === false
-              ? '<span class="rloss">LOSS ✗</span>'
-              : '<span class="rlive">PENDING</span>';
-          return `<tr>
-            <td style="font-family:var(--fm);font-size:10px;color:var(--text3)">${esc(m.date)}</td>
-            <td>${emoji}</td>
-            <td>${esc(m.match)}</td>
-            <td>${esc(m.pick)}</td>
-            <td style="font-family:var(--fm)">${esc(m.score)}</td>
-            <td>${outcome}</td>
-          </tr>`;
-        }).join('');
-      }).catch(()=>{});
-    })();
-    </script>
-  </div>
-</section>
 
 <section id="blog" style="position:relative;z-index:1;background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
   <div class="sec">
@@ -1987,7 +1926,7 @@ footer{
     <h2 class="stitle">Frequently Asked Questions</h2>
     <p class="ssub">Everything you need to know about ScoreOcs8</p>
     <div class="faqlist fu">
-      <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">How accurate are ScoreOcs8 predictions? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">Our pro analysis record shows 87% overall accuracy. All predictions are logged and results published publicly in our Track Record section. We only cover major soccer leagues — English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup.</div></div></div>
+      <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">How accurate are ScoreOcs8 predictions? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">Our pro analysis record shows 87% overall accuracy. All predictions are logged and results published publicly. We only cover major soccer leagues — English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup.</div></div></div>
       <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">What leagues does ScoreOcs8 cover? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup qualifying and finals. We do not cover small or lower-league competitions.</div></div></div>
       <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">Where do I register or login? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">Registration and login happen on the official OCS8 money-site domain. ScoreOcs8 is the prediction and alert site, so use our Register buttons to open OCS8 when you want to create an account or place a bet.</div></div></div>
       <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">What timezone are all match times shown in? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">All times on ScoreOcs8 are displayed in Asia/Kuala Lumpur time (MYT, UTC+8). The live clock in the nav bar always shows current MYT time so you never miss a kick-off.</div></div></div>
@@ -2019,7 +1958,7 @@ footer{
 <a href="https://facebook.com/scoreocs8" target="_blank" rel="noopener" class="fsi" aria-label="Facebook" title="Facebook /scoreocs8"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
 </div></div>
       <div class="fcol"><div class="fct">Quick Links</div><ul><li><a href="/">Home</a></li><li><a href="/predictions/">Match Prediction</a></li><li><a href="/blog/">Blog</a></li><li><a href="#faq">FAQ</a></li></ul></div>
-      <div class="fcol"><div class="fct">Resources</div><ul><li><a href="/blog/">Latest Articles</a></li><li><a href="#history">Accuracy Stats</a></li><li><a href="#highlights">Match Schedule</a></li><li><a href="#" onclick="event.preventDefault();openHiw();">How It Works</a></li></ul></div>
+      <div class="fcol"><div class="fct">Resources</div><ul><li><a href="/blog/">Latest Articles</a></li><li><a href="#highlights">Match Schedule</a></li><li><a href="#" onclick="event.preventDefault();openHiw();">How It Works</a></li></ul></div>
       <div class="fcol"><div class="fct">Connect</div><ul><li><a href="https://t.me/scoreocs8" target="_blank" rel="noopener">Telegram @scoreocs8</a></li><li><a href="https://instagram.com/scoreocs8" target="_blank" rel="noopener">Instagram</a></li><li><a href="https://x.com/scoreocs8" target="_blank" rel="noopener">X / Twitter</a></li><li><a href="https://threads.net/@scoreocs8" target="_blank" rel="noopener">Threads</a></li><li><a href="https://tiktok.com/@scoreocs8" target="_blank" rel="noopener">TikTok</a></li></ul></div>
     </div>
     <div class="seob">
@@ -2295,7 +2234,7 @@ const SCOREOCS8_I18N = {
       faqTitle: 'Frequently Asked Questions',
       faqSub: 'Everything you need to know about ScoreOcs8',
       faq1q: 'How accurate are ScoreOcs8 predictions? ▼',
-      faq1a: 'Our pro analysis record shows 87% overall accuracy. All predictions are logged and results published publicly in our Track Record section. We only cover major soccer leagues — English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup.',
+      faq1a: 'Our pro analysis record shows 87% overall accuracy. All predictions are logged and results published publicly. We only cover major soccer leagues — English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup.',
       faq2q: 'What leagues does ScoreOcs8 cover? ▼',
       faq2a: 'English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup qualifying and finals. We do not cover small or lower-league competitions.',
       faq3q: 'Where do I register or login? ▼',
@@ -2408,7 +2347,7 @@ const SCOREOCS8_I18N = {
       faqTitle: 'Soalan Lazim',
       faqSub: 'Semua yang anda perlu tahu tentang ScoreOcs8',
       faq1q: 'Sejauh mana tepat ramalan ScoreOcs8? ▼',
-      faq1a: 'Rekod analisis pro kami menunjukkan 87% ketepatan keseluruhan. Semua ramalan direkod dan keputusan dipaparkan secara publik dalam bahagian Track Record. Kami hanya meliputi liga bola sepak utama — English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 dan FIFA World Cup.',
+      faq1a: 'Rekod analisis pro kami menunjukkan 87% ketepatan keseluruhan. Semua ramalan direkod dan keputusan dipaparkan secara publik. Kami hanya meliputi liga bola sepak utama — English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 dan FIFA World Cup.',
       faq2q: 'Liga apa yang ScoreOcs8 cover? ▼',
       faq2a: 'English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 serta kelayakan dan final FIFA World Cup. Kami tidak cover liga kecil atau divisyen rendah.',
       faq3q: 'Di mana saya daftar atau login? ▼',
@@ -2521,7 +2460,7 @@ const SCOREOCS8_I18N = {
       faqTitle: '常见问题',
       faqSub: '你需要了解 ScoreOcs8 的所有重点',
       faq1q: 'ScoreOcs8 预测有多准确？ ▼',
-      faq1a: '我们的专业分析记录显示整体准确率为 87%。所有预测都会记录，结果也会公开在 Track Record 区块。我们只覆盖主要足球联赛 — English Premier League、UEFA Champions League、La Liga、Serie A、Bundesliga、Ligue 1 和 FIFA World Cup。',
+      faq1a: '我们的专业分析记录显示整体准确率为 87%。所有预测都会记录，结果也会公开。我们只覆盖主要足球联赛 — English Premier League、UEFA Champions League、La Liga、Serie A、Bundesliga、Ligue 1 和 FIFA World Cup。',
       faq2q: 'ScoreOcs8 覆盖哪些联赛？ ▼',
       faq2a: 'English Premier League、UEFA Champions League、La Liga、Serie A、Bundesliga、Ligue 1 以及 FIFA World Cup 资格赛和决赛。我们不覆盖小联赛或低级别赛事。',
       faq3q: '我要在哪里注册或登录？ ▼',
@@ -2625,11 +2564,6 @@ function setLang(lang) {
   i18nSetText('#testimonials .stag', d.customerProof);
   i18nSetText('#testimonials .stitle', d.usersSay);
   i18nSetText('#testimonials .ssub', d.usersSaySub);
-  i18nSetText('#history .stag', d.transparency);
-  i18nSetText('#history .stitle', d.trackTitle);
-  i18nSetText('#history .ssub', d.trackSub);
-  i18nSetAll('#history .track-note strong', [d.weekly, d.majorOnly, d.ticketOnly]);
-  i18nSetAll('#history .track-note span', [d.weeklyD, d.majorOnlyD, d.ticketOnlyD]);
   i18nSetText('#blog .stag', d.blogTag);
   i18nSetText('#blog .stitle', d.blogTitle);
   i18nSetText('#blog .ssub', d.blogSub);
@@ -3387,20 +3321,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const predictions = document.getElementById('predictions');
   const schedule = document.getElementById('highlights');
   const slips = document.getElementById('slips');
-  const history = document.getElementById('history');
   const blog = document.getElementById('blog');
   const faq = document.getElementById('faq');
   const why = document.getElementById('why-scoreocs8');
   const insights = document.getElementById('insights');
-  const proof = document.querySelector('.proof-panel');
 
   if (intro && schedule) intro.after(schedule);
   if (schedule && predictions) schedule.after(predictions);
-  if (proof && history) {
-    proof.classList.add('trust-bottom');
-    history.after(proof);
-  }
-  if (slips && history && slips.nextElementSibling !== history) slips.after(history);
   if (faq && insights) faq.before(insights);
   if (faq && why) faq.before(why);
   if (blog && why && blog.nextElementSibling !== why) blog.after(why);
