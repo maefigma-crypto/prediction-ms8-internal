@@ -65,6 +65,42 @@ export async function onRequest(context) {
   const venue = fx?.fixture?.venue?.name || '';
   const venueCity = fx?.fixture?.venue?.city || '';
 
+  // Scoreboard state — derived from API-Football status codes.
+  // Finished: FT/AET/PEN. Live: 1H/2H/HT/ET/BT/P/LIVE (elapsed minute may be set).
+  // Not started: NS/TBD. Anything else falls back to the long status text.
+  const statusShort = fx?.fixture?.status?.short || '';
+  const statusLong = fx?.fixture?.status?.long || '';
+  const elapsed = fx?.fixture?.status?.elapsed;
+  const homeScore = fx?.goals?.home;
+  const awayScore = fx?.goals?.away;
+  const FINISHED = new Set(['FT', 'AET', 'PEN']);
+  const LIVE = new Set(['1H', '2H', 'HT', 'ET', 'BT', 'P', 'LIVE']);
+  const hasScore = homeScore != null && awayScore != null;
+  let stateLabel, stateSub, stateCls;
+  const shortDate = fx?.fixture?.date
+    ? new Date(fx.fixture.date).toLocaleDateString('en-GB', { timeZone: 'Asia/Kuala_Lumpur', day: 'numeric', month: 'short' })
+    : '';
+  if (FINISHED.has(statusShort)) {
+    stateLabel = 'Final';
+    stateSub = statusShort === 'FT' ? shortDate : `${statusShort} · ${shortDate}`;
+    stateCls = 'final';
+  } else if (LIVE.has(statusShort)) {
+    stateLabel = 'Live';
+    stateSub = elapsed != null ? `${elapsed}'` : (statusLong || statusShort);
+    stateCls = 'live';
+  } else if (statusShort === 'NS' || statusShort === 'TBD' || !statusShort) {
+    stateLabel = 'Kickoff';
+    stateSub = shortDate || 'TBD';
+    stateCls = 'upcoming';
+  } else {
+    stateLabel = statusShort;
+    stateSub = statusLong || shortDate;
+    stateCls = 'other';
+  }
+  const showScore = hasScore && (FINISHED.has(statusShort) || LIVE.has(statusShort));
+  const homeScoreDisplay = showScore ? homeScore : '–';
+  const awayScoreDisplay = showScore ? awayScore : '–';
+
   const expectedSlug = slugify(`${home}-vs-${away}`);
   const canonicalSlug = expectedSlug ? `${fixtureId}-${expectedSlug}` : `${fixtureId}`;
   const canonical = `${SITE}/match/${canonicalSlug}/`;
@@ -221,11 +257,23 @@ body::before{content:'';position:fixed;inset:0;z-index:-2;pointer-events:none;ba
 h1{font-family:var(--ff);font-size:42px;font-weight:700;line-height:1.05;letter-spacing:.01em;text-transform:uppercase;margin-bottom:14px;}
 h1 .vs{color:var(--text3);margin:0 14px;font-weight:500;}
 .kickoff{font-family:var(--fm);font-size:13px;color:var(--text2);letter-spacing:.04em;margin-bottom:24px;}
-.teams{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:18px;margin-bottom:22px;}
-.team{text-align:center;}
-.team img{width:80px;height:80px;object-fit:contain;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);padding:8px;}
-.team .nm{font-family:var(--ff);font-size:20px;font-weight:600;margin-top:10px;}
-.vsbox{font-family:var(--ff);font-size:36px;font-weight:700;color:var(--text3);}
+.scoreboard{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:18px;margin-bottom:22px;padding:18px 8px;border-radius:16px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);}
+.sb-team{display:flex;align-items:center;gap:14px;min-width:0;}
+.sb-team.sb-home{justify-content:flex-end;text-align:right;}
+.sb-team.sb-away{justify-content:flex-start;text-align:left;}
+.sb-crest{width:64px;height:64px;object-fit:contain;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);padding:6px;flex-shrink:0;}
+.sb-meta{min-width:0;}
+.sb-name{font-family:var(--ff);font-size:20px;font-weight:600;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-center{display:grid;grid-template-columns:auto auto auto;align-items:center;gap:14px;padding:0 6px;}
+.sb-score{font-family:var(--ff);font-size:48px;font-weight:700;line-height:1;color:var(--text);letter-spacing:.02em;min-width:48px;text-align:center;}
+.sb-score.sb-pending{color:var(--text3);font-size:36px;}
+.sb-state{text-align:center;font-family:var(--fm);}
+.sb-state-label{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--text2);font-weight:600;}
+.sb-state-sub{font-size:12px;color:var(--text3);margin-top:4px;letter-spacing:.04em;}
+.sb-state.live .sb-state-label{color:var(--green);}
+.sb-state.live .sb-state-label::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:6px;vertical-align:middle;box-shadow:0 0 8px var(--green);animation:sb-pulse 1.5s ease-in-out infinite;}
+.sb-state.final .sb-state-label{color:var(--accent);}
+@keyframes sb-pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
 .pick-card{padding:20px 22px;border-radius:16px;background:linear-gradient(135deg,rgba(249,115,22,0.18),rgba(249,115,22,0.04));border:1px solid rgba(249,115,22,0.32);box-shadow:inset 0 1px 0 rgba(255,255,255,0.10),0 0 30px rgba(249,115,22,0.18);}
 .pick-card .label{font-family:var(--fm);font-size:10px;color:var(--text3);letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px;}
 .pick-card .pick{font-family:var(--ff);font-size:26px;font-weight:700;color:var(--accent);letter-spacing:.04em;}
@@ -259,9 +307,15 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
   .wrap{padding:100px 14px 40px;}
   h1{font-size:30px;}
   h1 .vs{display:block;margin:8px 0;}
-  .team img{width:60px;height:60px;}
-  .team .nm{font-size:16px;}
-  .vsbox{font-size:24px;}
+  .scoreboard{gap:8px;padding:14px 4px;}
+  .sb-team{gap:8px;}
+  .sb-crest{width:44px;height:44px;padding:4px;}
+  .sb-name{font-size:14px;}
+  .sb-center{gap:8px;padding:0 2px;}
+  .sb-score{font-size:34px;min-width:34px;}
+  .sb-score.sb-pending{font-size:26px;}
+  .sb-state-label{font-size:10px;letter-spacing:.10em;}
+  .sb-state-sub{font-size:11px;}
   .pick-card .pick{font-size:22px;}
   .h2h-summary{grid-template-columns:1fr;}
 }
@@ -286,15 +340,22 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
     <h1>${esc(home)}<span class="vs">vs</span>${esc(away)}</h1>
     <div class="kickoff">⏰ Kickoff: ${esc(kickoff || 'TBD')}${venue ? ` · 🏟 ${esc(venue)}${venueCity ? ', ' + esc(venueCity) : ''}` : ''}</div>
 
-    <div class="teams">
-      <div class="team">
-        ${homeLogo ? `<img src="${esc(homeLogo)}" alt="${esc(home)} logo" loading="eager">` : '<div class="team-fallback">⚽</div>'}
-        <div class="nm">${esc(home)}</div>
+    <div class="scoreboard" role="group" aria-label="${esc(home)} ${showScore ? homeScore + '-' + awayScore : 'vs'} ${esc(away)}, ${esc(stateLabel)}">
+      <div class="sb-team sb-home">
+        <div class="sb-meta"><div class="sb-name">${esc(home)}</div></div>
+        ${homeLogo ? `<img class="sb-crest" src="${esc(homeLogo)}" alt="${esc(home)} crest" loading="eager">` : '<div class="sb-crest" aria-hidden="true">⚽</div>'}
       </div>
-      <div class="vsbox">VS</div>
-      <div class="team">
-        ${awayLogo ? `<img src="${esc(awayLogo)}" alt="${esc(away)} logo" loading="eager">` : '<div class="team-fallback">⚽</div>'}
-        <div class="nm">${esc(away)}</div>
+      <div class="sb-center">
+        <div class="sb-score${showScore ? '' : ' sb-pending'}">${esc(homeScoreDisplay)}</div>
+        <div class="sb-state ${stateCls}">
+          <div class="sb-state-label">${esc(stateLabel)}</div>
+          <div class="sb-state-sub">${esc(stateSub)}</div>
+        </div>
+        <div class="sb-score${showScore ? '' : ' sb-pending'}">${esc(awayScoreDisplay)}</div>
+      </div>
+      <div class="sb-team sb-away">
+        ${awayLogo ? `<img class="sb-crest" src="${esc(awayLogo)}" alt="${esc(away)} crest" loading="eager">` : '<div class="sb-crest" aria-hidden="true">⚽</div>'}
+        <div class="sb-meta"><div class="sb-name">${esc(away)}</div></div>
       </div>
     </div>
 
