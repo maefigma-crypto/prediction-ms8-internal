@@ -208,7 +208,7 @@ export async function onRequest(context) {
   const h2hRowsRich = h2h.map(row => {
     const date = row.date ? new Date(row.date).toLocaleDateString('en-GB', { timeZone:'Asia/Kuala_Lumpur', day:'2-digit', month:'short', year:'numeric' }) : '';
     const outcome = h2hOutcome(row);
-    return `<tr><td>${esc(date)}</td><td><div class="h2h-matchline">${logoImg(row.home_logo, row.home)}<span>${esc(row.home)} ${esc(row.score_home)}-${esc(row.score_away)} ${esc(row.away)}</span>${logoImg(row.away_logo, row.away)}</div></td><td>${esc(row.league || '')}</td><td><span class="h2h-result ${outcome.cls}">${esc(outcome.label)}</span></td></tr>`;
+    return `<tr><td>${esc(date)}</td><td><div class="h2h-matchline">${logoImg(row.home_logo, row.home)}<span>${esc(row.home)} ${esc(row.score_home)}-${esc(row.score_away)} ${esc(row.away)}</span>${logoImg(row.away_logo, row.away)}</div></td><td class="hide-mobile">${esc(row.league || '')}</td><td><span class="h2h-result ${outcome.cls}">${esc(outcome.label)}</span></td></tr>`;
   }).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text3)">No head-to-head record available yet.</td></tr>';
 
   const statRow = (label) => {
@@ -312,6 +312,8 @@ h1 .vs{color:var(--text3);margin:0 14px;font-weight:500;}
 .h2h-result.win{color:var(--green);background:rgba(0,229,160,.10);border:1px solid rgba(0,229,160,.24);}
 .h2h-result.loss{color:var(--red);background:rgba(255,71,87,.10);border:1px solid rgba(255,71,87,.24);}
 .h2h-result.draw{color:var(--amber);background:rgba(245,166,35,.10);border:1px solid rgba(245,166,35,.24);}
+.table-scroll{width:100%;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.table-scroll table{min-width:520px;}
 table{width:100%;border-collapse:collapse;font-size:14px;}
 table td,table th{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.06);text-align:left;}
 table th{font-family:var(--fm);font-size:10px;color:var(--text3);letter-spacing:.10em;text-transform:uppercase;font-weight:500;}
@@ -337,6 +339,10 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
   .sb-state-sub{font-size:11px;}
   .pick-card .pick{font-size:22px;}
   .h2h-summary{grid-template-columns:1fr;}
+  .hide-mobile{display:none !important;}
+  .table-scroll table{min-width:360px;}
+  .h2h-matchline{flex-wrap:wrap;gap:6px;font-size:13px;}
+  .h2h-logo{width:22px;height:22px;}
 }
 </style>
 </head>
@@ -400,10 +406,12 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
       <div class="h2h-stat"><strong>${esc(summary.draws ?? 0)}</strong><span>Draws</span></div>
       <div class="h2h-stat"><strong>${esc(summary.awayWins ?? 0)}</strong><span>${esc(away)} wins</span></div>
     </div>
-    <table>
-      <thead><tr><th>Date</th><th>Match</th><th>Competition</th><th>Outcome</th></tr></thead>
-      <tbody>${h2hRowsRich}</tbody>
-    </table>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Date</th><th>Match</th><th class="hide-mobile">Competition</th><th>Outcome</th></tr></thead>
+        <tbody>${h2hRowsRich}</tbody>
+      </table>
+    </div>
   </section>
 
   ${stats.length ? `
