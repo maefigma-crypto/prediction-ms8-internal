@@ -39,6 +39,9 @@ function json(body, status = 200, extraHeaders = {}) {
 }
 
 async function cached(env, key, ttl, fetcher, opts = {}) {
+  // Preview deploys may run without a KV binding — fall back to a direct
+  // fetch so the API still works (uncached). Production has CACHE bound.
+  if (!env?.CACHE) return { data: await fetcher(), source: 'nocache' };
   if (!opts.refresh) {
     const hit = await env.CACHE.get(key, 'json');
     if (hit) return { data: hit, source: 'kv' };
