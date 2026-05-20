@@ -39,9 +39,6 @@ function json(body, status = 200, extraHeaders = {}) {
 }
 
 async function cached(env, key, ttl, fetcher, opts = {}) {
-  // Preview deploys may run without a KV binding — fall back to a direct
-  // fetch so the API still works (uncached). Production has CACHE bound.
-  if (!env?.CACHE) return { data: await fetcher(), source: 'nocache' };
   if (!opts.refresh) {
     const hit = await env.CACHE.get(key, 'json');
     if (hit) return { data: hit, source: 'kv' };
@@ -173,9 +170,7 @@ async function handlePredictions(env, url) {
   const fixtureId = url.searchParams.get('fixture_id');
   if (!fixtureId) return { error: 'fixture_id required', status: 400 };
 
-  // API-Football's /fixtures?id=X returns empty on some plan tiers — pass
-  // season to avoid the 'fixture not found' from a bare id lookup.
-  const fixtureData = await afGet(env, '/fixtures', { id: fixtureId, season: DEFAULT_SEASON });
+  const fixtureData = await afGet(env, '/fixtures', { id: fixtureId });
   const fx = fixtureData.response?.[0];
   if (!fx) throw new Error('fixture not found');
 
@@ -213,22 +208,16 @@ async function handleMatchDetail(env, url) {
   const fixtureId = url.searchParams.get('fixture_id');
   if (!fixtureId) return { error: 'fixture_id required', status: 400 };
 
-  // v2: extends payload with /fixtures/events for the Match Timeline strip.
-  // Cache-key bump prevents v1-cached entries (no events) from blocking the
-  // new section until TTL naturally expires.
-  return cached(env, `match-detail:v2:${fixtureId}`, TTL.matchDetail, async () => {
-    // Same id+season pairing — API-Football's bare ?id= lookup returns
-    // empty on the renewed plan; adding season makes it resolve.
-    const fixtureData = await afGet(env, '/fixtures', { id: fixtureId, season: DEFAULT_SEASON });
+  return cached(env, `match-detail:${fixtureId}`, TTL.matchDetail, async () => {
+    const fixtureData = await afGet(env, '/fixtures', { id: fixtureId });
     const fx = fixtureData.response?.[0];
     if (!fx) throw new Error('fixture not found');
 
     const home = fx.teams.home.id;
     const away = fx.teams.away.id;
-    const [h2hData, statsData, eventsData] = await Promise.all([
+    const [h2hData, statsData] = await Promise.all([
       afGet(env, '/fixtures/headtohead', { h2h: `${home}-${away}`, last: 8 }),
       afGet(env, '/fixtures/statistics', { fixture: fixtureId }).catch(() => ({ response: [] })),
-      afGet(env, '/fixtures/events', { fixture: fixtureId }).catch(() => ({ response: [] })),
     ]);
 
     const h2h = h2hData.response || [];
@@ -261,16 +250,6 @@ async function handleMatchDetail(env, url) {
         status: m.fixture?.status?.short,
       })),
       statistics: statsData.response || [],
-      events: (eventsData.response || []).map(ev => ({
-        minute: ev.time?.elapsed ?? null,
-        extra: ev.time?.extra ?? null,
-        team_id: ev.team?.id ?? null,
-        team_name: ev.team?.name || '',
-        player: ev.player?.name || '',
-        assist: ev.assist?.name || '',
-        type: String(ev.type || ''),
-        detail: String(ev.detail || ''),
-      })),
     };
   });
 }
