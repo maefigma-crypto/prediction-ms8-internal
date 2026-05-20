@@ -119,6 +119,48 @@ export async function onRequest(context) {
     awayRecord = fmt(awayId);
   }
 
+  // Match Timeline — events from API-Football mapped to icon/side/minute.
+  // Each event positioned along the track at minute / 95 * 100% so live and
+  // finished games look proportional; stoppage events sit at the right edge.
+  const rawEvents = Array.isArray(detail?.events) ? detail.events : [];
+  const eventIcon = (type, detail) => {
+    const t = String(type || '').toLowerCase();
+    const d = String(detail || '').toLowerCase();
+    if (t === 'goal') {
+      if (d.includes('own')) return { sym: '⚽', cls: 'own', label: 'Own goal' };
+      if (d.includes('penalty') && !d.includes('missed')) return { sym: '⚽', cls: 'pen', label: 'Penalty' };
+      if (d.includes('missed')) return { sym: '✗', cls: 'miss', label: 'Missed penalty' };
+      return { sym: '⚽', cls: 'goal', label: 'Goal' };
+    }
+    if (t === 'card') {
+      if (d.includes('red')) return { sym: '🟥', cls: 'red', label: 'Red card' };
+      if (d.includes('second yellow')) return { sym: '🟨🟥', cls: 'red', label: 'Second yellow' };
+      return { sym: '🟨', cls: 'yellow', label: 'Yellow card' };
+    }
+    if (t === 'subst') return { sym: '🔄', cls: 'sub', label: 'Substitution' };
+    if (t === 'var') return { sym: '📺', cls: 'var', label: 'VAR' };
+    return { sym: '•', cls: 'other', label: type || 'Event' };
+  };
+  const timelineEvents = rawEvents
+    .filter(e => e.minute != null && e.team_id)
+    .map(e => {
+      const fullMin = (e.minute || 0) + (e.extra || 0);
+      const pct = Math.max(0, Math.min(100, (fullMin / 95) * 100));
+      const ic = eventIcon(e.type, e.detail);
+      const minLabel = e.extra ? `${e.minute}+${e.extra}'` : `${e.minute}'`;
+      return {
+        side: e.team_id === homeId ? 'home' : 'away',
+        pct,
+        minLabel,
+        sym: ic.sym,
+        cls: ic.cls,
+        label: ic.label,
+        player: e.player || '',
+        assist: e.assist || '',
+      };
+    })
+    .sort((a, b) => parseInt(a.minLabel) - parseInt(b.minLabel));
+
   const expectedSlug = slugify(`${home}-vs-${away}`);
   const canonicalSlug = expectedSlug ? `${fixtureId}-${expectedSlug}` : `${fixtureId}`;
   const canonical = `${SITE}/match/${canonicalSlug}/`;
@@ -293,6 +335,23 @@ h1 .vs{color:var(--text3);margin:0 14px;font-weight:500;}
 .sb-state.live .sb-state-label::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:6px;vertical-align:middle;box-shadow:0 0 8px var(--green);animation:sb-pulse 1.5s ease-in-out infinite;}
 .sb-state.final .sb-state-label{color:var(--accent);}
 @keyframes sb-pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+.tl-wrap{display:flex;align-items:stretch;gap:14px;overflow-x:auto;padding:8px 4px 4px;-webkit-overflow-scrolling:touch;}
+.tl-crests{display:flex;flex-direction:column;justify-content:space-between;width:34px;flex-shrink:0;padding:6px 0;}
+.tl-crests img{width:30px;height:30px;object-fit:contain;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);padding:3px;}
+.tl-track{position:relative;flex:1;min-width:520px;min-height:118px;}
+.tl-line{position:absolute;top:50%;left:0;right:42px;height:2px;background:linear-gradient(90deg,rgba(0,229,160,.10),rgba(0,229,160,.55),rgba(0,229,160,.10));transform:translateY(-1px);}
+.tl-event{position:absolute;transform:translateX(-50%);text-align:center;width:36px;}
+.tl-event.tl-home{top:6px;}
+.tl-event.tl-away{bottom:6px;}
+.tl-min{font-family:var(--fm);font-size:10px;color:var(--text3);letter-spacing:.04em;margin-top:2px;}
+.tl-event.tl-away .tl-min{margin-top:0;margin-bottom:2px;order:-1;display:block;}
+.tl-icon{font-size:16px;line-height:1;display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);}
+.tl-icon.red{background:rgba(255,71,87,.16);border-color:rgba(255,71,87,.40);}
+.tl-icon.yellow{background:rgba(245,166,35,.14);border-color:rgba(245,166,35,.34);}
+.tl-icon.own{background:rgba(255,71,87,.10);border-color:rgba(255,71,87,.30);}
+.tl-icon.pen{background:rgba(0,229,160,.10);border-color:rgba(0,229,160,.30);}
+.tl-ft{position:absolute;top:50%;right:0;transform:translateY(-50%);padding:5px 9px;border-radius:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);font-family:var(--fm);font-size:10px;letter-spacing:.10em;text-transform:uppercase;color:var(--text2);}
+.tl-empty{padding:18px;text-align:center;color:var(--text3);font-family:var(--fm);font-size:11px;letter-spacing:.06em;}
 .pick-card{padding:20px 22px;border-radius:16px;background:linear-gradient(135deg,rgba(249,115,22,0.18),rgba(249,115,22,0.04));border:1px solid rgba(249,115,22,0.32);box-shadow:inset 0 1px 0 rgba(255,255,255,0.10),0 0 30px rgba(249,115,22,0.18);}
 .pick-card .label{font-family:var(--fm);font-size:10px;color:var(--text3);letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px;}
 .pick-card .pick{font-family:var(--ff);font-size:26px;font-weight:700;color:var(--accent);letter-spacing:.04em;}
@@ -343,6 +402,9 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
   .table-scroll table{min-width:360px;}
   .h2h-matchline{flex-wrap:wrap;gap:6px;font-size:13px;}
   .h2h-logo{width:22px;height:22px;}
+  .tl-track{min-width:480px;}
+  .tl-event{width:32px;}
+  .tl-icon{width:22px;height:22px;font-size:14px;}
 }
 </style>
 </head>
@@ -398,6 +460,22 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
       ${reason ? `<div class="pick-reason">${esc(reason)}</div>` : ''}
     </div>
   </article>
+
+  ${timelineEvents.length ? `
+  <section class="section">
+    <h2>Match Timeline <small>· ${timelineEvents.length} event${timelineEvents.length === 1 ? '' : 's'}</small></h2>
+    <div class="tl-wrap">
+      <div class="tl-crests">
+        ${homeLogo ? `<img src="${esc(homeLogo)}" alt="${esc(home)} crest" loading="lazy">` : '<span aria-hidden="true">⚽</span>'}
+        ${awayLogo ? `<img src="${esc(awayLogo)}" alt="${esc(away)} crest" loading="lazy">` : '<span aria-hidden="true">⚽</span>'}
+      </div>
+      <div class="tl-track" role="list" aria-label="Match events timeline">
+        <div class="tl-line" aria-hidden="true"></div>
+        ${timelineEvents.map(e => `<div class="tl-event tl-${e.side}" style="left:${e.pct.toFixed(2)}%" role="listitem" title="${esc(e.minLabel)} — ${esc(e.label)}${e.player ? ' · ' + esc(e.player) : ''}${e.assist ? ' (assist: ' + esc(e.assist) + ')' : ''}"><span class="tl-icon ${e.cls}" aria-hidden="true">${e.sym}</span><span class="tl-min">${esc(e.minLabel)}</span></div>`).join('')}
+        ${FINISHED.has(statusShort) ? `<div class="tl-ft" aria-label="Full time">${esc(statusShort)}</div>` : ''}
+      </div>
+    </div>
+  </section>` : ''}
 
   <section class="section">
     <h2>Head-to-head <small>· last ${h2h.length || 0} meetings</small></h2>
