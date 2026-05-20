@@ -623,36 +623,41 @@ function firstPickLine(item) {
 
 const SPORTSBOOK_TEMPLATE_KEYS = ['prediction', 'upcoming', 'reminder', 'result', 'proof', 'blog'];
 
+// Affiliate signup URL — appended via {signupCta} to every default template
+// and exposed as a placeholder so user-customized templates can reuse it.
+const SIGNUP_URL = 'https://ocs8my.com/signup?ref=OCSFMZ6HVI';
+const SIGNUP_CTA = `🆕 Sign up · OCS8 Sports · 立即注册:\n🔗 ${SIGNUP_URL}`;
+
 const SPORTSBOOK_DEFAULTS = {
   prediction: {
-    button: "📊 View Today's Picks",
-    url: `${PUBLIC_SITE_URL}/predictions/`,
-    text: `⚽🔥 <b>AI Match Prediction · AI 智能预测</b> 🔥⚽\n⭐ {firstPickLeague}\n\n🏟️ {firstPickName}\n🕐 Kickoff · 开赛: {firstPickKickoff}\n\n⚡ Pro Pick · 智能推荐: <b>{firstPickLabel}</b> 🎯 ({firstPickConfidence})\n\n📊 Full breakdown · 完整分析:\n🔗 {websiteUrl}\n\n⚠️ 18+ · AI analysis · Not betting advice\n#AIPrediction #ScoreOcs8 #足球预测 ⚽`,
+    button: '🆕 Sign Up · OCS8 Sports',
+    url: SIGNUP_URL,
+    text: `⚽🔥 <b>AI Match Prediction · AI 智能预测</b> 🔥⚽\n⭐ {firstPickLeague}\n\n🏟️ {firstPickName}\n🕐 Kickoff · 开赛: {firstPickKickoff}\n\n⚡ Pro Pick · 智能推荐: <b>{firstPickLabel}</b> 🎯 ({firstPickConfidence})\n\n📊 Full breakdown · 完整分析:\n🔗 {websiteUrl}\n\n{signupCta}\n\n⚠️ 18+ · AI analysis · Not betting advice\n#AIPrediction #ScoreOcs8 #足球预测 ⚽`,
   },
   upcoming: {
-    button: '📅 See Upcoming Matches',
-    url: `${PUBLIC_SITE_URL}/predictions/`,
-    text: `📅⚡ <b>Upcoming Matches · 近期赛事预告</b> ⚡📅\n\n{upcomingList}\n\n🕐 All times in Malaysia Time 🇲🇾 (MYT) · 马来西亚时间\n📊 Full list · 完整赛程:\n🔗 {websiteUrl}\n\n#UpcomingMatches #ScoreOcs8 #足球预测 ⚽`,
+    button: '🆕 Sign Up · OCS8 Sports',
+    url: SIGNUP_URL,
+    text: `📅⚡ <b>Upcoming Matches · 近期赛事预告</b> ⚡📅\n\n{upcomingList}\n\n🕐 All times in Malaysia Time 🇲🇾 (MYT) · 马来西亚时间\n📊 Full list · 完整赛程:\n🔗 {websiteUrl}\n\n{signupCta}\n\n#UpcomingMatches #ScoreOcs8 #足球预测 ⚽`,
   },
   reminder: {
-    button: '⚡ Place Bet Now',
-    url: `${PUBLIC_SITE_URL}/predictions/`,
-    text: `⏰🚨 <b>1 Hour Reminder · 开赛前一小时</b> 🚨⏰\n⭐ {firstPickLeague}\n\n🏟️ {firstPickName}\n🕐 Kickoff · 开赛: {firstPickKickoff}\n\n⚡ Pro Pick · 智能推荐: <b>{firstPickLabel}</b> 🎯 ({firstPickConfidence})\n\n💹 Odds + AI pick · 赔率分析:\n🔗 {websiteUrl}\n\n⚠️ 18+ · Bet responsibly · 理性投注\n#PreKickoff #ScoreOcs8 #足球预测 ⚽`,
+    button: '🆕 Sign Up · OCS8 Sports',
+    url: SIGNUP_URL,
+    text: `⏰🚨 <b>1 Hour Reminder · 开赛前一小时</b> 🚨⏰\n⭐ {firstPickLeague}\n\n🏟️ {firstPickName}\n🕐 Kickoff · 开赛: {firstPickKickoff}\n\n⚡ Pro Pick · 智能推荐: <b>{firstPickLabel}</b> 🎯 ({firstPickConfidence})\n\n💹 Odds + AI pick · 赔率分析:\n🔗 {websiteUrl}\n\n{signupCta}\n\n⚠️ 18+ · Bet responsibly · 理性投注\n#PreKickoff #ScoreOcs8 #足球预测 ⚽`,
   },
   result: {
-    button: '🎬 Watch Highlights',
-    url: `${PUBLIC_SITE_URL}/#match-highlights`,
-    text: `🏆🎉 <b>Full Time · 全场比赛结束</b> 🎉🏆\n⭐ {resultLeague}\n\n⚽ {resultScore} ⚽\n\n🎬 Highlights · 比赛集锦:\n🔗 {youtubeUrl}\n\n📊 Full result · 比赛详情:\n🔗 {websiteUrl}\n\n#FullTime #ScoreOcs8 #足球预测 ⚽🏆`,
+    button: '🆕 Sign Up · OCS8 Sports',
+    url: SIGNUP_URL,
+    text: `🏆🎉 <b>Full Time · 全场比赛结束</b> 🎉🏆\n⭐ {resultLeague}\n\n⚽ {resultScore} ⚽\n\n🎬 Highlights · 比赛集锦:\n🔗 {youtubeUrl}\n\n📊 Full result · 比赛详情:\n🔗 {websiteUrl}\n\n{signupCta}\n\n#FullTime #ScoreOcs8 #足球预测 ⚽🏆`,
   },
   proof: {
-    button: '💬 See More Customer Proof',
-    url: `${PUBLIC_SITE_URL}/#testimonials`,
-    text: `💬🔥 <b>What Our Users Say · 用户口碑</b> 🔥💬\n\n{proofTestimonials}\n\n📊 Tracked weekly · 每周追踪\n🏆 Major leagues only · 仅覆盖主要联赛\n✅ Public results · 公开战绩\n\n📲 See more on ScoreOcs8:\n🔗 {websiteUrl}\n\n#Testimonials #CustomerProof #ScoreOcs8 #足球预测 ⚽`,
+    button: '🆕 Sign Up · OCS8 Sports',
+    url: SIGNUP_URL,
+    text: `💬🔥 <b>What Our Users Say · 用户口碑</b> 🔥💬\n\n{proofTestimonials}\n\n📊 Tracked weekly · 每周追踪\n🏆 Major leagues only · 仅覆盖主要联赛\n✅ Public results · 公开战绩\n\n📲 See more on ScoreOcs8:\n🔗 {websiteUrl}\n\n{signupCta}\n\n#Testimonials #CustomerProof #ScoreOcs8 #足球预测 ⚽`,
   },
   blog: {
-    button: '📰 Read Latest Analysis',
-    url: `${PUBLIC_SITE_URL}/blog/`,
-    text: `📰✍️ <b>ScoreOcs8 Blog · 最新博客</b> ✍️📰\n\nLatest match analysis and football insights:\n最新比赛分析与足球见解：\n\n{latestPostTitles}\n\n📖 Read more · 阅读全文:\n🔗 {websiteUrl}\n\n#Blog #FootballAnalysis #ScoreOcs8 #足球预测 ⚽`,
+    button: '🆕 Sign Up · OCS8 Sports',
+    url: SIGNUP_URL,
+    text: `📰✍️ <b>ScoreOcs8 Blog · 最新博客</b> ✍️📰\n\nLatest match analysis and football insights:\n最新比赛分析与足球见解：\n\n{latestPostTitles}\n\n📖 Read more · 阅读全文:\n🔗 {websiteUrl}\n\n{signupCta}\n\n#Blog #FootballAnalysis #ScoreOcs8 #足球预测 ⚽`,
   },
 };
 
@@ -813,6 +818,10 @@ async function postSportsbookTemplateTest(env) {
       // Blog + proof template helpers
       latestPostTitles,
       proofTestimonials,
+
+      // Affiliate signup CTA — reusable across every template body
+      signupCta: SIGNUP_CTA,
+      signupUrl: SIGNUP_URL,
 
       // Result / highlight (latest finished match)
       resultLine: h
