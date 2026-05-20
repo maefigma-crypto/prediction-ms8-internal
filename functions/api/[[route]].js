@@ -173,7 +173,9 @@ async function handlePredictions(env, url) {
   const fixtureId = url.searchParams.get('fixture_id');
   if (!fixtureId) return { error: 'fixture_id required', status: 400 };
 
-  const fixtureData = await afGet(env, '/fixtures', { id: fixtureId });
+  // API-Football's /fixtures?id=X returns empty on some plan tiers — pass
+  // season to avoid the 'fixture not found' from a bare id lookup.
+  const fixtureData = await afGet(env, '/fixtures', { id: fixtureId, season: DEFAULT_SEASON });
   const fx = fixtureData.response?.[0];
   if (!fx) throw new Error('fixture not found');
 
@@ -215,7 +217,9 @@ async function handleMatchDetail(env, url) {
   // Cache-key bump prevents v1-cached entries (no events) from blocking the
   // new section until TTL naturally expires.
   return cached(env, `match-detail:v2:${fixtureId}`, TTL.matchDetail, async () => {
-    const fixtureData = await afGet(env, '/fixtures', { id: fixtureId });
+    // Same id+season pairing — API-Football's bare ?id= lookup returns
+    // empty on the renewed plan; adding season makes it resolve.
+    const fixtureData = await afGet(env, '/fixtures', { id: fixtureId, season: DEFAULT_SEASON });
     const fx = fixtureData.response?.[0];
     if (!fx) throw new Error('fixture not found');
 
