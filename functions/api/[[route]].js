@@ -263,18 +263,19 @@ async function handleMatchDetail(env, url) {
   const fixtureId = url.searchParams.get('fixture_id');
   if (!fixtureId) return { error: 'fixture_id required', status: 400 };
 
-  // v3: cache key bumped so v1/v2 entries don't shadow the new events
-  // array added for the Match Timeline strip.
-  return cached(env, `match-detail:v3:${fixtureId}`, TTL.matchDetail, async () => {
+  // v4: adds /fixtures/players-derived 'leaders' for the Game leaders
+  // strip (top scorer / assister / cards per team).
+  return cached(env, `match-detail:v4:${fixtureId}`, TTL.matchDetail, async () => {
     const fx = await lookupFixture(env, fixtureId);
     if (!fx) throw new Error('fixture not found');
 
     const home = fx.teams.home.id;
     const away = fx.teams.away.id;
-    const [h2hData, statsData, eventsData] = await Promise.all([
+    const [h2hData, statsData, eventsData, playersData] = await Promise.all([
       afGet(env, '/fixtures/headtohead', { h2h: `${home}-${away}`, last: 8 }),
       afGet(env, '/fixtures/statistics', { fixture: fixtureId }).catch(() => ({ response: [] })),
       afGet(env, '/fixtures/events', { fixture: fixtureId }).catch(() => ({ response: [] })),
+      afGet(env, '/fixtures/players', { fixture: fixtureId }).catch(() => ({ response: [] })),
     ]);
 
     const h2h = h2hData.response || [];
@@ -317,6 +318,42 @@ async function handleMatchDetail(env, url) {
         type: String(ev.type || ''),
         detail: String(ev.detail || ''),
       })),
+      // Top performer per team per category. Used by the Game leaders strip.
+      leaders: (() => {
+        const out = { goals: { home: null, away: null }, assists: { home: null, away: null }, cards: { home: null, away: null } };
+        for (const teamBlock of (playersData.response || [])) {
+          const side = teamBlock.team?.id === home ? 'home' : teamBlock.team?.id === away ? 'away' : null;
+          if (!side) continue;
+          const players = (teamBlock.players || []).map(p => {
+            const s = p.statistics?.[0] || {};
+            return {
+              id: p.player?.id ?? null,
+              name: p.player?.name || '',
+              photo: p.player?.photo || '',
+              position: s.games?.position || '',
+              number: s.games?.number ?? null,
+              minutes: s.games?.minutes ?? 0,
+              rating: s.games?.rating || null,
+              goals: s.goals?.total || 0,
+              assists: s.goals?.assists || 0,
+              shots: s.shots?.total || 0,
+              shotsOn: s.shots?.on || 0,
+              passes: s.passes?.total || 0,
+              yellow: s.cards?.yellow || 0,
+              red: s.cards?.red || 0,
+            };
+          });
+          if (!players.length) continue;
+          // Pick the standout per category — ties broken by minutes played.
+          const byGoals = [...players].filter(p => p.goals > 0).sort((a, b) => b.goals - a.goals || b.minutes - a.minutes)[0] || null;
+          const byAssists = [...players].filter(p => p.assists > 0).sort((a, b) => b.assists - a.assists || b.minutes - a.minutes)[0] || null;
+          const byCards = [...players].filter(p => (p.yellow + p.red) > 0).sort((a, b) => (b.red - a.red) || (b.yellow - a.yellow) || (b.minutes - a.minutes))[0] || null;
+          out.goals[side] = byGoals;
+          out.assists[side] = byAssists;
+          out.cards[side] = byCards;
+        }
+        return out;
+      })(),
     };
   });
 }
