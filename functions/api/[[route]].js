@@ -263,15 +263,18 @@ async function handleMatchDetail(env, url) {
   const fixtureId = url.searchParams.get('fixture_id');
   if (!fixtureId) return { error: 'fixture_id required', status: 400 };
 
-  return cached(env, `match-detail:${fixtureId}`, TTL.matchDetail, async () => {
+  // v3: cache key bumped so v1/v2 entries don't shadow the new events
+  // array added for the Match Timeline strip.
+  return cached(env, `match-detail:v3:${fixtureId}`, TTL.matchDetail, async () => {
     const fx = await lookupFixture(env, fixtureId);
     if (!fx) throw new Error('fixture not found');
 
     const home = fx.teams.home.id;
     const away = fx.teams.away.id;
-    const [h2hData, statsData] = await Promise.all([
+    const [h2hData, statsData, eventsData] = await Promise.all([
       afGet(env, '/fixtures/headtohead', { h2h: `${home}-${away}`, last: 8 }),
       afGet(env, '/fixtures/statistics', { fixture: fixtureId }).catch(() => ({ response: [] })),
+      afGet(env, '/fixtures/events', { fixture: fixtureId }).catch(() => ({ response: [] })),
     ]);
 
     const h2h = h2hData.response || [];
@@ -304,6 +307,16 @@ async function handleMatchDetail(env, url) {
         status: m.fixture?.status?.short,
       })),
       statistics: statsData.response || [],
+      events: (eventsData.response || []).map(ev => ({
+        minute: ev.time?.elapsed ?? null,
+        extra: ev.time?.extra ?? null,
+        team_id: ev.team?.id ?? null,
+        team_name: ev.team?.name || '',
+        player: ev.player?.name || '',
+        assist: ev.assist?.name || '',
+        type: String(ev.type || ''),
+        detail: String(ev.detail || ''),
+      })),
     };
   });
 }
