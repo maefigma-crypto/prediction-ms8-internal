@@ -307,7 +307,7 @@ function renderHtml({ displayDate, picks, accuracy, debug }) {
 <body>
   <div class="card">
     <div class="brand">
-      <img class="logo" src="https://scoreocs8.pages.dev/logo.png" alt="ScoreOcs8">
+      <img class="logo" src="https://scoreocs8.com/logo.png" alt="ScoreOcs8">
       <div class="date">${esc(fmtDisplayDate(displayDate))} · MYT</div>
     </div>
 
@@ -321,7 +321,7 @@ function renderHtml({ displayDate, picks, accuracy, debug }) {
     ${accBlock}
 
     <div class="foot">
-      <div class="fw">scoreocs8.pages.dev</div>
+      <div class="fw">scoreocs8.com</div>
       <div class="fd">Updated daily · 每日更新 · Asia/Kuala_Lumpur</div>
     </div>
   </div>

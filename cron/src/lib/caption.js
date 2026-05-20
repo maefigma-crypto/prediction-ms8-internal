@@ -11,7 +11,7 @@
 //   📊 Accuracy this week | 本周准确率: 8/12 (67%)
 //
 //   View all today's predictions | 浏览更多推介:
-//   👉 https://scoreocs8.pages.dev/
+//   👉 https://scoreocs8.com/
 //
 //   🎁 Claim welcome bonus | 领取新手礼金:
 //   👉 🇲🇾 https://[affiliate-my]
@@ -62,7 +62,7 @@ export function buildDailyCaption({
   date,
   picks = [],
   accuracy = null,
-  siteUrl = 'https://scoreocs8.pages.dev',
+  siteUrl = 'https://scoreocs8.com',
   affiliates = [],
 }) {
   const lines = [];
@@ -118,7 +118,7 @@ export function buildDailyCaptionX({
   date,
   picks = [],
   accuracy = null,
-  siteUrl = 'https://scoreocs8.pages.dev',
+  siteUrl = 'https://scoreocs8.com',
 }) {
   const d = new Date(date + 'T12:00:00Z').toLocaleDateString('en-GB', {
     timeZone: 'Asia/Kuala_Lumpur',
@@ -149,7 +149,7 @@ export function buildDailyCaptionX({
   // X counts URLs as 23 chars regardless of length; approximate by subtracting
   // real URL length then adding 23 when checking budget.
   const urlCount = (out.match(/https?:\/\/[^\s]+/g) || []).length;
-  const effective = out.length - (urlCount > 0 ? 27 - 23 : 0); // scoreocs8.pages.dev/ = ~27 → 23
+  const effective = out.length + (urlCount > 0 ? 23 - 22 : 0); // scoreocs8.com/ = ~22 chars, X counts as 23 — add 1 per URL
   if (effective > 275) {
     // Drop the 3rd pick first, then hashtags, then accuracy line
     const trimmed = out.split('\n').filter((l, i, arr) => {
@@ -178,7 +178,7 @@ export function buildPreMatchMotdCaption({
   fixture,
   pick,
   stake = 100,
-  siteUrl = 'https://scoreocs8.pages.dev',
+  siteUrl = 'https://scoreocs8.com',
 }) {
   const home = fixture?.teams?.home?.name || 'Home';
   const away = fixture?.teams?.away?.name || 'Away';
@@ -217,7 +217,7 @@ export function buildPreMatchMotdCaption({
 }
 
 // Caption for match result posts: "FT · Team A 2-1 Team B"
-export function buildResultCaption({ fixture, pickCorrect = null, weekAcc = null, siteUrl = 'https://scoreocs8.pages.dev' }) {
+export function buildResultCaption({ fixture, pickCorrect = null, weekAcc = null, siteUrl = 'https://scoreocs8.com' }) {
   const home = fixture?.teams?.home?.name || 'Home';
   const away = fixture?.teams?.away?.name || 'Away';
   const hs = fixture?.goals?.home ?? '-';

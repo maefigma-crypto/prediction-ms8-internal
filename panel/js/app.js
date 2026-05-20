@@ -164,7 +164,7 @@ async function loadDashboard() {
   wrap.innerHTML = renderSiteCard({
     slug: 'scoreocs8',
     name: 'ScoreOcs8',
-    host: 'scoreocs8.pages.dev',
+    host: 'scoreocs8.com',
     flag: 'S8',
     stats: data,
   });
