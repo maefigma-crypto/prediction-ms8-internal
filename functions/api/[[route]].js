@@ -263,19 +263,19 @@ async function handleMatchDetail(env, url) {
   const fixtureId = url.searchParams.get('fixture_id');
   if (!fixtureId) return { error: 'fixture_id required', status: 400 };
 
-  // v4: adds /fixtures/players-derived 'leaders' for the Game leaders
-  // strip (top scorer / assister / cards per team).
-  return cached(env, `match-detail:v4:${fixtureId}`, TTL.matchDetail, async () => {
+  // v5: adds /fixtures/lineups-derived 'lineups' for the Formation pitch.
+  return cached(env, `match-detail:v5:${fixtureId}`, TTL.matchDetail, async () => {
     const fx = await lookupFixture(env, fixtureId);
     if (!fx) throw new Error('fixture not found');
 
     const home = fx.teams.home.id;
     const away = fx.teams.away.id;
-    const [h2hData, statsData, eventsData, playersData] = await Promise.all([
+    const [h2hData, statsData, eventsData, playersData, lineupsData] = await Promise.all([
       afGet(env, '/fixtures/headtohead', { h2h: `${home}-${away}`, last: 8 }),
       afGet(env, '/fixtures/statistics', { fixture: fixtureId }).catch(() => ({ response: [] })),
       afGet(env, '/fixtures/events', { fixture: fixtureId }).catch(() => ({ response: [] })),
       afGet(env, '/fixtures/players', { fixture: fixtureId }).catch(() => ({ response: [] })),
+      afGet(env, '/fixtures/lineups', { fixture: fixtureId }).catch(() => ({ response: [] })),
     ]);
 
     const h2h = h2hData.response || [];
@@ -318,6 +318,39 @@ async function handleMatchDetail(env, url) {
         type: String(ev.type || ''),
         detail: String(ev.detail || ''),
       })),
+      // Lineups: team formation + starting XI with grid positions, used by
+      // the Formation pitch view. Compacted so the renderer doesn't have to
+      // unpack API-Football's nested shape.
+      lineups: (() => {
+        const out = { home: null, away: null };
+        for (const teamLineup of (lineupsData.response || [])) {
+          const side = teamLineup.team?.id === home ? 'home' : teamLineup.team?.id === away ? 'away' : null;
+          if (!side) continue;
+          out[side] = {
+            team_id: teamLineup.team?.id ?? null,
+            team_name: teamLineup.team?.name || '',
+            team_logo: teamLineup.team?.logo || '',
+            primary_color: teamLineup.team?.colors?.player?.primary || null,
+            number_color: teamLineup.team?.colors?.player?.number || null,
+            coach: teamLineup.coach?.name || '',
+            formation: teamLineup.formation || '',
+            startXI: (teamLineup.startXI || []).map(s => ({
+              id: s.player?.id ?? null,
+              name: s.player?.name || '',
+              number: s.player?.number ?? null,
+              pos: s.player?.pos || '',
+              grid: s.player?.grid || '',
+            })),
+            substitutes: (teamLineup.substitutes || []).map(s => ({
+              id: s.player?.id ?? null,
+              name: s.player?.name || '',
+              number: s.player?.number ?? null,
+              pos: s.player?.pos || '',
+            })),
+          };
+        }
+        return out;
+      })(),
       // Top performer per team per category. Used by the Game leaders strip.
       leaders: (() => {
         const out = { goals: { home: null, away: null }, assists: { home: null, away: null }, cards: { home: null, away: null } };
