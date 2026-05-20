@@ -154,6 +154,41 @@ export async function onRequest(context) {
     })
     .sort((a, b) => parseInt(a.minLabel) - parseInt(b.minLabel));
 
+  // Formation pitch — both teams positioned by API-Football grid coords.
+  // Each player has grid "row:col" where row 1 is GK, higher rows are more
+  // attacking. We translate per-side: home on left half attacking right;
+  // away mirrored. Players within each row are distributed evenly along
+  // the vertical axis so any formation (4-2-3-1, 3-5-2, etc.) looks right.
+  const lineups = detail?.lineups || { home: null, away: null };
+  const hasLineups = !!(lineups.home?.startXI?.length || lineups.away?.startXI?.length);
+  function buildPositions(side, startXI) {
+    if (!startXI?.length) return [];
+    const byRow = {};
+    for (const p of startXI) {
+      const [r, c] = String(p.grid || '1:1').split(':').map(n => parseInt(n, 10) || 1);
+      if (!byRow[r]) byRow[r] = [];
+      byRow[r].push({ ...p, _row: r, _col: c });
+    }
+    const sortedRows = Object.keys(byRow).map(Number).sort((a, b) => a - b);
+    const maxRow = sortedRows[sortedRows.length - 1] || 1;
+    const out = [];
+    for (const r of sortedRows) {
+      const players = byRow[r].sort((a, b) => a._col - b._col);
+      const count = players.length;
+      const xFrac = (r - 1) / Math.max(1, maxRow - 1);
+      // Home: GK at left (x≈6%), forwards near center (x≈46%).
+      // Away: GK at right (x≈94%), forwards near center (x≈54%).
+      const x = side === 'home' ? 6 + xFrac * 40 : 94 - xFrac * 40;
+      for (let i = 0; i < count; i++) {
+        const y = 10 + ((i + 0.5) / count) * 80;
+        out.push({ ...players[i], _x: x, _y: y });
+      }
+    }
+    return out;
+  }
+  const homePositions = buildPositions('home', lineups.home?.startXI);
+  const awayPositions = buildPositions('away', lineups.away?.startXI);
+
   // Game leaders — top scorer / assister / cards per team for the match.
   // Backend already aggregated; we just decide whether the section has
   // anything worth showing.
@@ -397,6 +432,33 @@ h1 .vs{color:var(--text3);margin:0 14px;font-weight:500;}
 .gl-stats span{font-family:var(--fm);font-size:10px;letter-spacing:.06em;color:var(--text3);text-transform:uppercase;display:inline-flex;flex-direction:column;align-items:center;gap:1px;}
 .gl-stats strong{font-family:var(--ff);font-size:14px;font-weight:700;color:var(--text);letter-spacing:0;}
 .gl-empty{padding:10px;border-radius:10px;background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.10);text-align:center;font-family:var(--fm);font-size:11px;color:var(--text3);letter-spacing:.04em;}
+.fp-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px;font-family:var(--ff);}
+.fp-team{display:flex;align-items:center;gap:10px;min-width:0;}
+.fp-team.fp-away{flex-direction:row-reverse;text-align:right;}
+.fp-team img{width:32px;height:32px;object-fit:contain;}
+.fp-team-name{font-size:16px;font-weight:700;color:var(--text);}
+.fp-formation{font-family:var(--fm);font-size:11px;color:var(--accent);letter-spacing:.10em;}
+.fp-wrap{position:relative;width:100%;min-height:420px;overflow:hidden;border-radius:14px;border:1px solid rgba(0,229,160,.18);background:
+  linear-gradient(90deg,rgba(0,229,160,.06) 0%,rgba(0,229,160,.10) 50%,rgba(0,229,160,.06) 100%),
+  repeating-linear-gradient(90deg,rgba(0,0,0,.10) 0,rgba(0,0,0,.10) 36px,transparent 36px,transparent 72px),
+  linear-gradient(180deg,#0f2415 0%,#163521 50%,#0f2415 100%);
+}
+.fp-wrap::before{content:'';position:absolute;top:50%;left:50%;width:120px;height:120px;border:2px solid rgba(255,255,255,.20);border-radius:50%;transform:translate(-50%,-50%);}
+.fp-wrap::after{content:'';position:absolute;top:0;bottom:0;left:50%;width:2px;background:rgba(255,255,255,.18);}
+.fp-box{position:absolute;top:50%;width:90px;height:200px;border:2px solid rgba(255,255,255,.18);transform:translateY(-50%);}
+.fp-box.fp-box-l{left:0;border-left:none;}
+.fp-box.fp-box-r{right:0;border-right:none;}
+.fp-jersey{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:4px;width:62px;z-index:2;}
+.fp-jersey-shirt{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--ff);font-size:14px;font-weight:800;color:#fff;border:2px solid rgba(255,255,255,.30);box-shadow:0 4px 10px rgba(0,0,0,.40);}
+.fp-jersey.home .fp-jersey-shirt{background:linear-gradient(135deg,#4f7cf7,#2c4fc4);}
+.fp-jersey.away .fp-jersey-shirt{background:linear-gradient(135deg,#ff5f5f,#c43030);}
+.fp-jersey-name{font-family:var(--ff);font-size:10px;font-weight:600;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.85);text-align:center;line-height:1.15;max-width:80px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fp-bench{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;}
+.fp-bench-col h3{font-family:var(--ff);font-size:13px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;}
+.fp-bench-col h3 small{display:block;font-family:var(--fm);font-size:10px;font-weight:400;color:var(--text3);letter-spacing:.04em;margin-top:2px;text-transform:none;}
+.fp-bench-list{display:flex;flex-direction:column;gap:6px;}
+.fp-bench-list li{display:flex;align-items:center;gap:10px;font-family:var(--fb);font-size:13px;color:var(--text2);list-style:none;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);}
+.fp-bench-num{font-family:var(--fm);font-size:11px;color:var(--text3);min-width:22px;text-align:center;}
 .pick-card{padding:20px 22px;border-radius:16px;background:linear-gradient(135deg,rgba(249,115,22,0.18),rgba(249,115,22,0.04));border:1px solid rgba(249,115,22,0.32);box-shadow:inset 0 1px 0 rgba(255,255,255,0.10),0 0 30px rgba(249,115,22,0.18);}
 .pick-card .label{font-family:var(--fm);font-size:10px;color:var(--text3);letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px;}
 .pick-card .pick{font-family:var(--ff);font-size:26px;font-weight:700;color:var(--accent);letter-spacing:.04em;}
@@ -452,6 +514,11 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
   .gl-grid{grid-template-columns:1fr;}
   .gl-stats span{font-size:9px;}
   .gl-stats strong{font-size:13px;}
+  .fp-wrap{min-height:360px;}
+  .fp-jersey{width:48px;}
+  .fp-jersey-shirt{width:28px;height:28px;font-size:12px;}
+  .fp-jersey-name{font-size:9px;max-width:60px;}
+  .fp-bench{grid-template-columns:1fr;}
   .h2h-logo{width:22px;height:22px;}
 }
 </style>
@@ -523,6 +590,44 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
         ${FINISHED.has(statusShort) ? `<div class="tl-ft" aria-label="Full time">${esc(statusShort)}</div>` : ''}
       </div>
     </div>
+  </section>` : ''}
+
+  ${hasLineups ? `
+  <section class="section">
+    <h2>Formation <small>· starting XI on the pitch</small></h2>
+    <div class="fp-head">
+      <div class="fp-team fp-home">
+        ${homeLogo ? `<img src="${esc(homeLogo)}" alt="${esc(home)} crest">` : ''}
+        <div>
+          <div class="fp-team-name">${esc(lineups.home?.team_name || home)}</div>
+          <div class="fp-formation">${esc(lineups.home?.formation || '')}</div>
+        </div>
+      </div>
+      <div class="fp-team fp-away">
+        ${awayLogo ? `<img src="${esc(awayLogo)}" alt="${esc(away)} crest">` : ''}
+        <div>
+          <div class="fp-team-name">${esc(lineups.away?.team_name || away)}</div>
+          <div class="fp-formation">${esc(lineups.away?.formation || '')}</div>
+        </div>
+      </div>
+    </div>
+    <div class="fp-wrap" role="img" aria-label="${esc(home)} vs ${esc(away)} formation pitch">
+      <div class="fp-box fp-box-l" aria-hidden="true"></div>
+      <div class="fp-box fp-box-r" aria-hidden="true"></div>
+      ${homePositions.map(p => `<div class="fp-jersey home" style="left:${p._x.toFixed(2)}%;top:${p._y.toFixed(2)}%" title="${esc(p.name)}${p.pos ? ' · ' + esc(p.pos) : ''}"><div class="fp-jersey-shirt">${esc(p.number ?? '')}</div><div class="fp-jersey-name">${esc(p.name.split(' ').pop() || p.name)}</div></div>`).join('')}
+      ${awayPositions.map(p => `<div class="fp-jersey away" style="left:${p._x.toFixed(2)}%;top:${p._y.toFixed(2)}%" title="${esc(p.name)}${p.pos ? ' · ' + esc(p.pos) : ''}"><div class="fp-jersey-shirt">${esc(p.number ?? '')}</div><div class="fp-jersey-name">${esc(p.name.split(' ').pop() || p.name)}</div></div>`).join('')}
+    </div>
+    ${(lineups.home?.substitutes?.length || lineups.away?.substitutes?.length) ? `
+    <div class="fp-bench">
+      <div class="fp-bench-col">
+        <h3>${esc(home)} bench${lineups.home?.coach ? ` <small>Coach · ${esc(lineups.home.coach)}</small>` : ''}</h3>
+        <ul class="fp-bench-list">${(lineups.home?.substitutes || []).map(s => `<li><span class="fp-bench-num">${esc(s.number ?? '')}</span>${esc(s.name)}${s.pos ? ` · ${esc(s.pos)}` : ''}</li>`).join('')}</ul>
+      </div>
+      <div class="fp-bench-col">
+        <h3>${esc(away)} bench${lineups.away?.coach ? ` <small>Coach · ${esc(lineups.away.coach)}</small>` : ''}</h3>
+        <ul class="fp-bench-list">${(lineups.away?.substitutes || []).map(s => `<li><span class="fp-bench-num">${esc(s.number ?? '')}</span>${esc(s.name)}${s.pos ? ` · ${esc(s.pos)}` : ''}</li>`).join('')}</ul>
+      </div>
+    </div>` : ''}
   </section>` : ''}
 
   ${hasAnyLeader ? `
