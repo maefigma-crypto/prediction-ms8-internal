@@ -432,30 +432,11 @@ async function postDailyToAll(env) {
     // (b) the featured bet slip with RM100 virtual stake for the top
     // match. Only goes to Telegram for now — a single slip per day on
     // the loudest channel is enough. IG/X/Threads can be wired later.
-    try {
-      report.stage = 'motd-prematch';
-      const motd = picks[0];
-      if (motd?.fx?.fixture?.id) {
-        const slipUrl = `${SITE_URL}${slipPath(motd.fx.fixture.id, motd.fx.teams?.home?.name, motd.fx.teams?.away?.name)}?status=running&stake=100&v=${Date.now()}`;
-        const slipPng = await screenshot(env, {
-          url: slipUrl,
-          viewport: { width: 1080, height: 1350 },
-          waitUntil: 'networkidle0',
-        });
-        const motdCaption = buildPreMatchMotdCaption({
-          fixture: motd.fx,
-          pick: motd.pick,
-          stake: 100,
-          siteUrl: SITE_URL,
-        });
-        const motdMsg = await sendPhoto(env, { photoBytes: slipPng, caption: motdCaption });
-        report.motd = { status: 'ok', messageId: motdMsg.message_id, fixtureId: motd.fx.fixture.id };
-      } else {
-        report.motd = { status: 'skipped', reason: 'no MOTD fixture' };
-      }
-    } catch (e) {
-      report.motd = { status: 'error', error: String(e.message || e) };
-    }
+    // MOTD single-pick post intentionally skipped — it duplicated the
+    // 3-pick daily fanout above and the virtual-stake framing didn't add
+    // value for members. Saves one screenshot render + one Telegram POST
+    // per day. Keep the stage entry in the report for observability.
+    report.motd = { status: 'skipped', reason: 'motd-prematch single-pick post removed' };
 
     report.stage = 'done';
     report.status = 'ok';
@@ -644,34 +625,34 @@ const SPORTSBOOK_TEMPLATE_KEYS = ['prediction', 'upcoming', 'reminder', 'result'
 
 const SPORTSBOOK_DEFAULTS = {
   prediction: {
-    button: "View Today's Picks",
+    button: "📊 View Today's Picks",
     url: `${PUBLIC_SITE_URL}/predictions/`,
-    text: `⚽ <b>AI Match Prediction · AI 智能预测</b>\n⭐ {firstPickLeague}\n\n🏟️ {firstPickName}\n🕐 Kickoff · 开赛: {firstPickKickoff}\n\n⚡ Pro Pick · 智能推荐: <b>{firstPickLabel}</b> ({firstPickConfidence})\n\n🔗 Full breakdown · 完整分析: {websiteUrl}\n\n⚠️ 18+ · AI analysis · Not betting advice\n#AIPrediction #ScoreOcs8 #足球预测`,
+    text: `⚽🔥 <b>AI Match Prediction · AI 智能预测</b> 🔥⚽\n⭐ {firstPickLeague}\n\n🏟️ {firstPickName}\n🕐 Kickoff · 开赛: {firstPickKickoff}\n\n⚡ Pro Pick · 智能推荐: <b>{firstPickLabel}</b> 🎯 ({firstPickConfidence})\n\n📊 Full breakdown · 完整分析:\n🔗 {websiteUrl}\n\n⚠️ 18+ · AI analysis · Not betting advice\n#AIPrediction #ScoreOcs8 #足球预测 ⚽`,
   },
   upcoming: {
-    button: 'See Upcoming Matches',
+    button: '📅 See Upcoming Matches',
     url: `${PUBLIC_SITE_URL}/predictions/`,
-    text: `📅 <b>Upcoming Matches · 近期赛事预告</b>\n\n{upcomingList}\n\n🕐 All times in Malaysia Time (MYT) · 马来西亚时间\n🔗 Full list · 完整赛程: {websiteUrl}\n\n#UpcomingMatches #ScoreOcs8 #足球预测`,
+    text: `📅⚡ <b>Upcoming Matches · 近期赛事预告</b> ⚡📅\n\n{upcomingList}\n\n🕐 All times in Malaysia Time 🇲🇾 (MYT) · 马来西亚时间\n📊 Full list · 完整赛程:\n🔗 {websiteUrl}\n\n#UpcomingMatches #ScoreOcs8 #足球预测 ⚽`,
   },
   reminder: {
-    button: 'Place Bet Now',
+    button: '⚡ Place Bet Now',
     url: `${PUBLIC_SITE_URL}/predictions/`,
-    text: `⏰ <b>1 Hour Reminder · 开赛前一小时</b>\n⭐ {firstPickLeague}\n\n🏟️ {firstPickName}\n🕐 Kickoff · 开赛: {firstPickKickoff}\n\n⚡ Pro Pick · 智能推荐: <b>{firstPickLabel}</b> ({firstPickConfidence})\n\n🔗 Odds + AI pick · 赔率分析: {websiteUrl}\n\n⚠️ 18+ · Bet responsibly · 理性投注\n#PreKickoff #ScoreOcs8 #足球预测`,
+    text: `⏰🚨 <b>1 Hour Reminder · 开赛前一小时</b> 🚨⏰\n⭐ {firstPickLeague}\n\n🏟️ {firstPickName}\n🕐 Kickoff · 开赛: {firstPickKickoff}\n\n⚡ Pro Pick · 智能推荐: <b>{firstPickLabel}</b> 🎯 ({firstPickConfidence})\n\n💹 Odds + AI pick · 赔率分析:\n🔗 {websiteUrl}\n\n⚠️ 18+ · Bet responsibly · 理性投注\n#PreKickoff #ScoreOcs8 #足球预测 ⚽`,
   },
   result: {
-    button: 'Watch Highlights',
+    button: '🎬 Watch Highlights',
     url: `${PUBLIC_SITE_URL}/#match-highlights`,
-    text: `🏆 <b>Full Time · 全场比赛结束</b>\n⭐ {resultLeague}\n\n⚽ {resultScore}\n\n🎬 Highlights · 比赛集锦: {youtubeUrl}\n🔗 Full result · 比赛详情: {websiteUrl}\n\n#FullTime #ScoreOcs8 #足球预测`,
+    text: `🏆🎉 <b>Full Time · 全场比赛结束</b> 🎉🏆\n⭐ {resultLeague}\n\n⚽ {resultScore} ⚽\n\n🎬 Highlights · 比赛集锦:\n🔗 {youtubeUrl}\n\n📊 Full result · 比赛详情:\n🔗 {websiteUrl}\n\n#FullTime #ScoreOcs8 #足球预测 ⚽🏆`,
   },
   proof: {
-    button: 'View Customer Proof',
+    button: '💬 See More Customer Proof',
     url: `${PUBLIC_SITE_URL}/#testimonials`,
-    text: `💬 <b>What Our Users Say · 用户口碑</b>\n\nCustomers can review proof examples, weekly performance notes, and tracked results directly on ScoreOcs8.\n用户评价、每周表现追踪、完整战绩记录尽在 ScoreOcs8.\n\n🔗 See proof · 查看记录: {websiteUrl}\n\n#Testimonials #ScoreOcs8 #足球预测`,
+    text: `💬🔥 <b>What Our Users Say · 用户口碑</b> 🔥💬\n\n{proofTestimonials}\n\n📊 Tracked weekly · 每周追踪\n🏆 Major leagues only · 仅覆盖主要联赛\n✅ Public results · 公开战绩\n\n📲 See more on ScoreOcs8:\n🔗 {websiteUrl}\n\n#Testimonials #CustomerProof #ScoreOcs8 #足球预测 ⚽`,
   },
   blog: {
-    button: 'Read Blog',
+    button: '📰 Read Latest Analysis',
     url: `${PUBLIC_SITE_URL}/blog/`,
-    text: `📰 <b>ScoreOcs8 Blog · 最新博客</b>\n\n<b>{websiteTitle}</b>\n\n{websiteDescription}\n\n🔗 Read more · 阅读全文: {websiteUrl}\n\n#Blog #FootballAnalysis #ScoreOcs8 #足球预测`,
+    text: `📰✍️ <b>ScoreOcs8 Blog · 最新博客</b> ✍️📰\n\nLatest match analysis and football insights:\n最新比赛分析与足球见解：\n\n{latestPostTitles}\n\n📖 Read more · 阅读全文:\n🔗 {websiteUrl}\n\n#Blog #FootballAnalysis #ScoreOcs8 #足球预测 ⚽`,
   },
 };
 
@@ -767,6 +748,34 @@ async function postSportsbookTemplateTest(env) {
     return p;
   };
 
+  // Latest blog post titles for the {latestPostTitles} placeholder — fetched
+  // once and reused. Falls back to a friendly line if /api/posts is empty.
+  const latestPostTitles = await (async () => {
+    try {
+      const res = await fetch(`${PUBLIC_SITE_URL}/api/posts`);
+      if (!res.ok) return '📝 New analysis coming soon · 新分析即将上线';
+      const posts = await res.json();
+      const top = (posts || []).slice(0, 3);
+      if (!top.length) return '📝 New analysis coming soon · 新分析即将上线';
+      return top.map(p => {
+        const e = p.emoji || '📝';
+        const t = escHtml(p.title || 'Untitled');
+        const slug = p.slug || '';
+        return `${e} <a href="${PUBLIC_SITE_URL}/blog/${slug}/">${t}</a>`;
+      }).join('\n');
+    } catch {
+      return '📝 New analysis coming soon · 新分析即将上线';
+    }
+  })();
+
+  // Inline customer testimonials for the {proofTestimonials} placeholder.
+  // The proof post BECOMES the proof — no teaser-and-link only.
+  const proofTestimonials = [
+    '💬 "Won RM20K+ following the AI prediction." — MJ',
+    '💬 "Copied the UCL pick and made RM8,700 profit." — AL',
+    '💬 "La Liga call landed, RM3,250 return." — TAN',
+  ].join('\n');
+
   for (const key of SPORTSBOOK_TEMPLATE_KEYS) {
     const userTpl = config?.templates?.[key];
     if (userTpl && userTpl.enabled === false) {
@@ -800,6 +809,10 @@ async function postSportsbookTemplateTest(env) {
       // Fixture lists
       pickRows,
       upcomingList,
+
+      // Blog + proof template helpers
+      latestPostTitles,
+      proofTestimonials,
 
       // Result / highlight (latest finished match)
       resultLine: h

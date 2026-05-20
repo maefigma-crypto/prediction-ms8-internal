@@ -272,7 +272,7 @@ body::before{
   <div class="wrap">
     <div class="brand">
       <img class="logo" src="https://scoreocs8.com/logo.png" alt="ScoreOcs8">
-      <div class="disclaimer">Odds Snapshot · Demo Tracking</div>
+      <div class="disclaimer">Odds Snapshot · Pick Tracking</div>
     </div>
 
     <div class="tabs">
@@ -284,7 +284,7 @@ body::before{
       <div class="slip-head">
         <div class="slip-title">
           <span class="i">i</span>
-          <span class="sn">Demo ${esc(d.stake)}</span>
+          <span class="sn">Stake ${esc(d.stake)}</span>
           <span class="sl">Single Pick</span>
         </div>
         <div class="badge ${badge.className}">${badge.text}</div>
@@ -305,7 +305,7 @@ body::before{
 
       <div class="sf">
         <div class="sfc">
-          <div class="sfl">Demo Stake</div>
+          <div class="sfl">Stake</div>
           <div class="sfv">${esc(d.stake)}</div>
         </div>
         <div class="sfc">

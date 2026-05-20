@@ -211,7 +211,7 @@ export function buildPreMatchMotdCaption({
   lines.push('');
   lines.push(`🔗 Live tracking: ${siteUrl}/`);
   lines.push('');
-  lines.push(`⚠ 18+ · Virtual currency · Not betting advice`);
+  lines.push(`⚠ 18+ · Not betting advice`);
   lines.push(`#MatchOfTheDay #ScoreOcs8 #足球预测`);
   return lines.join('\n');
 }
