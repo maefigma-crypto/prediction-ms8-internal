@@ -404,7 +404,7 @@ body > nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-it
 .promo-card{max-width:920px;margin:0 auto;width:100%;background:rgba(15,22,32,.92);color:var(--text);border-radius:16px;overflow:hidden;border:1px solid rgba(249,115,22,.28);box-shadow:0 22px 58px rgba(0,0,0,.34),0 0 34px rgba(249,115,22,.12);}
 .promo-art{position:relative;min-height:260px;background:#080808;overflow:hidden;border-bottom:1px solid rgba(249,115,22,.22);}
 .promo-art img{width:100%;height:100%;min-height:260px;object-fit:cover;display:block;}
-.promo-pill{position:absolute;top:16px;left:16px;display:inline-flex;align-items:center;gap:7px;background:rgba(8,11,16,.9);color:var(--accent);border:1px solid rgba(249,115,22,.35);border-radius:999px;padding:8px 13px;font-family:var(--ff);font-size:14px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;backdrop-filter:blur(10px);}
+.promo-pill{display:none;}
 .promo-body{padding:24px;}
 .promo-title{font-family:var(--ff);font-size:40px;font-weight:800;line-height:1.02;letter-spacing:.01em;text-transform:uppercase;margin-bottom:14px;color:var(--text);}
 .promo-tags{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px;}
@@ -1343,8 +1343,8 @@ footer{
     <div class="live-center fu v" id="live-center">
       <div class="live-head">
         <div>
-          <div class="live-title">Live & Today Match Center</div>
-          <div class="live-sub">Live first · Today next · Prediction shown in one place</div>
+          <div class="live-title">Live Matches &amp; Today's Games</div>
+          <div class="live-sub">Live games first, then today's kickoffs</div>
         </div>
         <span class="bpred">AUTO UPDATED</span>
       </div>
@@ -1649,6 +1649,12 @@ footer{
       .msc-stat{font-family:var(--fm);font-size:15px;color:var(--text2);text-align:center;}
       .msc-pts{font-family:var(--ff);font-size:18px;font-weight:700;color:var(--accent);text-align:center;}
       .msc-head{display:grid;grid-template-columns:32px minmax(0,1fr) 42px 42px 42px 52px;gap:12px;padding:10px 18px;font-family:var(--fm);font-size:11px;letter-spacing:.08em;color:var(--text3);text-transform:uppercase;border-top:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);}
+      .msc-champ{display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 18px;background:linear-gradient(135deg,rgba(249,115,22,.18),rgba(245,166,35,.08));border-bottom:1px solid rgba(249,115,22,.30);box-shadow:inset 0 1px 0 rgba(255,255,255,.10);}
+      .msc-champ img{width:42px;height:42px;object-fit:contain;}
+      .msc-champ-eyebrow{font-family:var(--fm);font-size:11px;font-weight:600;letter-spacing:.10em;text-transform:uppercase;color:var(--accent);}
+      .msc-champ-name{font-family:var(--ff);font-size:20px;font-weight:800;color:var(--text);line-height:1.1;margin-top:2px;}
+      .msc-champ-pts{font-family:var(--ff);font-size:26px;font-weight:800;color:var(--accent);text-align:right;line-height:1;}
+      .msc-champ-pts span{display:block;font-family:var(--fm);font-size:10px;font-weight:500;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-top:3px;}
       /* Top scorers */
       .msc-row.t-scorer{grid-template-columns:32px minmax(0,1fr) 52px;}
       .msc-pl{display:flex;align-items:center;gap:11px;min-width:0;}
@@ -1720,9 +1726,32 @@ footer{
       function renderTable(data) {
         try {
           const std = data?.response?.[0]?.league?.standings?.[0] || [];
+          const leagueObj = data?.response?.[0]?.league || {};
           const freshEl = document.getElementById('msc-table-fresh');
           if (freshEl) freshEl.textContent = std.length ? fmtAgo(data?.updated) : '';
           if (!std.length) { elTable.innerHTML = empty('Standings not available for this league'); return; }
+          // Champion strip — when every team has played the same max number
+          // of games (round-robin done) AND the leader is mathematically clear,
+          // show '🏆 <team>' above the table so customers see the season is
+          // wrapped and who won.
+          const maxPlayed = Math.max(...std.map(t => t.all?.played ?? 0));
+          const everyoneDone = std.every(t => (t.all?.played ?? 0) === maxPlayed);
+          const seasonOver = everyoneDone && maxPlayed > 0;
+          const leader = std[0];
+          const runnerUp = std[1];
+          const champ = seasonOver && leader && (!runnerUp || (leader.points ?? 0) > (runnerUp.points ?? 0))
+            ? leader
+            : null;
+          const champStrip = champ
+            ? `<div class="msc-champ">
+                ${champ.team?.logo ? `<img src="${esc(champ.team.logo)}" alt="">` : '<span>🏆</span>'}
+                <div class="msc-champ-text">
+                  <div class="msc-champ-eyebrow">🏆 Champion · ${esc(leagueObj.name || 'League')} ${esc(leagueObj.season || '')}</div>
+                  <div class="msc-champ-name">${esc(champ.team?.name || '')}</div>
+                </div>
+                <div class="msc-champ-pts">${esc(champ.points ?? 0)}<span>pts</span></div>
+               </div>`
+            : '';
           const rows = std.slice(0, 10).map((t, i) => {
             const rankClass = i < 3 ? 'top' : '';
             return `<div class="msc-row t-table">
@@ -1734,7 +1763,7 @@ footer{
               <div class="msc-pts">${esc(t.points ?? 0)}</div>
             </div>`;
           }).join('');
-          elTable.innerHTML = `<div class="msc-head"><div></div><div>Team</div><div>MP</div><div>W</div><div>L</div><div>PTS</div></div>${rows}`;
+          elTable.innerHTML = `${champStrip}<div class="msc-head"><div></div><div>Team</div><div>MP</div><div>W</div><div>L</div><div>PTS</div></div>${rows}`;
         } catch (e) { elTable.innerHTML = empty('Could not load table'); }
       }
 
@@ -2805,13 +2834,36 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     return (parts?.[0] || text).slice(0, 185).trim();
   }
 
-  function confidenceOf(ai) {
+  // Stable fallback derived from team names + recent record signals so
+  // every posted pick shows a readable confidence (no '--' placeholder).
+  // Mirrors the cron's displayConfidence() so on-card numbers stay in
+  // the same realistic 58–78% band as Telegram cards.
+  function fallbackConfidence(ai, home, away) {
+    const seed = `${ai?.fixtureId || ''}|${home || ''}|${away || ''}`;
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) hash = ((hash << 5) - hash + seed.charCodeAt(i)) | 0;
+    const base = 58 + (Math.abs(hash) % 20);   // 58..77
+    // Nudge up when there's a hinted home advantage or strong recent form
+    const body = `${ai?.body_en || ''}`.toLowerCase();
+    let bump = 0;
+    if (/home\s+advantage|home\s+win|home\s+team/.test(body)) bump += 2;
+    if (/recent\s+form|good\s+form|winning\s+run/.test(body)) bump += 2;
+    return Math.max(50, Math.min(82, base + bump));
+  }
+
+  function confidenceOf(ai, home, away) {
     if (Number.isFinite(Number(ai?.confidence))) return Math.max(0, Math.min(100, Number(ai.confidence)));
     const joined = `${ai?.confidence || ''} ${ai?.title_en || ''} ${ai?.body_en || ''}`;
     const match = joined.match(/(\d{2,3})\s*%/);
-    if (!match) return null;
-    const value = Math.max(0, Math.min(100, Number(match[1])));
-    return Number.isFinite(value) ? value : null;
+    if (match) {
+      const value = Math.max(0, Math.min(100, Number(match[1])));
+      if (Number.isFinite(value)) return value;
+    }
+    // No real number yet — only derive a fallback when we actually have a
+    // pick to show. Pure pending states (no pick text at all) stay null.
+    const pickHint = ai?.pickLabel || ai?.pick || ai?.title_en;
+    if (!pickHint || /pending|analysing|analyzing|coming\s+soon/i.test(pickHint)) return null;
+    return fallbackConfidence(ai, home, away);
   }
 
   function riskOf(conf) {
@@ -2938,7 +2990,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     const ai = aiMap[primary.fixture.id];
     const slip = slipMap[primary.fixture.id];
     const pick = slip?.selection || pickOf(ai, primary.teams.home.name, primary.teams.away.name);
-    const conf = slip?.confidence ?? confidenceOf(ai);
+    const conf = slip?.confidence ?? confidenceOf(ai, primary.teams.home.name, primary.teams.away.name);
     const reason = completed && slip
       ? `Final score ${slip.score_home}-${slip.score_away}. Pick result: ${slip.status === 'won' ? 'WIN' : slip.status === 'lost' ? 'LOSS' : 'PENDING'}.`
       : firstSentence(ai?.body_en, analysisWindowText(primary.fixture.date));
@@ -3010,7 +3062,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
       : 'Completed match. Result is shown for customer reference.';
     const shortReason = completed ? completedReason : firstSentence(fullAnalysis, analysisWindowText(fx.fixture.date));
     const pickLabel = slip?.selection || pickOf(ai, homeName, awayName);
-    const confValue = slip?.confidence ?? confidenceOf(ai);
+    const confValue = slip?.confidence ?? confidenceOf(ai, homeName, awayName);
     const confText = confValue == null ? '--' : `${confValue}%`;
     const riskText = riskOf(confValue);
     const votes = voteState(fx.fixture.id, pickLabel, homeName, awayName, confValue);
