@@ -272,20 +272,13 @@ body::before{
   <div class="wrap">
     <div class="brand">
       <img class="logo" src="https://scoreocs8.com/logo.png" alt="ScoreOcs8">
-      <div class="disclaimer">Odds Snapshot · Pick Tracking</div>
-    </div>
-
-    <div class="tabs">
-      <div class="tab">Pick Record</div>
-      <div class="tab active">Snapshot</div>
     </div>
 
     <div class="slip">
       <div class="slip-head">
         <div class="slip-title">
           <span class="i">i</span>
-          <span class="sn">Stake ${esc(d.stake)}</span>
-          <span class="sl">Single Pick</span>
+          <span class="sn">RM ${esc(d.stake)} Single</span>
         </div>
         <div class="badge ${badge.className}">${badge.text}</div>
       </div>
@@ -309,7 +302,7 @@ body::before{
           <div class="sfv">${esc(d.stake)}</div>
         </div>
         <div class="sfc">
-          <div class="sfl">Projected Return</div>
+          <div class="sfl">Payout</div>
           <div class="sfv pay${d.status === 'lost' ? ' pay-lost' : (d.status === 'running' ? ' pay-run' : '')}">${esc(d.payout.toFixed(2))}</div>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { screenshot } from './lib/screenshot.js';
-import { sendPhoto, sendMessage } from './lib/telegram.js';
+import { sendPhoto, sendMessage, sendPoll } from './lib/telegram.js';
 import {
   buildDailyCaption,
   buildDailyCaptionX,
@@ -1204,6 +1204,77 @@ async function bumpAccuracy(env, correct) {
   return data;
 }
 
+// 12h pre-match Telegram poll. Fires off the */15 heartbeat — scans the last
+// few days of generateDaily content for fixtures whose kickoff lies in the
+// 11h45m..12h15m window (covers any single */15 firing), posts a 'Who wins?'
+// poll once per fixture (KV flag `poll:posted:<id>` prevents duplicates).
+async function postPrematchPolls(env) {
+  if (!env.TG_BOT_TOKEN || !env.TG_CHANNEL_ID) {
+    return { status: 'skipped', reason: 'telegram not configured' };
+  }
+  if (!env?.CACHE) {
+    return { status: 'skipped', reason: 'no KV binding' };
+  }
+  const now = Date.now();
+  const WINDOW = 15 * 60 * 1000; // ±15 min around the 12h mark
+  const targetMs = 12 * 3600 * 1000;
+
+  // Walk the next 2 days of stored daily content (today + tomorrow MYT)
+  // since 12h-before-kickoff can sit either side of the date boundary.
+  const seenFixtures = new Map();
+  for (let i = 0; i < 2; i++) {
+    const d = new Date(now + i * 86400000).toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' });
+    let bundle;
+    try {
+      bundle = await env.CACHE.get(`content:${d}`, 'json');
+    } catch { continue; }
+    if (!bundle) continue;
+    const items = [];
+    if (bundle.top?.fixture) items.push(bundle.top.fixture);
+    for (const p of (bundle.previews || [])) {
+      if (p.fixture) items.push(p.fixture);
+    }
+    for (const fx of items) {
+      const id = fx?.fixture?.id;
+      if (!id || seenFixtures.has(id)) continue;
+      seenFixtures.set(id, fx);
+    }
+  }
+
+  const results = [];
+  for (const [id, fx] of seenFixtures) {
+    const kickoffMs = new Date(fx.fixture?.date || 0).getTime();
+    if (!Number.isFinite(kickoffMs)) continue;
+    const msUntil = kickoffMs - now;
+    if (Math.abs(msUntil - targetMs) > WINDOW) continue;
+
+    const flagKey = `poll:posted:${id}`;
+    const already = await env.CACHE.get(flagKey).catch(() => null);
+    if (already) {
+      results.push({ id, status: 'skipped', reason: 'already posted' });
+      continue;
+    }
+
+    const home = fx.teams?.home?.name || 'Home';
+    const away = fx.teams?.away?.name || 'Away';
+    const league = fx.league?.name || 'Football';
+    try {
+      const poll = await sendPoll(env, {
+        question: `⚽ Who wins? · 谁会获胜?\n${league}\n${home} vs ${away}`,
+        options: [home, 'Draw · 平局', away],
+        isAnonymous: true,
+      });
+      // 13h TTL — past kickoff the flag self-expires so KV doesn't grow.
+      await env.CACHE.put(flagKey, '1', { expirationTtl: 13 * 3600 });
+      results.push({ id, status: 'ok', messageId: poll.message_id, kickoff: fx.fixture?.date });
+    } catch (e) {
+      results.push({ id, status: 'error', error: String(e.message || e) });
+    }
+  }
+
+  return { status: 'ok', checked: seenFixtures.size, results };
+}
+
 async function checkFinishedMatches(env) {
   const date = todayMYT();
   const raw = await env.CACHE.get(`ft-queue:${date}`);
@@ -1341,7 +1412,11 @@ export default {
     } else if (cron.startsWith('0 2 ')) {
       ctx.waitUntil(postDailyToAll(env));
     } else if (cron.startsWith('*/15 ')) {
+      // Heartbeat does both: result slips for finished matches AND the 12h
+      // pre-match poll for upcoming featured fixtures. Both are KV-flagged
+      // so they fire at most once per fixture.
       ctx.waitUntil(checkFinishedMatches(env));
+      ctx.waitUntil(postPrematchPolls(env));
     } else {
       ctx.waitUntil(generateDaily(env));
     }
@@ -1351,12 +1426,13 @@ export default {
     if (url.searchParams.get('key') !== env.CRON_SECRET) {
       return new Response('unauthorized', { status: 401 });
     }
-    // Manual triggers: &task=generate | post | check | sportsbook-test
+    // Manual triggers: &task=generate | post | check | poll | sportsbook-test
     const task = url.searchParams.get('task') || 'generate';
     let result;
     if (task === 'sportsbook-test') result = await postSportsbookTemplateTest(env);
     else if (task === 'post') result = await postDailyToAll(env);
     else if (task === 'check') result = await checkFinishedMatches(env);
+    else if (task === 'poll') result = await postPrematchPolls(env);
     else result = await generateDaily(env);
     return new Response(JSON.stringify(result, null, 2), {
       headers: { 'content-type': 'application/json; charset=utf-8' },

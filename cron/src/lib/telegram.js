@@ -58,6 +58,34 @@ export async function sendMessage(env, { text, parseMode = 'HTML', disablePrevie
   return data.result;
 }
 
+// sendPoll for anonymous fan polls (e.g., 12h pre-match "Who wins?").
+// Telegram poll API: question max 300 chars, 2-10 options, each max 100 chars.
+export async function sendPoll(env, { question, options, isAnonymous = true }) {
+  assertCreds(env);
+  if (!Array.isArray(options) || options.length < 2 || options.length > 10) {
+    throw new Error(`sendPoll needs 2-10 options, got ${options?.length}`);
+  }
+  const res = await fetch(`${TG_API}/bot${env.TG_BOT_TOKEN}/sendPoll`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      chat_id: env.TG_CHANNEL_ID,
+      question: String(question || '').slice(0, 300),
+      options: options.map(o => String(o || '').slice(0, 100)),
+      is_anonymous: !!isAnonymous,
+      type: 'regular',
+      allows_multiple_answers: false,
+    }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!data.ok) {
+    throw new Error(
+      `Telegram sendPoll failed ${data.error_code || res.status}: ${data.description || 'unknown'}`
+    );
+  }
+  return data.result;
+}
+
 function assertCreds(env) {
   if (!env.TG_BOT_TOKEN || !env.TG_CHANNEL_ID) {
     throw new Error('TG_BOT_TOKEN and TG_CHANNEL_ID must be set');
