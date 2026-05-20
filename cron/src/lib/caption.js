@@ -96,6 +96,12 @@ export function buildDailyCaption({
   lines.push(`👉 ${siteUrl}/`);
   lines.push('');
 
+  // Always include the OCS8 Sports signup CTA — single source of truth for
+  // the affiliate funnel from Telegram captions.
+  lines.push(`🆕 <b>Sign up · OCS8 Sports</b> | 立即注册:`);
+  lines.push(`👉 https://ocs8my.com/signup?ref=OCSFMZ6HVI`);
+  lines.push('');
+
   if (affiliates.length) {
     lines.push(`🎁 <b>Welcome bonus</b> | 领取新手礼金:`);
     for (const a of affiliates) {
@@ -239,6 +245,9 @@ export function buildResultCaption({ fixture, pickCorrect = null, weekAcc = null
   }
   lines.push('');
   lines.push(`🔗 Full analysis | 完整分析: ${siteUrl}/`);
+  lines.push('');
+  lines.push(`🆕 <b>Sign up · OCS8 Sports</b> | 立即注册:`);
+  lines.push(`👉 https://ocs8my.com/signup?ref=OCSFMZ6HVI`);
   lines.push('');
   lines.push(`#ScoreOcs8 #${esc(league).replace(/\s+/g, '')} #足球预测`);
 

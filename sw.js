@@ -91,7 +91,7 @@ self.addEventListener('notificationclick', event => {
   event.notification.close();
   const action = event.action;
   const targetUrl = action === 'bet'
-    ? '/register.html'
+    ? 'https://ocs8my.com/signup?ref=OCSFMZ6HVI'
     : (event.notification.data?.url || '/');
 
   event.waitUntil(

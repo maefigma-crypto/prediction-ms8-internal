@@ -678,7 +678,7 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
   <div class="cta">
     <h3>Bet on this prediction</h3>
     <p>Open the official OCS8 money-site domain to register, login, and place this pick.</p>
-    <a class="cta-btn" href="/register.html">Open OCS8</a>
+    <a class="cta-btn" href="https://ocs8my.com/signup?ref=OCSFMZ6HVI" target="_blank" rel="noopener">Open OCS8</a>
   </div>
 
   <p style="font-size:12px;color:var(--text3);text-align:center;margin-top:30px;">ScoreOcs8 predictions are informational only — not a guarantee. 18+ only.</p>
