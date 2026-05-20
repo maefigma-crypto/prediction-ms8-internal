@@ -3169,8 +3169,14 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
       .filter(fx => fx.fixture?.status?.short === 'FT')
       .sort((a,b) => new Date(b.fixture.date) - new Date(a.fixture.date));
     let list = [...nearUpcoming, ...recentCompleted, ...upcoming.filter(fx => !nearUpcoming.includes(fx))];
-    if (mode === 'today') list = all.filter(fx => klDateKey(fx.fixture.date) === klToday());
-    if (mode === 'completed') list = all.filter(fx => fx.fixture?.status?.short === 'FT');
+    if (mode === 'today') {
+      list = all.filter(fx => klDateKey(fx.fixture.date) === klToday())
+        .sort((a,b) => new Date(a.fixture.date) - new Date(b.fixture.date));
+    }
+    if (mode === 'completed') {
+      list = all.filter(fx => fx.fixture?.status?.short === 'FT')
+        .sort((a,b) => new Date(b.fixture.date) - new Date(a.fixture.date));
+    }
     list = list.slice(0, 6);
     if (!list.length) {
       const msg = mode === 'completed' ? 'No completed fixtures in this feed yet.' : mode === 'today' ? 'No matches scheduled today.' : 'No upcoming fixtures in covered leagues. Check back later.';
