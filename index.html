@@ -348,7 +348,15 @@ body > nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-it
 .live-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:1px;background:var(--border);}
 .live-main,.live-side{background:var(--card);padding:14px 16px;}
 .live-match-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
-.live-teams{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin-bottom:12px;}
+.live-teams{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin-bottom:12px;text-decoration:none;color:inherit;border-radius:8px;padding:8px;margin-left:-8px;margin-right:-8px;transition:background .15s;}
+a.live-teams:hover,a.live-teams:focus{background:rgba(249,115,22,.06);outline:none;}
+.live-cta{display:grid;grid-template-columns:1fr auto;align-items:center;gap:14px;text-decoration:none;color:inherit;background:linear-gradient(135deg,rgba(249,115,22,.16),rgba(249,115,22,.04));border:1px solid rgba(249,115,22,.36);border-radius:10px;padding:14px 16px;box-shadow:inset 0 1px 0 rgba(255,255,255,.10);transition:all .15s;}
+.live-cta:hover,.live-cta:focus{background:linear-gradient(135deg,rgba(249,115,22,.24),rgba(249,115,22,.08));border-color:rgba(249,115,22,.55);outline:none;}
+.live-cta-eyebrow{grid-column:1/-1;font-family:var(--fm);font-size:10px;color:var(--text3);letter-spacing:.10em;text-transform:uppercase;margin-bottom:4px;}
+.live-cta-title{font-family:var(--ff);font-size:18px;font-weight:700;color:var(--text);letter-spacing:.02em;}
+.live-cta-sub{font-family:var(--fm);font-size:12px;color:var(--text2);letter-spacing:.04em;margin-top:2px;}
+.live-cta-arrow{font-family:var(--ff);font-size:28px;font-weight:700;color:var(--accent);grid-row:2/4;align-self:center;transition:transform .15s;}
+.live-cta:hover .live-cta-arrow{transform:translateX(4px);}
 .live-team{display:flex;align-items:center;gap:9px;min-width:0;}
 .live-team.away{justify-content:flex-end;text-align:right;}
 .live-team img{width:34px;height:34px;object-fit:contain;border-radius:50%;background:var(--bg3);border:1px solid var(--border);}
@@ -2229,8 +2237,8 @@ const SCOREOCS8_I18N = {
       upcoming: '⏰ Upcoming',
       today: '📅 Today',
       completed: '✅ Completed',
-      liveTitle: 'Live & Today Match Center',
-      liveSub: 'Live first · Today next · Prediction shown in one place',
+      liveTitle: "Live Matches & Today's Games",
+      liveSub: "Live games first, then today's kickoffs",
       autoUpdated: 'AUTO UPDATED',
       nextMatches: 'Next matches',
       easy: 'EASY-READ SOCCER PICKS',
@@ -2342,8 +2350,8 @@ const SCOREOCS8_I18N = {
       upcoming: '⏰ Akan Datang',
       today: '📅 Hari Ini',
       completed: '✅ Selesai',
-      liveTitle: 'Pusat Perlawanan Live & Hari Ini',
-      liveSub: 'Live dahulu · Hari ini seterusnya · Ramalan dipaparkan di satu tempat',
+      liveTitle: 'Perlawanan Live & Hari Ini',
+      liveSub: 'Perlawanan live dahulu, kemudian perlawanan hari ini',
       autoUpdated: 'AUTO UPDATE',
       nextMatches: 'Perlawanan seterusnya',
       easy: 'PILIHAN BOLA MUDAH BACA',
@@ -2455,8 +2463,8 @@ const SCOREOCS8_I18N = {
       upcoming: '⏰ 即将开赛',
       today: '📅 今日',
       completed: '✅ 已结束',
-      liveTitle: '实时与今日赛事中心',
-      liveSub: '实时优先 · 今日其次 · 预测集中显示',
+      liveTitle: '实时与今日比赛',
+      liveSub: '先看实时比赛，再看今日开球',
       autoUpdated: '自动更新',
       nextMatches: '下一场比赛',
       easy: '易读足球推荐',
@@ -2852,7 +2860,11 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
   }
 
   function confidenceOf(ai, home, away) {
-    if (Number.isFinite(Number(ai?.confidence))) return Math.max(0, Math.min(100, Number(ai.confidence)));
+    // ai.confidence can be explicit null (pending API response) — guard
+    // against Number(null) === 0 turning that into a fake 0% confidence.
+    if (ai?.confidence != null && Number.isFinite(Number(ai.confidence))) {
+      return Math.max(0, Math.min(100, Number(ai.confidence)));
+    }
     const joined = `${ai?.confidence || ''} ${ai?.title_en || ''} ${ai?.body_en || ''}`;
     const match = joined.match(/(\d{2,3})\s*%/);
     if (match) {
@@ -2997,18 +3009,32 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     const badge = live_ ? `<span class="blive"><span class="ldot"></span>LIVE</span>` : completed ? `<span class="result-strip final" style="margin:0;padding:3px 8px;font-size:10px;">FT</span>` : `<span class="bpred">NEXT</span>`;
 
     if (main) {
+      // For completed matches without a real Claude pick or tracked slip,
+      // the 'Pro analysis pending · 0%' card is misleading — the match is
+      // already over. Swap for a CTA that lands customers on the rich
+      // /match/<id>/ page (timeline + lineups + game leaders).
+      const matchHref = `/match/${primary.fixture.id}-${slugify(`${primary.teams.home.name}-vs-${primary.teams.away.name}`)}/`;
+      const isPending = !slip && (!ai || /pending|analysing|coming\s+soon/i.test(String(ai?.pickLabel || ai?.pick || '')));
+      const pickBlock = (completed && isPending)
+        ? `<a class="live-cta" href="${esc(matchHref)}">
+             <div class="live-cta-eyebrow">${esc(m.name)} · ${esc(mytDate(primary.fixture.date))}</div>
+             <div class="live-cta-title">📊 Full match details</div>
+             <div class="live-cta-sub">Timeline · lineups · stats · head-to-head</div>
+             <div class="live-cta-arrow" aria-hidden="true">→</div>
+           </a>`
+        : `<div class="live-pickbox">
+             <div class="live-pick-label">Pro Analysis</div>
+             <div class="live-pick-value">${esc(pick)}${conf == null ? '' : ` · ${esc(conf)}%`}</div>
+             <div class="live-reason">${esc(reason)}</div>
+           </div>`;
       main.innerHTML = `
         <div class="live-match-meta">${badge}<span class="pcl"><span class="lbadge" style="background:${m.swatch}">${m.flag}</span>${esc(m.name)} · ${esc(mytDate(primary.fixture.date))}</span></div>
-        <div class="live-teams">
+        <a class="live-teams" href="${esc(matchHref)}" aria-label="Open ${esc(primary.teams.home.name)} vs ${esc(primary.teams.away.name)} match details">
           <div class="live-team"><img src="${esc(primary.teams.home.logo || '')}" onerror="this.style.display='none'"><div class="live-team-name">${esc(primary.teams.home.name)}</div></div>
           <div class="live-scorebox"><strong>${esc(score)}</strong><span>${esc(scoreLabel)}</span></div>
           <div class="live-team away"><div class="live-team-name">${esc(primary.teams.away.name)}</div><img src="${esc(primary.teams.away.logo || '')}" onerror="this.style.display='none'"></div>
-        </div>
-        <div class="live-pickbox">
-          <div class="live-pick-label">Pro Analysis</div>
-          <div class="live-pick-value">${esc(pick)}${conf == null ? '' : ` · ${esc(conf)}%`}</div>
-          <div class="live-reason">${esc(reason)}</div>
-        </div>`;
+        </a>
+        ${pickBlock}`;
     }
 
     if (side) {
