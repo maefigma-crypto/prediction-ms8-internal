@@ -166,12 +166,64 @@ async function handleOdds(env, url) {
   }, { refresh });
 }
 
+// Locate a single fixture by id. API-Football's /fixtures?id=X started
+// returning empty on the renewed Pro subscription, so we try that first
+// (in case it gets fixed) and fall back to scanning the cached
+// /api/fixtures payloads — those use /fixtures?league=X&season=Y which
+// still works fine.
+async function lookupFixture(env, fixtureId) {
+  const id = parseInt(fixtureId, 10);
+  if (!id) return null;
+  // 1. Direct lookup (preferred, gives us the freshest object)
+  try {
+    const direct = await afGet(env, '/fixtures', { id });
+    if (direct.response?.[0]) return direct.response[0];
+  } catch { /* fall through */ }
+  // 2. Multi-league cached payload (homepage default)
+  const tryKeys = [
+    `fixtures:v2:${DEFAULT_SEASON}`,
+    `fixtures:v2:league:39:${DEFAULT_SEASON}`,
+    `fixtures:v2:league:2:${DEFAULT_SEASON}`,
+    `fixtures:v2:league:1:${DEFAULT_SEASON}`,
+    `fixtures:v2:league:140:${DEFAULT_SEASON}`,
+    `fixtures:v2:league:135:${DEFAULT_SEASON}`,
+    `fixtures:v2:league:78:${DEFAULT_SEASON}`,
+    `fixtures:v2:league:61:${DEFAULT_SEASON}`,
+  ];
+  if (env?.CACHE) {
+    for (const key of tryKeys) {
+      const cached = await env.CACHE.get(key, 'json');
+      if (!cached) continue;
+      for (const lg of cached.leagues || []) {
+        for (const bucket of ['next', 'today', 'last']) {
+          const found = (lg[bucket] || []).find(fx => fx.fixture?.id === id);
+          if (found) return found;
+        }
+      }
+    }
+  }
+  // 3. Last resort — fetch each priority league fresh and scan
+  for (const lgId of [39, 2, 1, 140, 135, 78, 61]) {
+    try {
+      const [next, last, today] = await Promise.all([
+        afGet(env, '/fixtures', { league: lgId, season: DEFAULT_SEASON, next: 20 }),
+        afGet(env, '/fixtures', { league: lgId, season: DEFAULT_SEASON, last: 20 }),
+        afGet(env, '/fixtures', { league: lgId, season: DEFAULT_SEASON, date: new Date().toISOString().slice(0, 10) }),
+      ]);
+      for (const arr of [next.response, today.response, last.response]) {
+        const found = (arr || []).find(fx => fx.fixture?.id === id);
+        if (found) return found;
+      }
+    } catch { /* try next league */ }
+  }
+  return null;
+}
+
 async function handlePredictions(env, url) {
   const fixtureId = url.searchParams.get('fixture_id');
   if (!fixtureId) return { error: 'fixture_id required', status: 400 };
 
-  const fixtureData = await afGet(env, '/fixtures', { id: fixtureId });
-  const fx = fixtureData.response?.[0];
+  const fx = await lookupFixture(env, fixtureId);
   if (!fx) throw new Error('fixture not found');
 
   const kickoffMs = new Date(fx.fixture?.date || 0).getTime();
@@ -209,8 +261,7 @@ async function handleMatchDetail(env, url) {
   if (!fixtureId) return { error: 'fixture_id required', status: 400 };
 
   return cached(env, `match-detail:${fixtureId}`, TTL.matchDetail, async () => {
-    const fixtureData = await afGet(env, '/fixtures', { id: fixtureId });
-    const fx = fixtureData.response?.[0];
+    const fx = await lookupFixture(env, fixtureId);
     if (!fx) throw new Error('fixture not found');
 
     const home = fx.teams.home.id;
