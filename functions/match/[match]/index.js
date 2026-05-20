@@ -154,6 +154,45 @@ export async function onRequest(context) {
     })
     .sort((a, b) => parseInt(a.minLabel) - parseInt(b.minLabel));
 
+  // Game leaders — top scorer / assister / cards per team for the match.
+  // Backend already aggregated; we just decide whether the section has
+  // anything worth showing.
+  const leaders = detail?.leaders || { goals: {}, assists: {}, cards: {} };
+  const hasAnyLeader = ['goals', 'assists', 'cards'].some(k =>
+    (leaders[k]?.home || leaders[k]?.away)
+  );
+  const leaderCols = [
+    { key: 'goals', label: 'Goals', stat: 'goals', statLabel: 'GLS' },
+    { key: 'assists', label: 'Assists', stat: 'assists', statLabel: 'AST' },
+    { key: 'cards', label: 'Cards', stat: null, statLabel: '' },
+  ];
+  const leaderCard = (p, side) => {
+    if (!p) return '<div class="gl-empty">—</div>';
+    const teamLogo = side === 'home' ? homeLogo : awayLogo;
+    return `<div class="gl-card gl-${side}">
+      ${teamLogo ? `<img class="gl-tlogo" src="${esc(teamLogo)}" alt="" loading="lazy">` : ''}
+      ${p.photo ? `<img class="gl-photo" src="${esc(p.photo)}" alt="${esc(p.name)}" loading="lazy">` : '<div class="gl-photo-fb" aria-hidden="true">⚽</div>'}
+      <div class="gl-body">
+        <div class="gl-name">${esc(p.name)}</div>
+        <div class="gl-pos">${esc(p.position || '')}${p.number != null ? ` · #${esc(p.number)}` : ''}</div>
+      </div>
+    </div>`;
+  };
+  const leaderStats = (p, key) => {
+    if (!p) return '';
+    const goals = `<span><strong>${esc(p.goals)}</strong>GLS</span>`;
+    const assists = `<span><strong>${esc(p.assists)}</strong>AST</span>`;
+    const shots = `<span><strong>${esc(p.shots)}</strong>SH</span>`;
+    const shotsOn = `<span><strong>${esc(p.shotsOn)}</strong>SHOG</span>`;
+    const minutes = `<span><strong>${esc(p.minutes)}</strong>MIN</span>`;
+    const yellow = `<span><strong>${esc(p.yellow)}</strong>YC</span>`;
+    const red = `<span><strong>${esc(p.red)}</strong>RC</span>`;
+    if (key === 'goals') return `<div class="gl-stats">${goals}${shots}${shotsOn}${minutes}</div>`;
+    if (key === 'assists') return `<div class="gl-stats">${assists}${shots}${minutes}</div>`;
+    if (key === 'cards') return `<div class="gl-stats">${red}${yellow}${minutes}</div>`;
+    return '';
+  };
+
   const expectedSlug = slugify(`${home}-vs-${away}`);
   const canonicalSlug = expectedSlug ? `${fixtureId}-${expectedSlug}` : `${fixtureId}`;
   const canonical = `${SITE}/match/${canonicalSlug}/`;
@@ -344,6 +383,20 @@ h1 .vs{color:var(--text3);margin:0 14px;font-weight:500;}
 .tl-icon.own{background:rgba(255,71,87,.10);border-color:rgba(255,71,87,.30);}
 .tl-icon.pen{background:rgba(0,229,160,.10);border-color:rgba(0,229,160,.30);}
 .tl-ft{position:absolute;top:50%;right:0;transform:translateY(-50%);padding:5px 9px;border-radius:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);font-family:var(--fm);font-size:10px;letter-spacing:.10em;text-transform:uppercase;color:var(--text2);}
+.gl-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;}
+.gl-col{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px 14px 12px;display:flex;flex-direction:column;gap:10px;}
+.gl-col-h{font-family:var(--ff);font-size:13px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--accent);}
+.gl-card{position:relative;display:grid;grid-template-columns:48px 1fr;align-items:center;gap:12px;padding:10px;border-radius:10px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);}
+.gl-tlogo{position:absolute;top:6px;right:6px;width:18px;height:18px;object-fit:contain;opacity:.85;}
+.gl-photo{width:48px;height:48px;border-radius:50%;object-fit:cover;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);}
+.gl-photo-fb{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:20px;}
+.gl-body{min-width:0;}
+.gl-name{font-family:var(--ff);font-size:15px;font-weight:700;color:var(--text);line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.gl-pos{font-family:var(--fm);font-size:11px;color:var(--text3);letter-spacing:.04em;margin-top:3px;}
+.gl-stats{display:flex;justify-content:flex-start;gap:14px;padding:0 4px 2px;margin-top:-4px;}
+.gl-stats span{font-family:var(--fm);font-size:10px;letter-spacing:.06em;color:var(--text3);text-transform:uppercase;display:inline-flex;flex-direction:column;align-items:center;gap:1px;}
+.gl-stats strong{font-family:var(--ff);font-size:14px;font-weight:700;color:var(--text);letter-spacing:0;}
+.gl-empty{padding:10px;border-radius:10px;background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.10);text-align:center;font-family:var(--fm);font-size:11px;color:var(--text3);letter-spacing:.04em;}
 .pick-card{padding:20px 22px;border-radius:16px;background:linear-gradient(135deg,rgba(249,115,22,0.18),rgba(249,115,22,0.04));border:1px solid rgba(249,115,22,0.32);box-shadow:inset 0 1px 0 rgba(255,255,255,0.10),0 0 30px rgba(249,115,22,0.18);}
 .pick-card .label{font-family:var(--fm);font-size:10px;color:var(--text3);letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px;}
 .pick-card .pick{font-family:var(--ff);font-size:26px;font-weight:700;color:var(--accent);letter-spacing:.04em;}
@@ -396,6 +449,9 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
   .tl-track{min-width:480px;}
   .tl-event{width:32px;}
   .tl-icon{width:22px;height:22px;font-size:14px;}
+  .gl-grid{grid-template-columns:1fr;}
+  .gl-stats span{font-size:9px;}
+  .gl-stats strong{font-size:13px;}
   .h2h-logo{width:22px;height:22px;}
 }
 </style>
@@ -466,6 +522,25 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
         ${timelineEvents.map(e => `<div class="tl-event tl-${e.side}" style="left:${e.pct.toFixed(2)}%" role="listitem" title="${esc(e.minLabel)} — ${esc(e.label)}${e.player ? ' · ' + esc(e.player) : ''}${e.assist ? ' (assist: ' + esc(e.assist) + ')' : ''}"><span class="tl-icon ${e.cls}" aria-hidden="true">${e.sym}</span><span class="tl-min">${esc(e.minLabel)}</span></div>`).join('')}
         ${FINISHED.has(statusShort) ? `<div class="tl-ft" aria-label="Full time">${esc(statusShort)}</div>` : ''}
       </div>
+    </div>
+  </section>` : ''}
+
+  ${hasAnyLeader ? `
+  <section class="section">
+    <h2>Game leaders <small>· top performers per team</small></h2>
+    <div class="gl-grid">
+      ${leaderCols.map(col => {
+        const homeP = leaders[col.key]?.home;
+        const awayP = leaders[col.key]?.away;
+        if (!homeP && !awayP) return '';
+        return `<div class="gl-col">
+          <div class="gl-col-h">${esc(col.label)}</div>
+          ${leaderCard(homeP, 'home')}
+          ${leaderStats(homeP, col.key)}
+          ${leaderCard(awayP, 'away')}
+          ${leaderStats(awayP, col.key)}
+        </div>`;
+      }).join('')}
     </div>
   </section>` : ''}
 
