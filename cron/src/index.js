@@ -1546,18 +1546,135 @@ async function checkFinishedMatches(env) {
   return { status: 'ok', ...report, total: queue.length };
 }
 
+// --- Daily recap (23:30 MYT) ------------------------------------------------
+//
+// Per-day W/L summary + running week record + tomorrow MOTD teaser. Fires
+// after the last match of the day has had time to reach FT (~23:30 MYT = the
+// tail of the European evening slate, ~3h after KO of a 20:00 MYT game).
+//
+// Dedup: posted:recap:<date> with 36h TTL. Skips silently when there's
+// nothing reconciled to report (off-days produce no spam).
+async function postDailyRecap(env) {
+  if (!env.TG_BOT_TOKEN || !env.TG_CHANNEL_ID) {
+    return { status: 'skipped', reason: 'telegram not configured' };
+  }
+  const date = todayMYT();
+  const dedupKey = `posted:recap:${date}`;
+  if (await env.CACHE.get(dedupKey).catch(() => null)) {
+    return { status: 'skipped', reason: 'already posted', date };
+  }
+
+  // 1. Today's reconciled results from the ft-queue.
+  const raw = await env.CACHE.get(`ft-queue:${date}`);
+  let queue = [];
+  if (raw) { try { queue = JSON.parse(raw); } catch {} }
+  const reconciled = queue.filter(q =>
+    q.posted === true && (q.correct === true || q.correct === false)
+  );
+  if (reconciled.length === 0) {
+    return { status: 'skipped', reason: 'no reconciled results today', date };
+  }
+  const wins = reconciled.filter(q => q.correct === true).length;
+  const losses = reconciled.length - wins;
+
+  // 2. Running week record (already maintained by bumpAccuracy()).
+  let weekAcc = null;
+  try {
+    const wraw = await env.CACHE.get('accuracy:week:current');
+    if (wraw) {
+      const w = JSON.parse(wraw);
+      if (w.total) {
+        weekAcc = { hits: w.hits, total: w.total, pct: Math.round((w.hits / w.total) * 100) };
+      }
+    }
+  } catch {}
+
+  // 3. Tomorrow's MOTD teaser — first featured fixture from the next-day bundle.
+  const tomorrowDate = new Date(Date.now() + 86400000)
+    .toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' });
+  let tomorrowFx = null;
+  try {
+    const bundle = await env.CACHE.get(`content:${tomorrowDate}`, 'json');
+    tomorrowFx = bundle?.top?.fixture || null;
+  } catch {}
+
+  // 4. Build the caption.
+  const lines = [];
+  lines.push('<b>📊 Daily Recap · 今日回顾</b>');
+  lines.push('');
+  for (const r of reconciled) {
+    const emoji = r.correct === true ? '✅' : '❌';
+    const verdict = r.correct === true ? 'WIN' : 'LOSS';
+    lines.push(`${emoji} ${r.home || 'Home'} vs ${r.away || 'Away'} — ${verdict}`);
+  }
+  lines.push('');
+  lines.push(`<b>Today:</b> ${wins}W · ${losses}L`);
+  if (weekAcc) {
+    lines.push(`<b>This week:</b> ${weekAcc.hits}/${weekAcc.total} (${weekAcc.pct}%)`);
+  }
+
+  if (tomorrowFx) {
+    const home = tomorrowFx.teams?.home?.name || 'TBD';
+    const away = tomorrowFx.teams?.away?.name || 'TBD';
+    const league = tomorrowFx.league?.name || 'Football';
+    const ko = tomorrowFx.fixture?.date;
+    let koStr = '';
+    if (ko) {
+      const koDate = new Date(ko);
+      if (!isNaN(koDate.getTime())) {
+        koStr = koDate.toLocaleString('en-GB', {
+          timeZone: 'Asia/Kuala_Lumpur',
+          day: '2-digit', month: 'short',
+          hour: '2-digit', minute: '2-digit',
+          hour12: false,
+        }) + ' MYT';
+      }
+    }
+    lines.push('');
+    lines.push('<b>⚽ Tomorrow · 明日焦点</b>');
+    lines.push(`${league} · ${home} vs ${away}`);
+    if (koStr) lines.push(`Kickoff: ${koStr}`);
+  }
+
+  lines.push('');
+  lines.push(`<a href="${SITE_URL}">Open ScoreOCS8 for full AI analysis →</a>`);
+
+  try {
+    const msg = await sendMessage(env, { text: lines.join('\n') });
+    await env.CACHE.put(dedupKey, JSON.stringify({ message_id: msg.message_id, ts: Date.now() }), {
+      expirationTtl: 36 * 3600,
+    });
+    return {
+      status: 'ok',
+      date,
+      day: { played: reconciled.length, wins, losses },
+      weekAcc,
+      tomorrow: tomorrowFx ? {
+        home: tomorrowFx.teams?.home?.name,
+        away: tomorrowFx.teams?.away?.name,
+      } : null,
+      message_id: msg.message_id,
+    };
+  } catch (e) {
+    return { status: 'error', error: String(e.message || e) };
+  }
+}
+
 export default {
   async scheduled(event, env, ctx) {
     // Dispatch by cron pattern:
     //   23:00 UTC = 07:00 MYT → generate tomorrow's content
     //   01:00 UTC = 09:00 MYT → sportsbook daily batch (gated by panel toggle)
     //   02:00 UTC = 10:00 MYT → post today's AI picks to Telegram
-    //   */15 * UTC → check FT queue and post result slips
+    //   15:30 UTC = 23:30 MYT → daily recap (W/L + tomorrow MOTD)
+    //   */15 * UTC → heartbeat (KO-30 alert, 12h poll, FT result slips)
     const cron = event.cron || '';
     if (cron.startsWith('0 1 ')) {
       ctx.waitUntil(runSportsbookDaily(env));
     } else if (cron.startsWith('0 2 ')) {
       ctx.waitUntil(postDailyToAll(env));
+    } else if (cron.startsWith('30 15 ')) {
+      ctx.waitUntil(postDailyRecap(env));
     } else if (cron.startsWith('*/15 ')) {
       // Heartbeat does three things:
       //   1. KO-30 pre-match alert for the MOTD fixture
@@ -1576,7 +1693,7 @@ export default {
     if (url.searchParams.get('key') !== env.CRON_SECRET) {
       return new Response('unauthorized', { status: 401 });
     }
-    // Manual triggers: &task=generate | post | check | poll | premat | sportsbook-test
+    // Manual triggers: generate | post | check | poll | premat | recap | sportsbook-test
     const task = url.searchParams.get('task') || 'generate';
     let result;
     if (task === 'sportsbook-test') result = await postSportsbookTemplateTest(env);
@@ -1584,6 +1701,7 @@ export default {
     else if (task === 'check') result = await checkFinishedMatches(env);
     else if (task === 'poll') result = await postPrematchPolls(env);
     else if (task === 'premat') result = await postPreMatchAlerts(env);
+    else if (task === 'recap') result = await postDailyRecap(env);
     else result = await generateDaily(env);
     return new Response(JSON.stringify(result, null, 2), {
       headers: { 'content-type': 'application/json; charset=utf-8' },
