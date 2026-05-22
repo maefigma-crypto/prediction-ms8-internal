@@ -62,7 +62,9 @@ export async function onRequestGet({ request }) {
   const away = shortTeam(url.searchParams.get('away') || 'Away');
   const league = (url.searchParams.get('league') || 'Football').toUpperCase();
   const dateStr = fmtMytDateTime(url.searchParams.get('date'));
-  const tag = (url.searchParams.get('tag') || 'PRO PICK').toUpperCase();
+  // Empty default — caller MUST pass an actual pick label. If missing we
+  // render a plain "PRO PICK" badge instead of "PRO PICK: PRO PICK".
+  const tag = (url.searchParams.get('tag') || '').toUpperCase();
   const conf = parseInt(url.searchParams.get('confidence') || '', 10);
   const confStr = Number.isFinite(conf) && conf > 0 ? `${conf}%` : '';
   const homeLogo = url.searchParams.get('home_logo') || '';
@@ -80,8 +82,15 @@ export async function onRequestGet({ request }) {
     ? `<image href="${escXml(awayLogo)}" x="854" y="312" width="156" height="156" preserveAspectRatio="xMidYMid meet"/>`
     : `<text x="932" y="412" font-family="system-ui,-apple-system,sans-serif" font-size="62" font-weight="900" fill="#ffffff" text-anchor="middle" opacity=".85">${escXml(teamInitials(away))}</text>`;
 
-  // Pick badge width — auto-fit based on content length
-  const pickLabelFull = confStr ? `PRO PICK: ${tag}  •  ${confStr}` : `PRO PICK: ${tag}`;
+  // Pick badge width — auto-fit based on content length.
+  // When tag is empty (no real pick), render just "PRO PICK" instead of
+  // the broken "PRO PICK: PRO PICK" that came from the old default.
+  let pickLabelFull;
+  if (tag) {
+    pickLabelFull = confStr ? `PRO PICK: ${tag}  •  ${confStr}` : `PRO PICK: ${tag}`;
+  } else {
+    pickLabelFull = confStr ? `PRO PICK  •  ${confStr}` : `PRO PICK`;
+  }
   const pickWidth = Math.max(480, pickLabelFull.length * 13 + 80);
   const pickX = 640 - pickWidth / 2;
 

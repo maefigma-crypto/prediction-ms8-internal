@@ -7,8 +7,11 @@ compatibility_date = "2025-09-01"
 #   01:00 UTC = 09:00 MYT → runSportsbookDaily() posts sportsbook batch
 #                          (only when panel Automation toggle is ON)
 #   02:00 UTC = 10:00 MYT → postDailyToTelegram() screenshots + posts
-#   */15 * * * * → checkFinishedMatches() posts virtual bet slip at FT.
-#                  Early-returns when the queue is empty so idle days
+#   */15 * * * * → heartbeat runs 3 KV-dedupe'd jobs per tick:
+#                    • postPreMatchAlerts()  — MOTD alert ~KO-30min
+#                    • postPrematchPolls()   — fan poll ~KO-12h
+#                    • checkFinishedMatches() — FT result slip ~KO+100min
+#                  Each early-returns when nothing's due, so idle days
 #                  consume zero API-Football quota.
 [triggers]
 crons = ["0 23 * * *", "0 1 * * *", "0 2 * * *", "*/15 * * * *"]

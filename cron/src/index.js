@@ -680,16 +680,26 @@ const SPORTSBOOK_PAGE_BY_KEY = {
 //   reminder   → text-only (kickoff alert, image not essential)
 //   blog       → og:image from /blog/
 //   proof      → og:image from /  (user will typically disable this template)
+// A pick is "ready" only when it carries a real label/value AND that value
+// isn't the placeholder the AI pipeline writes before analysis completes.
+// This is the single source of truth for "do we have content worth posting?"
+function isPickReady(pick) {
+  const label = String(pick?.pickLabel || pick?.pick || '').trim();
+  if (!label) return false;
+  return !/^(pending|pro\s+analysis\s+pending|analysing|coming\s+soon)$/i.test(label);
+}
+
 function defaultImageStrategy(key, topFx, topPick, hasHighlight, batchToken) {
   if (key === 'prediction' && topFx?.fixture?.id) {
+    const realTag = isPickReady(topPick) ? (topPick.pickLabel || topPick.pick) : '';
     const params = new URLSearchParams({
       home:    topFx.teams?.home?.name || 'Home',
       away:    topFx.teams?.away?.name || 'Away',
       league:  topFx.league?.name || 'Football',
       date:    topFx.fixture?.date || '',
-      tag:     topPick?.pickLabel || topPick?.pick || 'PRO PICK',
       v:       String(batchToken),
     });
+    if (realTag) params.set('tag', realTag);
     if (topPick?.confidence != null) params.set('confidence', String(topPick.confidence));
     if (topFx.teams?.home?.logo) params.set('home_logo', topFx.teams.home.logo);
     if (topFx.teams?.away?.logo) params.set('away_logo', topFx.teams.away.logo);
@@ -781,10 +791,20 @@ async function postSportsbookTemplateTest(env) {
     '💬 "La Liga call landed, RM3,250 return." — TAN',
   ].join('\n');
 
+  // Templates that depend on a concrete pro pick. Refuse to post these
+  // when the AI pipeline hasn't produced a real pick yet — otherwise the
+  // channel ships a "Pro analysis pending" / "PRO PICK: PRO PICK" card.
+  const PICK_DEPENDENT_KEYS = new Set(['prediction', 'reminder']);
+  const pickReady = isPickReady(topPick);
+
   for (const key of SPORTSBOOK_TEMPLATE_KEYS) {
     const userTpl = config?.templates?.[key];
     if (userTpl && userTpl.enabled === false) {
       report.results.push({ key, status: 'skipped', reason: 'template disabled' });
+      continue;
+    }
+    if (PICK_DEPENDENT_KEYS.has(key) && !pickReady) {
+      report.results.push({ key, status: 'skipped', reason: 'pick not ready (no pickLabel from AI pipeline yet)' });
       continue;
     }
 
@@ -947,6 +967,19 @@ async function runSportsbookDaily(env) {
   const result = await postSportsbookTemplateTest(env);
   result.trigger = 'daily-cron';
   result.fired_on = todayMyt;
+
+  // If the pick-dependent templates were skipped because the AI pipeline
+  // hadn't produced a real pick yet, release the dedup slot so a manual
+  // retry (or the next cron tick, if added) can re-fire once picks land.
+  // Otherwise today's prediction post is silently lost for 36h.
+  const skippedForPickGap = (result.results || []).some(r =>
+    r.status === 'skipped' && /pick not ready/i.test(r.reason || '')
+  );
+  if (skippedForPickGap) {
+    await env.CACHE.delete(dedupKey);
+    result.dedup = 'released — pick not ready, retry allowed';
+  }
+
   return result;
 }
 
@@ -1284,6 +1317,89 @@ async function postPrematchPolls(env) {
   return { status: 'ok', checked: seenFixtures.size, results };
 }
 
+// --- KO-30 pre-match alert --------------------------------------------------
+//
+// Fires once per Match-of-the-Day fixture when kickoff is ~15-35 min away.
+// The window is wider than 30 ± a few to guarantee that at least one of the
+// */15 cron ticks lands inside it; the per-fixture KV dedup
+// (posted:premat30:<id>) ensures we never double-send.
+//
+// Cost: 0-1 sendMessage calls per cron tick. Skipped entirely when pick
+// isn't ready, so a stalled AI pipeline never produces a broken alert.
+async function postPreMatchAlerts(env) {
+  if (!env.TG_BOT_TOKEN || !env.TG_CHANNEL_ID) {
+    return { status: 'skipped', reason: 'telegram not configured' };
+  }
+  const date = todayMYT();
+  const raw = await env.CACHE.get(`ft-queue:${date}`);
+  if (!raw) return { status: 'skipped', reason: 'no queue for today', date };
+
+  let queue;
+  try { queue = JSON.parse(raw); } catch { return { status: 'error', reason: 'bad queue json', date }; }
+
+  const now = Date.now();
+  // Window: 15-35 min before kickoff. Wide enough for the */15 heartbeat
+  // to overlap regardless of which minute it fires, narrow enough that
+  // the alert text "Match of the Day" stays accurate.
+  const WINDOW_MIN_MS = 15 * 60 * 1000;
+  const WINDOW_MAX_MS = 35 * 60 * 1000;
+
+  const report = { date, eligible: 0, posted: 0, skipped: 0, errors: [] };
+
+  for (const item of queue) {
+    // Only the MOTD fixture gets the pre-match alert. Other featured
+    // fixtures track silently — same channel-flood-prevention as the FT
+    // result post in checkFinishedMatches().
+    if (!item.is_motd) continue;
+    const kickoffMs = new Date(item.kickoff_iso).getTime();
+    if (!Number.isFinite(kickoffMs)) continue;
+    const tilKO = kickoffMs - now;
+    if (tilKO < WINDOW_MIN_MS || tilKO > WINDOW_MAX_MS) continue;
+    report.eligible += 1;
+
+    const dedupKey = `posted:premat30:${item.fixture_id}`;
+    if (await env.CACHE.get(dedupKey).catch(() => null)) {
+      report.skipped += 1;
+      continue;
+    }
+
+    try {
+      const pick = await env.CACHE.get(`prediction:${item.fixture_id}`, 'json').catch(() => null);
+      if (!isPickReady(pick)) {
+        // Don't ship a "Pro analysis pending" alert — silently miss this
+        // window instead. The morning daily post still went out.
+        report.skipped += 1;
+        report.errors.push({ fixture_id: item.fixture_id, error: 'pick not ready at KO-30' });
+        continue;
+      }
+
+      const fxData = await afGet(env, '/fixtures', { id: item.fixture_id });
+      const fx = fxData.response?.[0];
+      if (!fx) {
+        report.errors.push({ fixture_id: item.fixture_id, error: 'fixture not found' });
+        continue;
+      }
+
+      const caption = buildPreMatchMotdCaption({
+        fixture: fx,
+        pick,
+        siteUrl: SITE_URL,
+      });
+
+      const msg = await sendMessage(env, { text: caption });
+      // 6h TTL — past kickoff the flag self-expires so KV stays clean.
+      await env.CACHE.put(dedupKey, JSON.stringify({ message_id: msg.message_id, ts: now }), {
+        expirationTtl: 6 * 3600,
+      });
+      report.posted += 1;
+    } catch (e) {
+      report.errors.push({ fixture_id: item.fixture_id, error: String(e.message || e) });
+    }
+  }
+
+  return { status: 'ok', ...report };
+}
+
 async function checkFinishedMatches(env) {
   const date = todayMYT();
   const raw = await env.CACHE.get(`ft-queue:${date}`);
@@ -1296,7 +1412,13 @@ async function checkFinishedMatches(env) {
   const due = queue.filter(q => !q.posted && q.check_at_ms <= now);
   if (!due.length) return { status: 'ok', due: 0, date, total: queue.length };
 
-  const report = { date, checked: due.length, posted: 0, still_live: 0, errors: [] };
+  // Max retries per fixture. Initial check fires at KO+100min; with a
+  // 10-min retry on still-live this covers up to KO+150min — past any
+  // realistic football match length including ET+PEN. Beyond this we
+  // assume the match is stuck or API-Football is misreporting and stop.
+  const MAX_ATTEMPTS = 6;
+
+  const report = { date, checked: due.length, posted: 0, still_live: 0, gave_up: 0, errors: [] };
 
   for (const item of due) {
     try {
@@ -1306,8 +1428,15 @@ async function checkFinishedMatches(env) {
       item.attempts = (item.attempts || 0) + 1;
 
       if (!short || LIVE_UNFINISHED.has(short)) {
-        // Match still ongoing — retry in 15 min
-        item.check_at_ms = now + 15 * 60 * 1000;
+        if (item.attempts >= MAX_ATTEMPTS) {
+          // Give up — match has been "live" for >150min past KO.
+          item.posted = true;
+          item.note = `gave up after ${item.attempts} attempts, last status ${short || 'unknown'}`;
+          report.gave_up += 1;
+          continue;
+        }
+        // Match still ongoing — retry in 10 min (tighter than the old 15)
+        item.check_at_ms = now + 10 * 60 * 1000;
         report.still_live += 1;
         continue;
       }
@@ -1398,8 +1527,17 @@ async function checkFinishedMatches(env) {
       });
     } catch (e) {
       report.errors.push({ fixture_id: item.fixture_id, error: String(e.message || e) });
-      // Retry in 30 min on transient error
-      item.check_at_ms = Date.now() + 30 * 60 * 1000;
+      item.attempts = (item.attempts || 0) + 1;
+      if (item.attempts >= MAX_ATTEMPTS) {
+        item.posted = true;
+        item.note = `gave up after ${item.attempts} errored attempts`;
+        report.gave_up += 1;
+      } else {
+        // Exponential backoff capped at 30 min so transient API-Football
+        // outages don't peg us to the same 30-min retry indefinitely.
+        const backoff = Math.min(30, 5 * item.attempts) * 60 * 1000;
+        item.check_at_ms = Date.now() + backoff;
+      }
     }
   }
 
@@ -1421,11 +1559,14 @@ export default {
     } else if (cron.startsWith('0 2 ')) {
       ctx.waitUntil(postDailyToAll(env));
     } else if (cron.startsWith('*/15 ')) {
-      // Heartbeat does both: result slips for finished matches AND the 12h
-      // pre-match poll for upcoming featured fixtures. Both are KV-flagged
-      // so they fire at most once per fixture.
-      ctx.waitUntil(checkFinishedMatches(env));
+      // Heartbeat does three things:
+      //   1. KO-30 pre-match alert for the MOTD fixture
+      //   2. 12h pre-match poll for upcoming featured fixtures
+      //   3. FT result slips for finished matches
+      // All three are KV-flagged so they fire at most once per fixture.
+      ctx.waitUntil(postPreMatchAlerts(env));
       ctx.waitUntil(postPrematchPolls(env));
+      ctx.waitUntil(checkFinishedMatches(env));
     } else {
       ctx.waitUntil(generateDaily(env));
     }
@@ -1435,13 +1576,14 @@ export default {
     if (url.searchParams.get('key') !== env.CRON_SECRET) {
       return new Response('unauthorized', { status: 401 });
     }
-    // Manual triggers: &task=generate | post | check | poll | sportsbook-test
+    // Manual triggers: &task=generate | post | check | poll | premat | sportsbook-test
     const task = url.searchParams.get('task') || 'generate';
     let result;
     if (task === 'sportsbook-test') result = await postSportsbookTemplateTest(env);
     else if (task === 'post') result = await postDailyToAll(env);
     else if (task === 'check') result = await checkFinishedMatches(env);
     else if (task === 'poll') result = await postPrematchPolls(env);
+    else if (task === 'premat') result = await postPreMatchAlerts(env);
     else result = await generateDaily(env);
     return new Response(JSON.stringify(result, null, 2), {
       headers: { 'content-type': 'application/json; charset=utf-8' },
