@@ -77,7 +77,7 @@
         <div style="font-size:28px;line-height:1">📲</div>
         <div style="flex:1;min-width:0;">
           <div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:16px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px;">Install ScoreOcs8</div>
-          <div style="color:#9aa5bd;font-size:12.5px;line-height:1.55;margin-bottom:10px;">Get pre-match alerts, daily picks at 08:00 MYT, and 1-tap home-screen access — no app store, free forever.</div>
+          <div style="color:#9aa5bd;font-size:12.5px;line-height:1.55;margin-bottom:10px;">Get pre-match alerts, daily picks at 09:00 MYT, and 1-tap home-screen access — no app store, free forever.</div>
           <div style="display:flex;gap:8px;">
             <button id="pwa-install-yes" style="flex:1;padding:10px 14px;border:none;border-radius:10px;background:linear-gradient(180deg,#ff9c4a,#f97316,#c75808);color:#fff;font-family:Rajdhani,sans-serif;font-size:13px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;box-shadow:0 6px 16px rgba(249,115,22,.45),inset 0 1px 0 rgba(255,255,255,.4);">Install</button>
             <button id="pwa-install-no" style="padding:10px 14px;border:1px solid rgba(255,255,255,0.14);border-radius:10px;background:rgba(255,255,255,0.04);color:#9aa5bd;font-family:Outfit,sans-serif;font-size:12px;cursor:pointer;">Not now</button>
@@ -142,7 +142,7 @@
           <div style="flex:1;min-width:0;">
             <div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:16px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px;">Get free pick alerts</div>
             <ul style="list-style:none;padding:0;margin:0 0 12px;display:flex;flex-direction:column;gap:5px;">
-              <li style="display:flex;gap:8px;font-size:12.5px;color:#9aa5bd;"><span style="color:#f97316;">●</span> Daily pro picks at 08:00 MYT</li>
+              <li style="display:flex;gap:8px;font-size:12.5px;color:#9aa5bd;"><span style="color:#f97316;">●</span> Daily pro picks at 09:00 MYT</li>
               <li style="display:flex;gap:8px;font-size:12.5px;color:#9aa5bd;"><span style="color:#f97316;">●</span> Pre-kickoff reminder for top match</li>
               <li style="display:flex;gap:8px;font-size:12.5px;color:#9aa5bd;"><span style="color:#f97316;">●</span> Win confirmation when our pick wins</li>
               <li style="display:flex;gap:8px;font-size:12.5px;color:#9aa5bd;"><span style="color:#f97316;">●</span> Free forever, 1-tap unsubscribe</li>

@@ -1,5 +1,6 @@
 import { screenshot } from './lib/screenshot.js';
 import { sendPhoto, sendMessage, sendPoll } from './lib/telegram.js';
+import { broadcastPush } from './lib/webpush.js';
 import {
   buildDailyCaption,
   buildDailyCaptionX,
@@ -995,6 +996,32 @@ async function runSportsbookDaily(env) {
     result.dedup = 'released — pick not ready, retry allowed';
   }
 
+  // Fan out to PWA push subscribers when the headline `prediction` template
+  // actually fired. The daily dedup above means this only ever fires once
+  // per match day, matching the single Telegram morning post.
+  const predictionFired = (result.results || []).some(r =>
+    r.key === 'prediction' && r.status === 'ok'
+  );
+  if (predictionFired) {
+    const { picks } = await loadFeaturedWithPicks(env).catch(() => ({ picks: [] }));
+    const top = picks[0];
+    const home = top?.fx?.teams?.home?.name || '';
+    const away = top?.fx?.teams?.away?.name || '';
+    const pickLabel = top?.pick?.pickLabel || top?.pick?.pick || '';
+    const headline = home && away
+      ? `Today's pro pick: ${home} vs ${away}`
+      : `Today's pro picks are ready`;
+    const body = pickLabel
+      ? `Pick: ${pickLabel} · ${picks.length} match${picks.length === 1 ? '' : 'es'} on the slate`
+      : `Tap to see the day's slate at ScoreOcs8.`;
+    result.push = await broadcastPush(env, {
+      title: headline,
+      body,
+      url: '/',
+      tag: `daily-${todayMyt}`,
+    });
+  }
+
   return result;
 }
 
@@ -1410,6 +1437,21 @@ async function postPreMatchAlerts(env) {
         expirationTtl: 6 * 3600,
       });
       report.posted += 1;
+
+      // Fan out to PWA push subscribers (same event, mirrored to anyone who
+      // installed the PWA + opted into notifications). KV dedup above means
+      // this fires exactly once per fixture per match day.
+      const home = fx?.teams?.home?.name || 'Home';
+      const away = fx?.teams?.away?.name || 'Away';
+      const slug = `${home}-vs-${away}`.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 64);
+      const pushResult = await broadcastPush(env, {
+        title: `⚡ Starts in 30 min · ${home} vs ${away}`,
+        body: `Pro pick: ${pick?.pickLabel || pick?.pick || 'see analysis'}`,
+        url: `/match/${item.fixture_id}-${slug}/`,
+        tag: `premat30-${item.fixture_id}`,
+      });
+      report.push = report.push || [];
+      report.push.push({ fixture_id: item.fixture_id, ...pushResult });
     } catch (e) {
       report.errors.push({ fixture_id: item.fixture_id, error: String(e.message || e) });
     }
@@ -1676,6 +1718,20 @@ async function postDailyRecap(env) {
     await env.CACHE.put(dedupKey, JSON.stringify({ message_id: msg.message_id, ts: Date.now() }), {
       expirationTtl: 36 * 3600,
     });
+
+    // Fan out to PWA push subscribers. Compact summary suited to the OS
+    // notification line (most platforms truncate body around 100 chars).
+    const tomorrowLine = tomorrowFx
+      ? `Tomorrow: ${tomorrowFx.teams?.home?.name || 'TBD'} vs ${tomorrowFx.teams?.away?.name || 'TBD'}`
+      : '';
+    const weekLine = weekAcc ? ` · Week ${weekAcc.hits}/${weekAcc.total}` : '';
+    const pushResult = await broadcastPush(env, {
+      title: `📊 Today: ${wins}W · ${losses}L${weekLine}`,
+      body: tomorrowLine || 'Open ScoreOcs8 for today\'s recap.',
+      url: '/',
+      tag: `recap-${date}`,
+    });
+
     return {
       status: 'ok',
       date,
@@ -1686,6 +1742,7 @@ async function postDailyRecap(env) {
         away: tomorrowFx.teams?.away?.name,
       } : null,
       message_id: msg.message_id,
+      push: pushResult,
     };
   } catch (e) {
     return { status: 'error', error: String(e.message || e) };
@@ -1724,7 +1781,7 @@ export default {
     if (url.searchParams.get('key') !== env.CRON_SECRET) {
       return new Response('unauthorized', { status: 401 });
     }
-    // Manual triggers: generate | post | check | poll | premat | recap | sportsbook-test
+    // Manual triggers: generate | post | check | poll | premat | recap | push-test | sportsbook-test
     const task = url.searchParams.get('task') || 'generate';
     let result;
     if (task === 'sportsbook-test') result = await postSportsbookTemplateTest(env);
@@ -1733,6 +1790,16 @@ export default {
     else if (task === 'poll') result = await postPrematchPolls(env);
     else if (task === 'premat') result = await postPreMatchAlerts(env);
     else if (task === 'recap') result = await postDailyRecap(env);
+    else if (task === 'push-test') {
+      // Fire a one-shot test push to every subscriber. Useful for verifying
+      // VAPID setup before a real event lands.
+      result = await broadcastPush(env, {
+        title: 'ScoreOcs8 test push',
+        body: 'If you see this, web push is working end-to-end. ✅',
+        url: '/',
+        tag: 'test',
+      });
+    }
     else result = await generateDaily(env);
     return new Response(JSON.stringify(result, null, 2), {
       headers: { 'content-type': 'application/json; charset=utf-8' },
