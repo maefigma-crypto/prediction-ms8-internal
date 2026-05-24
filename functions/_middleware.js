@@ -62,6 +62,16 @@ export async function onRequest(context) {
   const { request, env, next } = context;
   const url = new URL(request.url);
 
+  // 0. *.pages.dev → scoreocs8.com 301 (SEO consolidation).
+  // All customer-facing traffic should flow through the custom domain so
+  // Google attributes link equity correctly. The per-deployment URLs
+  // (e.g. ace5cc90.scoreocs8.pages.dev) get deindexed by Google within a
+  // few crawl cycles once they return a permanent redirect. Escape hatch:
+  // ?preview=1 keeps the .pages.dev URL reachable for QA before promoting.
+  if (url.hostname.endsWith('.pages.dev') && url.searchParams.get('preview') !== '1') {
+    return Response.redirect(`https://scoreocs8.com${url.pathname}${url.search}`, 301);
+  }
+
   // 1. 301 / 302 redirect handler (hot path — early return so it's fast).
   // Only match literal pathnames. Redirect manager in _data/redirects.json.
   const redirects = await getRedirects(env);
