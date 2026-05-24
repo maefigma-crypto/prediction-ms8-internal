@@ -415,9 +415,12 @@ async function postDailyToAll(env) {
     };
 
     // 5. Fan out daily predictions in parallel — each platform isolated.
+    // Telegram intentionally skipped here: the 09:00 sportsbook batch
+    // already posts the daily AI pick on Telegram, so this 10:00 fan-out
+    // would duplicate it on the same channel. X/IG/Threads still need it.
     report.stage = 'fanout';
     const results = await Promise.allSettled([
-      postToTelegram(env, pngBytes, captions.telegram, date),
+      Promise.resolve({ status: 'skipped', reason: 'telegram daily handled by 09:00 sportsbook batch' }),
       postToX(env, pngBytes, captions.x, date),
       postToIG(env, snap.url, captions.ig, date),
       postToThreads(env, snap.url, captions.threads, date),
@@ -797,10 +800,22 @@ async function postSportsbookTemplateTest(env) {
   const PICK_DEPENDENT_KEYS = new Set(['prediction', 'reminder']);
   const pickReady = isPickReady(topPick);
 
+  // Lean default — only the headline `prediction` template fires unless
+  // the user has explicitly enabled others in the panel (enabled === true).
+  // Previously the channel could ship up to 6 messages in one 09:00 batch
+  // (prediction + upcoming + reminder + result + proof + blog), which felt
+  // spammy. Now: 1 strong morning post. Re-enable individual templates from
+  // the panel anytime by toggling them on.
+  const CORE_KEYS = new Set(['prediction']);
+
   for (const key of SPORTSBOOK_TEMPLATE_KEYS) {
     const userTpl = config?.templates?.[key];
     if (userTpl && userTpl.enabled === false) {
       report.results.push({ key, status: 'skipped', reason: 'template disabled' });
+      continue;
+    }
+    if (!CORE_KEYS.has(key) && !(userTpl && userTpl.enabled === true)) {
+      report.results.push({ key, status: 'skipped', reason: 'non-core template, not explicitly enabled in panel' });
       continue;
     }
     if (PICK_DEPENDENT_KEYS.has(key) && !pickReady) {
@@ -1263,6 +1278,11 @@ async function postPrematchPolls(env) {
 
   // Walk the next 2 days of stored daily content (today + tomorrow MYT)
   // since 12h-before-kickoff can sit either side of the date boundary.
+  // MOTD-only: previously polled every featured fixture (up to 3 polls
+  // per day on a busy slate), which felt spammy. Now we only poll the
+  // top.fixture — one curated fan poll per day, matched to the same
+  // fixture the pre-match alert + FT slip + recap headline. Previews
+  // skipped intentionally.
   const seenFixtures = new Map();
   for (let i = 0; i < 2; i++) {
     const d = new Date(now + i * 86400000).toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' });
@@ -1273,9 +1293,7 @@ async function postPrematchPolls(env) {
     if (!bundle) continue;
     const items = [];
     if (bundle.top?.fixture) items.push(bundle.top.fixture);
-    for (const p of (bundle.previews || [])) {
-      if (p.fixture) items.push(p.fixture);
-    }
+    // bundle.previews intentionally NOT included — MOTD only.
     for (const fx of items) {
       const id = fx?.fixture?.id;
       if (!id || seenFixtures.has(id)) continue;
