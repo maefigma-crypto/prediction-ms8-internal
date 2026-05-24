@@ -112,13 +112,18 @@ export async function onRequest(context) {
     });
   }
 
-  // 0b. *.pages.dev → scoreocs8.com 301 (SEO consolidation).
-  // All customer-facing traffic should flow through the custom domain so
-  // Google attributes link equity correctly. The per-deployment URLs
-  // (e.g. ace5cc90.scoreocs8.pages.dev) get deindexed by Google within a
-  // few crawl cycles once they return a permanent redirect. Escape hatch:
-  // ?preview=1 keeps the .pages.dev URL reachable for QA before promoting.
-  if (url.hostname.endsWith('.pages.dev') && url.searchParams.get('preview') !== '1') {
+  // 0b. scoreocs8.pages.dev (and its per-deployment URLs) → scoreocs8.com.
+  // SEO consolidation: customer-facing traffic flows through the custom
+  // domain so Google attributes link equity correctly.
+  // IMPORTANT — only redirect scoreocs8's OWN .pages.dev variants. Other
+  // Cloudflare Pages projects on this account (e.g. ocs-super-panel.pages.dev)
+  // deploy from this same repo and would otherwise pick up this middleware
+  // and 301 themselves out of existence. Match strictly on the scoreocs8
+  // project hostname.
+  const isScoreOcs8PagesDev =
+    url.hostname === 'scoreocs8.pages.dev' ||
+    url.hostname.endsWith('.scoreocs8.pages.dev');
+  if (isScoreOcs8PagesDev && url.searchParams.get('preview') !== '1') {
     return Response.redirect(`https://scoreocs8.com${url.pathname}${url.search}`, 301);
   }
 
