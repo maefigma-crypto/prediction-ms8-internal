@@ -1,12 +1,8 @@
 # Cloudflare Pages _redirects — rules evaluated in order, first match wins.
-
-# Block /panel/* on this public site. The admin panel is a SEPARATE
-# Cloudflare Pages project (ocs-super-panel.pages.dev) that builds from
-# the panel/ subdirectory of this repo. We don't want the source code
-# accidentally served from the public domain even with Cloudflare Access
-# in front of the panel project — defense in depth.
-/panel/*  /  404
-/panel    /  404
+#
+# Note: /panel/* is handled in functions/_middleware.js (redirected 301 to
+# ocs-super-panel.pages.dev) because static files in panel/ would otherwise
+# take precedence over any _redirects rule here. The middleware runs first.
 
 # Legacy /register.html now lives at the OCS8 affiliate signup. 302 so old
 # bookmarks / search results land on the right place without permanently

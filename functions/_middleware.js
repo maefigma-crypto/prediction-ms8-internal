@@ -97,7 +97,18 @@ export async function onRequest(context) {
   const { request, env, next } = context;
   const url = new URL(request.url);
 
-  // 0. *.pages.dev → scoreocs8.com 301 (SEO consolidation).
+  // 0a. /panel/* → standalone admin Pages project (ocs-super-panel.pages.dev).
+  // panel/ source lives in this repo so the standalone project can build
+  // from it, but that means panel/index.html etc. ALSO get served from the
+  // customer domain by default. We don't want admin source code reachable
+  // from scoreocs8.com — push it to the dedicated origin so Cloudflare
+  // Access (when configured there) is the only door.
+  if (url.pathname === '/panel' || url.pathname.startsWith('/panel/')) {
+    const tail = url.pathname.replace(/^\/panel\/?/, '/');
+    return Response.redirect(`https://ocs-super-panel.pages.dev${tail}${url.search}`, 301);
+  }
+
+  // 0b. *.pages.dev → scoreocs8.com 301 (SEO consolidation).
   // All customer-facing traffic should flow through the custom domain so
   // Google attributes link equity correctly. The per-deployment URLs
   // (e.g. ace5cc90.scoreocs8.pages.dev) get deindexed by Google within a
