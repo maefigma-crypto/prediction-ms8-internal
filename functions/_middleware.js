@@ -97,15 +97,19 @@ export async function onRequest(context) {
   const { request, env, next } = context;
   const url = new URL(request.url);
 
-  // 0a. /panel/* → standalone admin Pages project (ocs-super-panel.pages.dev).
-  // panel/ source lives in this repo so the standalone project can build
-  // from it, but that means panel/index.html etc. ALSO get served from the
-  // customer domain by default. We don't want admin source code reachable
-  // from scoreocs8.com — push it to the dedicated origin so Cloudflare
-  // Access (when configured there) is the only door.
+  // 0a. /panel and /panel/* → opaque 404 on the customer domain.
+  // panel/ source lives in this repo so the standalone admin Pages project
+  // (ocs-super-panel) can build from it. That means the static panel files
+  // would otherwise be reachable at scoreocs8.com/panel/* too, which is
+  // both a duplicate of the standalone admin URL AND a security tell —
+  // a 301 to the admin origin advertises where the admin lives to anyone
+  // probing the customer domain (`/admin`, `/panel`, `/login` wordlists).
+  // A plain 404 keeps the admin location opaque.
   if (url.pathname === '/panel' || url.pathname.startsWith('/panel/')) {
-    const tail = url.pathname.replace(/^\/panel\/?/, '/');
-    return Response.redirect(`https://ocs-super-panel.pages.dev${tail}${url.search}`, 301);
+    return new Response('Not found', {
+      status: 404,
+      headers: { 'content-type': 'text/plain; charset=utf-8' },
+    });
   }
 
   // 0b. *.pages.dev → scoreocs8.com 301 (SEO consolidation).
