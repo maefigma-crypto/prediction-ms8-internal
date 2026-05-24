@@ -4,6 +4,41 @@ function escAttr(s) {
   return String(s ?? '').replace(/[<>"'&]/g, c => ({ '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '&': '&amp;' }[c]));
 }
 
+/* HTMLRewriter handler: injects a minimal WebSite JSON-LD on every HTML
+ * page so the isPartOf: { @id: ".../#website" } reference used by per-page
+ * WebPage/SportsEvent schema actually resolves on-page. Without this Google
+ * falls back to other site-name signals (and on a Pages-hosted site has
+ * been observed labelling search results "Cloudflare"). */
+class WebSiteSchemaInjector {
+  constructor() { this.done = false; }
+  element(element) {
+    if (this.done) return;
+    this.done = true;
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      '@id': `${SITE_URL}/#website`,
+      url: `${SITE_URL}/`,
+      name: 'ScoreOcs8',
+      alternateName: 'ScoreOcs8 Predictions',
+      inLanguage: 'en-MY',
+      publisher: { '@id': `${SITE_URL}/#organisation` },
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: `${SITE_URL}/?q={search_term_string}`,
+        },
+        'query-input': 'required name=search_term_string',
+      },
+    };
+    element.append(
+      `<script type="application/ld+json">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script>`,
+      { html: true }
+    );
+  }
+}
+
 /* HTMLRewriter handler: injects site-wide head tags into the homepage.
  * Runs ONLY on '/' or '/index.html' HTML responses so the cost is zero
  * for all API/SSR/static-asset traffic. */
@@ -87,14 +122,24 @@ export async function onRequest(context) {
   // 2. Let the downstream handler produce a response.
   const response = await next();
 
-  // 3. Only rewrite the homepage HTML. Every other path (blog SSR, API,
-  // assets, og/match, sitemap) is left untouched.
-  const isHomepage = url.pathname === '/' || url.pathname === '/index.html';
+  // 3. Skip non-HTML (API, assets, og images, sitemap.xml, robots.txt).
   const ct = response.headers.get('content-type') || '';
-  if (!isHomepage || !ct.includes('text/html')) return response;
+  if (!ct.includes('text/html')) return response;
 
-  const settings = await getSettings(env);
-  return new HTMLRewriter()
-    .on('head', new HomepageHeadInjector(settings))
-    .transform(response);
+  // 4. WebSite schema goes on EVERY HTML page so the per-page JSON-LD
+  // (SportsEvent, VideoObject, etc.) can reference isPartOf: #website
+  // and have that resolve on-page. Cheap — one HTMLRewriter on('head').
+  const rewriter = new HTMLRewriter()
+    .on('head', new WebSiteSchemaInjector());
+
+  // 5. Homepage gets the heavier injection (favicon, GA, hreflang,
+  // organisation_schema from settings). Other pages skip this — they
+  // produce their own per-page schema in their handlers.
+  const isHomepage = url.pathname === '/' || url.pathname === '/index.html';
+  if (isHomepage) {
+    const settings = await getSettings(env);
+    rewriter.on('head', new HomepageHeadInjector(settings));
+  }
+
+  return rewriter.transform(response);
 }
