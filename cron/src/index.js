@@ -1543,10 +1543,24 @@ async function checkFinishedMatches(env) {
 
   // Persist queue with updated states
   await env.CACHE.put(`ft-queue:${date}`, JSON.stringify(queue), { expirationTtl: 48 * 3600 });
-  return { status: 'ok', ...report, total: queue.length };
+
+  // Event-driven daily recap: when EVERY queued fixture is posted (either
+  // FT'd, postponed, or gave-up) AND at least one had a real W/L verdict,
+  // fire the recap. Means the recap always lands right after the last
+  // match of the day, regardless of whether that's 22:00 or 06:00 MYT.
+  // postDailyRecap has its own KV dedup so calling it on every tick after
+  // completion is safe.
+  let recap = null;
+  const allDone = queue.length > 0 && queue.every(q => q.posted === true);
+  const anyReconciled = queue.some(q => q.correct === true || q.correct === false);
+  if (allDone && anyReconciled) {
+    recap = await postDailyRecap(env);
+  }
+
+  return { status: 'ok', ...report, total: queue.length, recap };
 }
 
-// --- Daily recap (23:30 MYT) ------------------------------------------------
+// --- Daily recap (event-driven, fires after last FT reconciled) -------------
 //
 // Per-day W/L summary + running week record + tomorrow MOTD teaser. Fires
 // after the last match of the day has had time to reach FT (~23:30 MYT = the
@@ -1666,15 +1680,14 @@ export default {
     //   23:00 UTC = 07:00 MYT → generate tomorrow's content
     //   01:00 UTC = 09:00 MYT → sportsbook daily batch (gated by panel toggle)
     //   02:00 UTC = 10:00 MYT → post today's AI picks to Telegram
-    //   15:30 UTC = 23:30 MYT → daily recap (W/L + tomorrow MOTD)
-    //   */15 * UTC → heartbeat (KO-30 alert, 12h poll, FT result slips)
+    //   */15 * UTC → heartbeat (KO-30 alert, 12h poll, FT result slips,
+    //                  and event-driven recap triggered from inside
+    //                  checkFinishedMatches when the day's queue is done).
     const cron = event.cron || '';
     if (cron.startsWith('0 1 ')) {
       ctx.waitUntil(runSportsbookDaily(env));
     } else if (cron.startsWith('0 2 ')) {
       ctx.waitUntil(postDailyToAll(env));
-    } else if (cron.startsWith('30 15 ')) {
-      ctx.waitUntil(postDailyRecap(env));
     } else if (cron.startsWith('*/15 ')) {
       // Heartbeat does three things:
       //   1. KO-30 pre-match alert for the MOTD fixture
