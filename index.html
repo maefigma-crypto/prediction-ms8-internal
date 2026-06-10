@@ -1714,6 +1714,9 @@ footer{
       const elResults = document.getElementById('msc-results');
       const cache = {};
       const SEASON = '2025';
+      // API-Football tags tournaments by start year — WC 2026 is season 2026.
+      const SEASON_BY_LEAGUE = { '1': '2026' };
+      const seasonOf = id => SEASON_BY_LEAGUE[String(id)] || SEASON;
       const esc = s => String(s ?? '').replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
       const myt = d => { try { return new Date(d).toLocaleString('en-MY',{timeZone:'Asia/Kuala_Lumpur',hour:'2-digit',minute:'2-digit',hour12:false}); } catch { return ''; } };
       const mytDate = d => { try { return new Date(d).toLocaleDateString('en-MY',{timeZone:'Asia/Kuala_Lumpur',day:'numeric',month:'short'}).toUpperCase(); } catch { return ''; } };
@@ -1731,13 +1734,38 @@ footer{
         const d = Math.round(h / 24);
         return `updated ${d}d ago`;
       }
+      function tableRows(list, limit) {
+        return list.slice(0, limit).map((t, i) => {
+          const rankClass = i < 3 ? 'top' : '';
+          return `<div class="msc-row t-table">
+            <div class="msc-rank ${rankClass}">${esc(t.rank ?? i+1)}</div>
+            <div class="msc-team">${t.team?.logo ? `<img src="${esc(t.team.logo)}" alt="">` : ''}<span class="msc-team-name">${esc(t.team?.name || '')}</span></div>
+            <div class="msc-stat">${esc(t.all?.played ?? 0)}</div>
+            <div class="msc-stat">${esc(t.all?.win ?? 0)}</div>
+            <div class="msc-stat">${esc(t.all?.lose ?? 0)}</div>
+            <div class="msc-pts">${esc(t.points ?? 0)}</div>
+          </div>`;
+        }).join('');
+      }
+
       function renderTable(data) {
         try {
-          const std = data?.response?.[0]?.league?.standings?.[0] || [];
+          const groups = data?.response?.[0]?.league?.standings || [];
+          const std = groups[0] || [];
           const leagueObj = data?.response?.[0]?.league || {};
           const freshEl = document.getElementById('msc-table-fresh');
           if (freshEl) freshEl.textContent = std.length ? fmtAgo(data?.updated) : '';
           if (!std.length) { elTable.innerHTML = empty('Standings not available for this league'); return; }
+          // Cup competitions (FIFA WC) return one standings array per group —
+          // render every group under its own header instead of a single table.
+          if (groups.length > 1) {
+            const head = `<div class="msc-head"><div></div><div>Team</div><div>MP</div><div>W</div><div>L</div><div>PTS</div></div>`;
+            elTable.innerHTML = groups.map(g => {
+              const label = g?.[0]?.group || '';
+              return `<div style="margin:10px 0 4px;font-family:var(--fm,monospace);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text2);">${esc(label)}</div>${head}${tableRows(g, g.length)}`;
+            }).join('');
+            return;
+          }
           // Champion strip — when every team has played the same max number
           // of games (round-robin done) AND the leader is mathematically clear,
           // show '🏆 <team>' above the table so customers see the season is
@@ -1760,18 +1788,7 @@ footer{
                 <div class="msc-champ-pts">${esc(champ.points ?? 0)}<span>pts</span></div>
                </div>`
             : '';
-          const rows = std.slice(0, 10).map((t, i) => {
-            const rankClass = i < 3 ? 'top' : '';
-            return `<div class="msc-row t-table">
-              <div class="msc-rank ${rankClass}">${esc(t.rank ?? i+1)}</div>
-              <div class="msc-team">${t.team?.logo ? `<img src="${esc(t.team.logo)}" alt="">` : ''}<span class="msc-team-name">${esc(t.team?.name || '')}</span></div>
-              <div class="msc-stat">${esc(t.all?.played ?? 0)}</div>
-              <div class="msc-stat">${esc(t.all?.win ?? 0)}</div>
-              <div class="msc-stat">${esc(t.all?.lose ?? 0)}</div>
-              <div class="msc-pts">${esc(t.points ?? 0)}</div>
-            </div>`;
-          }).join('');
-          elTable.innerHTML = `${champStrip}<div class="msc-head"><div></div><div>Team</div><div>MP</div><div>W</div><div>L</div><div>PTS</div></div>${rows}`;
+          elTable.innerHTML = `${champStrip}<div class="msc-head"><div></div><div>Team</div><div>MP</div><div>W</div><div>L</div><div>PTS</div></div>${tableRows(std, 10)}`;
         } catch (e) { elTable.innerHTML = empty('Could not load table'); }
       }
 
@@ -1835,10 +1852,11 @@ footer{
         elUpcoming.innerHTML = '<div class="msc-loading">Loading fixtures…</div>';
         elResults.innerHTML = '<div class="msc-loading">Loading results…</div>';
 
+        const season = seasonOf(leagueId);
         const [std, scor, fx] = await Promise.all([
-          fetch(`/api/standings?league=${leagueId}&season=${SEASON}`).then(r => r.ok ? r.json() : null).catch(() => null),
-          fetch(`/api/topscorers?league=${leagueId}&season=${SEASON}`).then(r => r.ok ? r.json() : null).catch(() => null),
-          fetch(`/api/fixtures?league=${leagueId}&season=${SEASON}`).then(r => r.ok ? r.json() : null).catch(() => null),
+          fetch(`/api/standings?league=${leagueId}&season=${season}`).then(r => r.ok ? r.json() : null).catch(() => null),
+          fetch(`/api/topscorers?league=${leagueId}&season=${season}`).then(r => r.ok ? r.json() : null).catch(() => null),
+          fetch(`/api/fixtures?league=${leagueId}&season=${season}`).then(r => r.ok ? r.json() : null).catch(() => null),
         ]);
         cache[leagueId] = { std, scor, fx };
         renderTable(std); renderScorers(scor); renderUpcoming(fx); renderResults(fx);

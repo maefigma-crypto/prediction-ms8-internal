@@ -45,6 +45,9 @@ function slipPath(fixtureId, home, away) {
   return slug ? `/slip/${fixtureId}-${slug}/` : `/slip/${fixtureId}/`;
 }
 const DEFAULT_SEASON = '2025';
+// API-Football tags tournaments by start year — the 2026 World Cup is season 2026.
+const LEAGUE_SEASONS = { 1: '2026' };
+const seasonFor = id => LEAGUE_SEASONS[String(id)] || DEFAULT_SEASON;
 
 // Today's date in MYT (Asia/Kuala_Lumpur, UTC+8). Cron fires at 23:00 UTC
 // which is 07:00 MYT next day — using UTC here would write content under
@@ -100,7 +103,7 @@ async function pickTopFixtures(env) {
   for (let i = 0; i < LEAGUE_PRIORITY.length; i++) {
     const lg = LEAGUE_PRIORITY[i];
     try {
-      const data = await afGet(env, '/fixtures', { league: lg.id, season: DEFAULT_SEASON, next: 5 });
+      const data = await afGet(env, '/fixtures', { league: lg.id, season: seasonFor(lg.id), next: 5 });
       for (const fx of (data.response || [])) {
         all.push({ ...fx, _priority: i, _leagueKey: lg.key });
       }

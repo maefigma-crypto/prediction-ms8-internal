@@ -14,6 +14,16 @@ const HIGHLIGHT_LEAGUES = [
   { id: 1, key: 'WC', name: 'FIFA World Cup' },
 ];
 const DEFAULT_SEASON = '2025';
+// API-Football tags tournaments by start year — the 2026 World Cup is
+// season 2026 while domestic 2025-26 leagues are season 2025. Requests for
+// an overridden league that carry no season (or the stale default) are
+// coerced so old cached pages keep working.
+const LEAGUE_SEASONS = { 1: '2026' };
+function seasonFor(leagueId, requested) {
+  const override = LEAGUE_SEASONS[String(leagueId)];
+  if (override && (!requested || requested === DEFAULT_SEASON)) return override;
+  return requested || DEFAULT_SEASON;
+}
 const ODDS_SPORT = 'soccer_epl';
 
 const TTL = {
@@ -70,7 +80,7 @@ async function handleLive(env, url) {
 }
 
 async function handleFixtures(env, url) {
-  const season = url.searchParams.get('season') || DEFAULT_SEASON;
+  const requestedSeason = url.searchParams.get('season');
   const refresh = url.searchParams.get('refresh') === '1';
   const leagueParam = url.searchParams.get('league');
 
@@ -78,6 +88,7 @@ async function handleFixtures(env, url) {
   if (leagueParam) {
     const id = parseInt(leagueParam, 10);
     if (!id) return { data: { error: 'invalid league id' }, source: 'error' };
+    const season = seasonFor(id, requestedSeason);
     return cached(env, `fixtures:v2:league:${id}:${season}`, TTL.fixtures, async () => {
       const today = new Date().toISOString().slice(0, 10);
       const [next, last, todayMatches] = await Promise.all([
@@ -98,10 +109,11 @@ async function handleFixtures(env, url) {
   }
 
   // Default: fetch all 4 primary leagues at once (homepage behaviour).
-  return cached(env, `fixtures:v2:${season}`, TTL.fixtures, async () => {
+  return cached(env, `fixtures:v2:${requestedSeason || DEFAULT_SEASON}`, TTL.fixtures, async () => {
     const today = new Date().toISOString().slice(0, 10);
     const results = await Promise.all(
       Object.entries(LEAGUES).map(async ([name, id]) => {
+        const season = seasonFor(id, requestedSeason);
         const [next, last, todayMatches] = await Promise.all([
           afGet(env, '/fixtures', { league: id, season, next: 10 }),
           afGet(env, '/fixtures', { league: id, season, last: 10 }),
@@ -121,9 +133,9 @@ async function handleFixtures(env, url) {
 }
 
 async function handleStandings(env, url) {
-  const season = url.searchParams.get('season') || DEFAULT_SEASON;
   const refresh = url.searchParams.get('refresh') === '1';
   const leagueId = parseInt(url.searchParams.get('league') || String(LEAGUES.EPL), 10);
+  const season = seasonFor(leagueId, url.searchParams.get('season'));
   return cached(env, `standings:${leagueId}:${season}`, TTL.standings, async () => {
     try {
       const data = await afGet(env, '/standings', { league: leagueId, season });
@@ -136,9 +148,9 @@ async function handleStandings(env, url) {
 }
 
 async function handleTopScorers(env, url) {
-  const season = url.searchParams.get('season') || DEFAULT_SEASON;
   const refresh = url.searchParams.get('refresh') === '1';
   const leagueId = parseInt(url.searchParams.get('league') || String(LEAGUES.EPL), 10);
+  const season = seasonFor(leagueId, url.searchParams.get('season'));
   return cached(env, `topscorers:${leagueId}:${season}`, TTL.topscorers, async () => {
     try {
       const data = await afGet(env, '/players/topscorers', { league: leagueId, season });
@@ -185,13 +197,7 @@ async function lookupFixture(env, fixtureId) {
   // 2. Multi-league cached payload (homepage default)
   const tryKeys = [
     `fixtures:v2:${DEFAULT_SEASON}`,
-    `fixtures:v2:league:39:${DEFAULT_SEASON}`,
-    `fixtures:v2:league:2:${DEFAULT_SEASON}`,
-    `fixtures:v2:league:1:${DEFAULT_SEASON}`,
-    `fixtures:v2:league:140:${DEFAULT_SEASON}`,
-    `fixtures:v2:league:135:${DEFAULT_SEASON}`,
-    `fixtures:v2:league:78:${DEFAULT_SEASON}`,
-    `fixtures:v2:league:61:${DEFAULT_SEASON}`,
+    ...[39, 2, 1, 140, 135, 78, 61].map(lgId => `fixtures:v2:league:${lgId}:${seasonFor(lgId)}`),
   ];
   if (env?.CACHE) {
     for (const key of tryKeys) {
@@ -208,10 +214,11 @@ async function lookupFixture(env, fixtureId) {
   // 3. Last resort — fetch each priority league fresh and scan
   for (const lgId of [39, 2, 1, 140, 135, 78, 61]) {
     try {
+      const season = seasonFor(lgId);
       const [next, last, today] = await Promise.all([
-        afGet(env, '/fixtures', { league: lgId, season: DEFAULT_SEASON, next: 20 }),
-        afGet(env, '/fixtures', { league: lgId, season: DEFAULT_SEASON, last: 20 }),
-        afGet(env, '/fixtures', { league: lgId, season: DEFAULT_SEASON, date: new Date().toISOString().slice(0, 10) }),
+        afGet(env, '/fixtures', { league: lgId, season, next: 20 }),
+        afGet(env, '/fixtures', { league: lgId, season, last: 20 }),
+        afGet(env, '/fixtures', { league: lgId, season, date: new Date().toISOString().slice(0, 10) }),
       ]);
       for (const arr of [next.response, today.response, last.response]) {
         const found = (arr || []).find(fx => fx.fixture?.id === id);
@@ -495,7 +502,7 @@ async function handleHighlights(env, url) {
         const settled = [];
         const batches = await Promise.allSettled(
           HIGHLIGHT_LEAGUES.map(async league => {
-            const data = await afGet(env, '/fixtures', { league: league.id, season, last: 8 });
+            const data = await afGet(env, '/fixtures', { league: league.id, season: seasonFor(league.id, season), last: 8 });
             return (data.response || [])
               .filter(fx => HIGHLIGHT_FINISHED.has(fx?.fixture?.status?.short))
               .map(fx => normalizeHighlightFixture(fx, 'recent-finished'));
