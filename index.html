@@ -146,7 +146,7 @@ body > nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-it
 .nav-rewards:hover{filter:brightness(1.08);transform:translateY(-1px);}
 .nav-rewards::after{content:'';position:absolute;left:50%;bottom:-10px;transform:translateX(-50%);border-left:8px solid transparent;border-right:8px solid transparent;border-bottom:10px solid #111827;opacity:0;transition:opacity .15s;}
 .nav-rewards.active::after{opacity:1;}
-.nav-rewards-pop{display:none;position:absolute;top:calc(100% + 12px);right:0;width:min(340px,calc(100vw - 24px));background:linear-gradient(150deg,#101827 0%,#151a28 58%,#28150b 100%);color:#fff;border:1px solid rgba(249,115,22,.32);border-radius:16px;padding:14px;z-index:420;box-shadow:0 18px 48px rgba(0,0,0,.45),0 0 28px rgba(249,115,22,.14);}
+.nav-rewards-pop{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:min(340px,calc(100vw - 24px));background:linear-gradient(150deg,#101827 0%,#151a28 58%,#28150b 100%);color:#fff;border:1px solid rgba(249,115,22,.32);border-radius:16px;padding:14px;z-index:420;box-shadow:0 18px 48px rgba(0,0,0,.45),0 0 28px rgba(249,115,22,.14);}
 .nav-rewards-pop.open{display:block;}
 .nav-rewards-close{position:absolute;top:9px;right:10px;background:transparent;border:none;color:#fff;font-size:22px;line-height:1;cursor:pointer;}
 .nav-rewards-brand{font-family:var(--ff);font-size:22px;font-weight:700;letter-spacing:.04em;color:var(--accent);}
@@ -2207,7 +2207,7 @@ function closeModal(){document.getElementById('auth-modal').style.display='none'
 function closeBonusPopup(){const p=document.getElementById('bonus-popup');if(p)p.classList.remove('open');try{sessionStorage.setItem('scoreocs8_bonus_seen','1');}catch{}}
 function openBonusPopup(){const p=document.getElementById('bonus-popup');if(p)p.classList.add('open');}
 function closeRewards(){const p=document.getElementById('nav-rewards-pop');const b=document.getElementById('nav-rewards-btn');if(p)p.classList.remove('open');if(b)b.classList.remove('active');}
-function toggleRewards(e){if(e)e.stopPropagation();const p=document.getElementById('nav-rewards-pop');const b=document.getElementById('nav-rewards-btn');if(!p||!b)return;const open=p.classList.toggle('open');b.classList.toggle('active',open);}
+function toggleRewards(e){if(e)e.stopPropagation();const p=document.getElementById('nav-rewards-pop');const b=document.getElementById('nav-rewards-btn');if(!p||!b)return;if(p.parentElement!==document.body)document.body.appendChild(p);const open=p.classList.toggle('open');b.classList.toggle('active',open);}
 document.addEventListener('click',e=>{const p=document.getElementById('nav-rewards-pop');const b=document.getElementById('nav-rewards-btn');if(!p||!b)return;if(!p.contains(e.target)&&!b.contains(e.target))closeRewards();});
 document.addEventListener('DOMContentLoaded',()=>{try{if(sessionStorage.getItem('scoreocs8_bonus_seen'))return;}catch{}setTimeout(openBonusPopup,900);});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeBonusPopup();closeRewards();}});
@@ -2309,11 +2309,11 @@ async function openMatchDetail(fixtureId){
       </div>
       <div class="detail-section">
         <div class="detail-section-title">Head-to-head history</div>
-        ${h2h||'<div style="color:var(--text3);font-size:13px;">No head-to-head history returned by the football API.</div>'}
+        ${h2h||'<div style="color:var(--text3);font-size:13px;">No previous meetings in our records — a historic first encounter between these two sides. 🏟️</div>'}
       </div>
       <div class="detail-section">
         <div class="detail-section-title">Match statistics</div>
-        ${stats.length?`<div style="display:grid;grid-template-columns:1fr auto 1fr;gap:10px;margin-bottom:8px;"><div class="team-stat-name">${esc(home)}</div><div></div><div class="team-stat-name" style="text-align:right;">${esc(away)}</div></div>${statRows}`:'<div style="color:var(--text3);font-size:13px;line-height:1.6;">Detailed stats like fouls, free kicks, shots and cards are available for live/finished matches when API-Football provides them. Upcoming matches usually show history first, then stats after kickoff or full-time.</div>'}
+        ${stats.length?`<div style="display:grid;grid-template-columns:1fr auto 1fr;gap:10px;margin-bottom:8px;"><div class="team-stat-name">${esc(home)}</div><div></div><div class="team-stat-name" style="text-align:right;">${esc(away)}</div></div>${statRows}`:'<div style="color:var(--text3);font-size:13px;line-height:1.6;">Detailed stats like fouls, shots and cards appear here once the match kicks off. Check back during the game or after full-time.</div>'}
       </div>`;
   }catch(e){
     title.textContent='Match details unavailable';
