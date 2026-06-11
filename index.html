@@ -1403,8 +1403,8 @@ footer{
       .wcs-chip:hover{background:rgba(255,255,255,0.08);color:var(--text);border-color:rgba(249,115,22,0.30);}
       .wcs-chip.active{background:linear-gradient(180deg,#ff9c4a 0%,#f97316 50%,#c75808 100%);color:#fff;border-color:transparent;box-shadow:0 3px 10px rgba(249,115,22,0.35);}
       .wcs-count{font-family:var(--fm);font-size:11px;color:var(--text3);}
-      .wcs-list{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-height:580px;overflow-y:auto;padding-right:4px;scrollbar-width:thin;scrollbar-color:rgba(249,115,22,.35) transparent;}
-      @media(max-width:760px){.wcs-list{grid-template-columns:1fr;max-height:520px;}}
+      .wcs-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-height:580px;overflow-y:auto;padding-right:4px;scrollbar-width:thin;scrollbar-color:rgba(249,115,22,.35) transparent;}
+      @media(max-width:760px){.wcs-list{grid-template-columns:minmax(0,1fr);max-height:520px;}}
       .wcs-date{grid-column:1/-1;font-family:var(--fm);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);padding:8px 2px 0;display:flex;align-items:center;gap:8px;}
       .wcs-date::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(249,115,22,.35),transparent);}
       .wcs-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);border-radius:14px;padding:13px 15px;cursor:pointer;transition:all .2s;backdrop-filter:blur(12px);}
