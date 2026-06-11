@@ -57,7 +57,12 @@ async function cached(env, key, ttl, fetcher, opts = {}) {
     if (hit) return { data: hit, source: 'kv' };
   }
   const data = await fetcher();
-  await env.CACHE.put(key, JSON.stringify(data), { expirationTtl: ttl });
+  // opts.validate guards against poisoning the cache with empty payloads
+  // when API-Football transiently returns nothing — serve the empty
+  // response but let the next request hit the origin again.
+  if (!opts.validate || opts.validate(data)) {
+    await env.CACHE.put(key, JSON.stringify(data), { expirationTtl: ttl });
+  }
   return { data, source: opts.refresh ? 'refreshed' : 'origin' };
 }
 
@@ -105,7 +110,9 @@ async function handleFixtures(env, url) {
           today: todayMatches.response || [],
         }],
       };
-    }, { refresh });
+      // A league bucket that is entirely empty is almost always an
+      // API-Football hiccup, not a real schedule — don't cache it.
+    }, { refresh, validate: d => d.leagues.some(l => l.next.length || l.last.length || l.today.length) });
   }
 
   // Default: fetch all 4 primary leagues at once (homepage behaviour).
@@ -129,7 +136,7 @@ async function handleFixtures(env, url) {
       })
     );
     return { updated: Date.now(), leagues: results };
-  }, { refresh });
+  }, { refresh, validate: d => d.leagues.some(l => l.next.length || l.last.length || l.today.length) });
 }
 
 // Full FIFA World Cup schedule — all 104 fixtures with group + venue
@@ -169,7 +176,7 @@ async function handleWcSchedule(env, url) {
       };
     }).sort((a, b) => new Date(a.date) - new Date(b.date));
     return { updated: Date.now(), season, count: matches.length, matches };
-  }, { refresh });
+  }, { refresh, validate: d => (d.matches || []).length > 0 });
 }
 
 async function handleStandings(env, url) {

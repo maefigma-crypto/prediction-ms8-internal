@@ -1739,21 +1739,27 @@ footer{
         wcsRender();
       }));
 
-      fetch('/api/wc-schedule')
-        .then(r => r.ok ? r.json() : null)
-        .then(data => {
-          wcsMatches = data?.matches || [];
-          if (!wcsMatches.length) { wcsList.innerHTML = '<div class="wcs-empty">World Cup schedule unavailable right now — refresh shortly.</div>'; return; }
-          wcsRender();
-          // Refresh scores every 2 min while matches are live
-          setInterval(async () => {
-            try {
-              const fresh = await fetch('/api/wc-schedule').then(r => r.ok ? r.json() : null);
-              if (fresh?.matches?.length) { wcsMatches = fresh.matches; wcsRender(); }
-            } catch {}
-          }, 120000);
-        })
-        .catch(() => { wcsList.innerHTML = '<div class="wcs-empty">Could not load the World Cup schedule.</div>'; });
+      async function wcsLoad(bustCache) {
+        try {
+          const fresh = await fetch('/api/wc-schedule' + (bustCache ? '?refresh=1' : '')).then(r => r.ok ? r.json() : null);
+          if (fresh?.matches?.length) { wcsMatches = fresh.matches; wcsRender(); return true; }
+        } catch {}
+        return false;
+      }
+      (async () => {
+        // API-Football occasionally returns an empty payload for a beat —
+        // retry (cache-busting) instead of dead-ending on first failure.
+        let ok = await wcsLoad(false);
+        for (let attempt = 0; !ok && attempt < 4; attempt++) {
+          wcsList.innerHTML = '<div class="wcs-empty">Loading World Cup schedule… retrying</div>';
+          await new Promise(r => setTimeout(r, 12000 * (attempt + 1)));
+          ok = await wcsLoad(true);
+        }
+        if (!ok) wcsList.innerHTML = '<div class="wcs-empty">World Cup schedule unavailable right now — it will retry automatically.</div>';
+        // Keep refreshing every 2 min — updates live scores and self-heals
+        // even if the first load failed.
+        setInterval(() => wcsLoad(false), 120000);
+      })();
     })();
     </script>
   </div>
