@@ -3328,6 +3328,14 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     return out;
   }
 
+  // During the World Cup the homepage "FIFA World Cup Predictions" section
+  // should show WC fixtures (league id 1) only. Fall back to all leagues on
+  // rest days so the section is never empty.
+  function wcFirst(list) {
+    const wc = (list || []).filter(fx => fx.league?.id === 1);
+    return wc.length ? wc : (list || []);
+  }
+
   function renderPreds(all, aiMap, slipMap = {}) {
     const grid = document.getElementById('pred-grid'); if (!grid) return;
     const now = Date.now();
@@ -3451,7 +3459,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     const liveSet = new Set((live.response || []).map(fx => fx.fixture.id));
     // If any live match appears, re-render with fresh fixtures
     const fresh = await getJSON(API + '/fixtures');
-    const all = flattenFixtures(fresh);
+    const all = wcFirst(flattenFixtures(fresh));
     state.all = all;
     renderPreds(all, state.aiMap, state.slipMap);
     renderLiveCenter(all, state.aiMap, state.slipMap);
@@ -3465,7 +3473,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
       getJSON(API + '/topscorers?league=39&season=2025'),
       loadSlipMap(),
     ]);
-    const all = flattenFixtures(fixtures);
+    const all = wcFirst(flattenFixtures(fixtures));
     const aiMap = await loadAIMap(all);
     const state = { all, aiMap, slipMap: slipBundle.map };
     window.predictionState = state;

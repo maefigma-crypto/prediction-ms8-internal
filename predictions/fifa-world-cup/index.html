@@ -489,6 +489,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeBurger();});
   const mytDate = iso => { try { return new Date(iso).toLocaleDateString('en-CA', {timeZone:'Asia/Kuala_Lumpur'}); } catch { return ''; } };
   const LIVE = new Set(['1H','2H','HT','ET','BT','P','LIVE']);
   const isLive = fx => LIVE.has(fx?.fixture?.status?.short);
+  const slugify = s => String(s||'').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,64);
 
   async function getJSON(path) { try { const r = await fetch(path); return r.ok ? await r.json() : null; } catch { return null; } }
 
@@ -510,7 +511,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeBurger();});
       ? `<div class="vs-score">${hScore} — ${aScore}</div><div class="vs-time" style="color:${live?'var(--red)':'var(--text3)'}">${live ? '● '+(fx.fixture.status.elapsed||'')+"'" : 'FT'}</div>`
       : `<div class="vs-score" style="font-size:24px;color:var(--text2)">VS</div><div class="vs-time">${esc(kickoff)} MYT</div>`;
     const logo = url => url ? `<img src="${esc(url)}" onerror="this.style.display='none';this.parentElement.textContent='⚽'" style="width:44px;height:44px;border-radius:50%;object-fit:contain;">` : '⚽';
-    return `<div class="pc">
+    const href = `/match/${fx.fixture.id}-${slugify(fx.teams.home.name + '-vs-' + fx.teams.away.name)}/`;
+    return `<a class="pc" href="${href}" style="text-decoration:none;color:inherit;display:block;cursor:pointer;" aria-label="View ${esc(fx.teams.home.name)} vs ${esc(fx.teams.away.name)} prediction">
       <div class="pch"><span class="pcl">${L.emoji} ${esc(L.name)} · ${esc(date)} · ${esc(kickoff)} MYT</span>${badge}</div>
       <div class="pcb">
         <div class="pct">
@@ -518,8 +520,9 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeBurger();});
           <div class="vs-mid">${scoreBlock}</div>
           <div class="team-side"><div class="tlogo">${logo(fx.teams.away.logo)}</div><div class="tname">${esc(fx.teams.away.name)}</div></div>
         </div>
+        <div style="text-align:center;margin-top:12px;font-family:var(--fm);font-size:11px;color:var(--accent);letter-spacing:.06em;">View AI prediction →</div>
       </div>
-    </div>`;
+    </a>`;
   }
 
   function tableRow(r, i) {
