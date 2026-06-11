@@ -132,6 +132,46 @@ async function handleFixtures(env, url) {
   }, { refresh });
 }
 
+// Full FIFA World Cup schedule — all 104 fixtures with group + venue
+// details for the homepage "Follow the FIFA World Cup" section. One
+// API-Football call returns the whole season; standings provide the
+// team→group mapping (fixture rounds only say "Group Stage - 1").
+async function handleWcSchedule(env, url) {
+  const refresh = url.searchParams.get('refresh') === '1';
+  const season = seasonFor(1);
+  return cached(env, `wc:schedule:${season}`, TTL.fixtures, async () => {
+    const [fixturesData, standingsData] = await Promise.all([
+      afGet(env, '/fixtures', { league: 1, season }),
+      afGet(env, '/standings', { league: 1, season }).catch(() => ({ response: [] })),
+    ]);
+    const groupOf = {};
+    for (const group of standingsData.response?.[0]?.league?.standings || []) {
+      for (const row of group) {
+        if (row.team?.id) groupOf[row.team.id] = row.group || '';
+      }
+    }
+    const matches = (fixturesData.response || []).map(fx => {
+      const homeGroup = groupOf[fx.teams?.home?.id] || '';
+      const awayGroup = groupOf[fx.teams?.away?.id] || '';
+      return {
+        fixture_id: fx.fixture?.id,
+        date: fx.fixture?.date,
+        status: fx.fixture?.status?.short || 'NS',
+        elapsed: fx.fixture?.status?.elapsed ?? null,
+        round: fx.league?.round || '',
+        group: homeGroup && homeGroup === awayGroup ? homeGroup : '',
+        venue: fx.fixture?.venue?.name || '',
+        city: fx.fixture?.venue?.city || '',
+        home: { id: fx.teams?.home?.id, name: fx.teams?.home?.name || 'TBD', logo: fx.teams?.home?.logo || '' },
+        away: { id: fx.teams?.away?.id, name: fx.teams?.away?.name || 'TBD', logo: fx.teams?.away?.logo || '' },
+        goals: { home: fx.goals?.home ?? null, away: fx.goals?.away ?? null },
+        penalty: { home: fx.score?.penalty?.home ?? null, away: fx.score?.penalty?.away ?? null },
+      };
+    }).sort((a, b) => new Date(a.date) - new Date(b.date));
+    return { updated: Date.now(), season, count: matches.length, matches };
+  }, { refresh });
+}
+
 async function handleStandings(env, url) {
   const refresh = url.searchParams.get('refresh') === '1';
   const leagueId = parseInt(url.searchParams.get('league') || String(LEAGUES.EPL), 10);
@@ -625,6 +665,8 @@ export async function onRequest(context) {
         result = await handleFixtures(env, url); break;
       case 'standings':
         result = await handleStandings(env, url); break;
+      case 'wc-schedule':
+        result = await handleWcSchedule(env, url); break;
       case 'topscorers':
         result = await handleTopScorers(env, url); break;
       case 'odds':
@@ -824,7 +866,7 @@ export async function onRequest(context) {
         return json({
           error: 'not found',
           route,
-          routes: ['/api/live', '/api/fixtures', '/api/standings', '/api/topscorers', '/api/odds', '/api/predictions?fixture_id=', '/api/highlights', '/api/health'],
+          routes: ['/api/live', '/api/fixtures', '/api/standings', '/api/wc-schedule', '/api/topscorers', '/api/odds', '/api/predictions?fixture_id=', '/api/highlights', '/api/health'],
         }, 404);
     }
     return json(result.data, 200, { 'X-Cache': result.source });

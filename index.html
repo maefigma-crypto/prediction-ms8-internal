@@ -1265,7 +1265,7 @@ footer{
       <h1><span id="hl-hero1">Daily Soccer</span><br><span class="hl" id="hl-hero2">Predictions</span><br><span id="hl-hero3">For Big Matches</span></h1>
       <p class="hero-sub" id="hl-herosub">ScoreOcs8 focuses on major football matches only. Check upcoming fixtures, simple pro picks, H2H context, and settled pick results in one place.</p>
       <div class="hero-btns">
-        <a href="#highlights" class="btn-p" id="hl-btn2">📅 Match Schedule</a>
+        <a href="#highlights" class="btn-p" id="hl-btn2">📅 FIFA World Cup</a>
         <a href="/predictions/" class="btn-o" id="hl-btn1">📊 Match Prediction</a>
         <a href="#" class="btn-o" id="hl-btn3" onclick="event.preventDefault();openHiw();">💡 How It Works</a>
       </div>
@@ -1338,11 +1338,433 @@ footer{
   </div>
 </div>
 
+<section id="highlights" style="position:relative;z-index:1;background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+  <div class="sec">
+    <div class="stag">FIFA World Cup 2026™</div>
+    <h2 class="stitle">Follow the FIFA World Cup</h2>
+    <p class="ssub">All 104 matches · 11 June – 19 July 2026 · Group tables, kickoff times in MYT, live scores and results — auto-updated</p>
+
+    <!-- ── WORLD CUP FULL SCHEDULE (104 matches) ── -->
+    <div class="wcs-bar fu">
+      <div class="wcs-filters" id="wcs-filters">
+        <button class="wcs-chip active" data-stage="upcoming">⏰ Upcoming</button>
+        <button class="wcs-chip" data-stage="today">📅 Today</button>
+        <button class="wcs-chip" data-stage="group">First Stage</button>
+        <button class="wcs-chip" data-stage="r32">Round of 32</button>
+        <button class="wcs-chip" data-stage="r16">Round of 16</button>
+        <button class="wcs-chip" data-stage="qf">Quarter-finals</button>
+        <button class="wcs-chip" data-stage="sf">Semi-finals</button>
+        <button class="wcs-chip" data-stage="final">Finals</button>
+        <button class="wcs-chip" data-stage="all">All matches</button>
+      </div>
+      <span class="wcs-count" id="wcs-count"></span>
+    </div>
+    <div class="wcs-list fu" id="wcs-list"><div class="msc-loading">Loading World Cup schedule…</div></div>
+
+    <div class="msc-tabs fu" style="margin-top:26px;">
+      <button class="msc-tab active" data-league="1" data-name="FIFA World Cup">🏆 FIFA WC</button>
+      <button class="msc-tab" data-league="39" data-name="Premier League">🏴󠁧󠁢󠁥󠁮󠁧󠁿 EPL</button>
+      <button class="msc-tab" data-league="2" data-name="Champions League">⭐ UCL</button>
+      <button class="msc-tab" data-league="140" data-name="La Liga">🇪🇸 La Liga</button>
+      <button class="msc-tab" data-league="135" data-name="Serie A">🇮🇹 Serie A</button>
+      <button class="msc-tab" data-league="78" data-name="Bundesliga">🇩🇪 Bundesliga</button>
+      <button class="msc-tab" data-league="61" data-name="Ligue 1">🇫🇷 Ligue 1</button>
+    </div>
+
+    <div class="msc-grid fu">
+      <div class="msc-card">
+        <div class="msc-card-h"><span class="msc-card-icon">📊</span><span>Live Table</span><span class="msc-fresh" id="msc-table-fresh"></span></div>
+        <div class="msc-card-b" id="msc-table"><div class="msc-loading">Loading league table…</div></div>
+      </div>
+      <div class="msc-card">
+        <div class="msc-card-h"><span class="msc-card-icon">⚽</span><span>Top Scorers</span></div>
+        <div class="msc-card-b" id="msc-scorers"><div class="msc-loading">Loading top scorers…</div></div>
+      </div>
+      <div class="msc-card">
+        <div class="msc-card-h"><span class="msc-card-icon">📅</span><span>Upcoming Matches</span></div>
+        <div class="msc-card-b" id="msc-upcoming"><div class="msc-loading">Loading fixtures…</div></div>
+      </div>
+      <div class="msc-card">
+        <div class="msc-card-h"><span class="msc-card-icon">✅</span><span>Latest Results</span></div>
+        <div class="msc-card-b" id="msc-results"><div class="msc-loading">Loading results…</div></div>
+      </div>
+    </div>
+
+    <style>
+      .msc-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+      .msc-tab{font-family:var(--ff);font-size:16px;font-weight:700;letter-spacing:.03em;padding:11px 18px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.04);color:var(--text2);border-radius:999px;backdrop-filter:blur(12px);cursor:pointer;transition:all .2s;white-space:nowrap;}
+      .msc-tab:hover{background:rgba(255,255,255,0.08);color:var(--text);border-color:rgba(249,115,22,0.30);}
+      .msc-tab.active{background:linear-gradient(180deg,#ff9c4a 0%,#f97316 50%,#c75808 100%);color:#fff;border-color:transparent;box-shadow:0 4px 14px rgba(249,115,22,0.40),inset 0 1px 0 rgba(255,255,255,0.30);}
+      /* WORLD CUP FULL SCHEDULE */
+      .wcs-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+      .wcs-filters{display:flex;gap:7px;flex-wrap:wrap;}
+      .wcs-chip{font-family:var(--fm);font-size:11px;font-weight:600;letter-spacing:.05em;padding:7px 13px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.04);color:var(--text2);border-radius:999px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+      .wcs-chip:hover{background:rgba(255,255,255,0.08);color:var(--text);border-color:rgba(249,115,22,0.30);}
+      .wcs-chip.active{background:linear-gradient(180deg,#ff9c4a 0%,#f97316 50%,#c75808 100%);color:#fff;border-color:transparent;box-shadow:0 3px 10px rgba(249,115,22,0.35);}
+      .wcs-count{font-family:var(--fm);font-size:11px;color:var(--text3);}
+      .wcs-list{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-height:580px;overflow-y:auto;padding-right:4px;scrollbar-width:thin;scrollbar-color:rgba(249,115,22,.35) transparent;}
+      @media(max-width:760px){.wcs-list{grid-template-columns:1fr;max-height:520px;}}
+      .wcs-date{grid-column:1/-1;font-family:var(--fm);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);padding:8px 2px 0;display:flex;align-items:center;gap:8px;}
+      .wcs-date::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(249,115,22,.35),transparent);}
+      .wcs-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);border-radius:14px;padding:13px 15px;cursor:pointer;transition:all .2s;backdrop-filter:blur(12px);}
+      .wcs-card:hover{background:rgba(255,255,255,0.07);border-color:rgba(249,115,22,0.35);transform:translateY(-1px);}
+      .wcs-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;font-family:var(--fm);font-size:10px;color:var(--text3);letter-spacing:.04em;margin-bottom:10px;}
+      .wcs-meta .wcs-stagename{color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+      .wcs-body{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;}
+      .wcs-teams{display:flex;flex-direction:column;gap:8px;min-width:0;}
+      .wcs-team{display:flex;align-items:center;gap:9px;min-width:0;}
+      .wcs-team img{width:24px;height:24px;border-radius:50%;object-fit:contain;background:rgba(255,255,255,.06);flex:none;}
+      .wcs-team span{font-family:var(--ff);font-size:15px;font-weight:600;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+      .wcs-team .wcs-goal{margin-left:auto;font-family:var(--ff);font-size:16px;font-weight:700;color:var(--text);}
+      .wcs-team.winner span{color:var(--text);}
+      .wcs-right{text-align:right;flex:none;}
+      .wcs-time{font-family:var(--ff);font-size:21px;font-weight:700;color:var(--text);line-height:1;}
+      .wcs-time small{display:block;font-family:var(--fm);font-size:9px;color:var(--text3);letter-spacing:.08em;margin-top:4px;}
+      .wcs-live{color:var(--red);font-family:var(--fm);font-size:11px;font-weight:700;}
+      .wcs-ft{color:var(--text3);font-family:var(--fm);font-size:11px;}
+      .wcs-empty{grid-column:1/-1;padding:34px;text-align:center;color:var(--text3);font-family:var(--fm);font-size:12px;}
+      .msc-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+      @media(max-width:760px){.msc-grid{grid-template-columns:1fr;}}
+      .msc-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);border-radius:18px;backdrop-filter:blur(18px) saturate(160%);box-shadow:0 14px 40px rgba(0,0,0,0.32),inset 0 1px 0 rgba(255,255,255,0.08);overflow:hidden;position:relative;}
+      .msc-card::before{content:'';position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.30),transparent);}
+      .msc-card-h{padding:16px 18px;display:flex;align-items:center;gap:10px;font-family:var(--ff);font-size:18px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text);border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);}
+      .msc-fresh{margin-left:auto;font-family:var(--fm);font-size:11px;font-weight:500;letter-spacing:.04em;color:var(--text3);text-transform:none;}
+      .msc-fresh::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:6px;vertical-align:middle;box-shadow:0 0 6px var(--green);}
+      .msc-card-icon{font-size:19px;}
+      .msc-card-b{padding:8px 0;max-height:440px;overflow-y:auto;}
+      .msc-card-b::-webkit-scrollbar{width:6px;}
+      .msc-card-b::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.10);border-radius:3px;}
+      .msc-loading,.msc-empty{padding:32px 18px;text-align:center;color:var(--text3);font-family:var(--fm);font-size:14px;letter-spacing:.04em;}
+      /* Live table rows */
+      .msc-row{display:grid;align-items:center;gap:12px;padding:13px 18px;border-top:1px solid rgba(255,255,255,0.04);font-size:16px;}
+      .msc-row:first-child{border-top:none;}
+      .msc-row.t-table{grid-template-columns:32px minmax(0,1fr) 42px 42px 42px 52px;}
+      .msc-rank{font-family:var(--fm);font-size:15px;color:var(--text3);text-align:center;}
+      .msc-rank.top{color:var(--accent);font-weight:700;}
+      .msc-team{display:flex;align-items:center;gap:10px;min-width:0;}
+      .msc-team img{width:24px;height:24px;object-fit:contain;flex-shrink:0;}
+      .msc-team-name{font-family:var(--ff);font-size:18px;font-weight:700;line-height:1.15;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+      .msc-stat{font-family:var(--fm);font-size:15px;color:var(--text2);text-align:center;}
+      .msc-pts{font-family:var(--ff);font-size:18px;font-weight:700;color:var(--accent);text-align:center;}
+      .msc-head{display:grid;grid-template-columns:32px minmax(0,1fr) 42px 42px 42px 52px;gap:12px;padding:10px 18px;font-family:var(--fm);font-size:11px;letter-spacing:.08em;color:var(--text3);text-transform:uppercase;border-top:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);}
+      .msc-champ{display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 18px;background:linear-gradient(135deg,rgba(249,115,22,.18),rgba(245,166,35,.08));border-bottom:1px solid rgba(249,115,22,.30);box-shadow:inset 0 1px 0 rgba(255,255,255,.10);}
+      .msc-champ img{width:42px;height:42px;object-fit:contain;}
+      .msc-champ-eyebrow{font-family:var(--fm);font-size:11px;font-weight:600;letter-spacing:.10em;text-transform:uppercase;color:var(--accent);}
+      .msc-champ-name{font-family:var(--ff);font-size:20px;font-weight:800;color:var(--text);line-height:1.1;margin-top:2px;}
+      .msc-champ-pts{font-family:var(--ff);font-size:26px;font-weight:800;color:var(--accent);text-align:right;line-height:1;}
+      .msc-champ-pts span{display:block;font-family:var(--fm);font-size:10px;font-weight:500;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-top:3px;}
+      /* Top scorers */
+      .msc-row.t-scorer{grid-template-columns:32px minmax(0,1fr) 52px;}
+      .msc-pl{display:flex;align-items:center;gap:11px;min-width:0;}
+      .msc-pl img{width:36px;height:36px;border-radius:50%;object-fit:cover;background:rgba(255,255,255,0.06);flex-shrink:0;}
+      .msc-pl-info{min-width:0;}
+      .msc-pl-name{font-family:var(--ff);font-size:17px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+      .msc-pl-club{font-family:var(--fm);font-size:13px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+      .msc-goals{font-family:var(--ff);font-size:19px;font-weight:700;color:var(--accent);text-align:center;}
+      /* Fixtures / results */
+      .msc-fx{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:14px 18px;border-top:1px solid rgba(255,255,255,0.04);}
+      .msc-fx:first-child{border-top:none;}
+      .msc-fx-date{font-family:var(--fm);font-size:12px;letter-spacing:.08em;color:var(--accent);text-transform:uppercase;background:rgba(249,115,22,0.10);border:1px solid rgba(249,115,22,0.22);border-radius:999px;padding:4px 10px;white-space:nowrap;}
+      .msc-fx-teams{font-family:var(--ff);font-size:17px;font-weight:700;color:var(--text);min-width:0;}
+      .msc-fx-vs{color:var(--text3);font-weight:400;margin:0 6px;}
+      .msc-fx-meta{font-family:var(--fm);font-size:13px;color:var(--text3);margin-top:2px;}
+      .msc-fx-time{font-family:var(--fm);font-size:14px;color:var(--amber);white-space:nowrap;text-align:right;}
+      .msc-fx-score{font-family:var(--ff);font-size:19px;font-weight:700;color:var(--text);white-space:nowrap;text-align:right;}
+      .msc-fx-score .win{color:var(--green);}
+      @media(max-width:640px){
+        .msc-card-h{font-size:16px;padding:15px 16px;}
+        .msc-card-b{max-height:420px;}
+        .msc-row{gap:9px;padding:12px 14px;}
+        .msc-row.t-table,.msc-head{grid-template-columns:28px minmax(0,1fr) 34px 34px 34px 42px;}
+        .msc-head{gap:9px;padding:9px 14px;font-size:10px;}
+        .msc-team{gap:8px;}
+        .msc-team img{width:22px;height:22px;}
+        .msc-team-name{font-size:16px;}
+        .msc-stat,.msc-rank{font-size:13px;}
+        .msc-pts{font-size:16px;}
+        .msc-row.t-scorer{grid-template-columns:28px minmax(0,1fr) 44px;}
+        .msc-pl img{width:32px;height:32px;}
+        .msc-pl-name{font-size:16px;}
+        .msc-pl-club{font-size:12px;}
+        .msc-goals{font-size:17px;}
+        .msc-fx{grid-template-columns:1fr;gap:7px;padding:14px;}
+        .msc-fx-date{width:max-content;font-size:11px;}
+        .msc-fx-teams{font-size:16px;}
+        .msc-fx-meta{font-size:12px;}
+        .msc-fx-time,.msc-fx-score{text-align:left;}
+      }
+    </style>
+
+    <script>
+    (function(){
+      const tabs = document.querySelectorAll('.msc-tab');
+      const elTable = document.getElementById('msc-table');
+      const elScorers = document.getElementById('msc-scorers');
+      const elUpcoming = document.getElementById('msc-upcoming');
+      const elResults = document.getElementById('msc-results');
+      const cache = {};
+      const SEASON = '2025';
+      // API-Football tags tournaments by start year — WC 2026 is season 2026.
+      const SEASON_BY_LEAGUE = { '1': '2026' };
+      const seasonOf = id => SEASON_BY_LEAGUE[String(id)] || SEASON;
+      const esc = s => String(s ?? '').replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
+      const myt = d => { try { return new Date(d).toLocaleString('en-MY',{timeZone:'Asia/Kuala_Lumpur',hour:'2-digit',minute:'2-digit',hour12:false}); } catch { return ''; } };
+      const mytDate = d => { try { return new Date(d).toLocaleDateString('en-MY',{timeZone:'Asia/Kuala_Lumpur',day:'numeric',month:'short'}).toUpperCase(); } catch { return ''; } };
+
+      const empty = msg => `<div class="msc-empty">${esc(msg)}</div>`;
+
+      function fmtAgo(ms) {
+        if (!ms) return '';
+        const s = Math.max(0, Math.round((Date.now() - ms) / 1000));
+        if (s < 60) return 'updated just now';
+        const m = Math.round(s / 60);
+        if (m < 60) return `updated ${m}m ago`;
+        const h = Math.round(m / 60);
+        if (h < 24) return `updated ${h}h ago`;
+        const d = Math.round(h / 24);
+        return `updated ${d}d ago`;
+      }
+      function tableRows(list, limit) {
+        return list.slice(0, limit).map((t, i) => {
+          const rankClass = i < 3 ? 'top' : '';
+          return `<div class="msc-row t-table">
+            <div class="msc-rank ${rankClass}">${esc(t.rank ?? i+1)}</div>
+            <div class="msc-team">${t.team?.logo ? `<img src="${esc(t.team.logo)}" alt="">` : ''}<span class="msc-team-name">${esc(t.team?.name || '')}</span></div>
+            <div class="msc-stat">${esc(t.all?.played ?? 0)}</div>
+            <div class="msc-stat">${esc(t.all?.win ?? 0)}</div>
+            <div class="msc-stat">${esc(t.all?.lose ?? 0)}</div>
+            <div class="msc-pts">${esc(t.points ?? 0)}</div>
+          </div>`;
+        }).join('');
+      }
+
+      function renderTable(data) {
+        try {
+          const groups = data?.response?.[0]?.league?.standings || [];
+          const std = groups[0] || [];
+          const leagueObj = data?.response?.[0]?.league || {};
+          const freshEl = document.getElementById('msc-table-fresh');
+          if (freshEl) freshEl.textContent = std.length ? fmtAgo(data?.updated) : '';
+          if (!std.length) { elTable.innerHTML = empty('Standings not available for this league'); return; }
+          // Cup competitions (FIFA WC) return one standings array per group —
+          // render every group under its own header instead of a single table.
+          if (groups.length > 1) {
+            const head = `<div class="msc-head"><div></div><div>Team</div><div>MP</div><div>W</div><div>L</div><div>PTS</div></div>`;
+            elTable.innerHTML = groups.map(g => {
+              const label = g?.[0]?.group || '';
+              return `<div style="margin:10px 0 4px;font-family:var(--fm,monospace);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text2);">${esc(label)}</div>${head}${tableRows(g, g.length)}`;
+            }).join('');
+            return;
+          }
+          // Champion strip — when every team has played the same max number
+          // of games (round-robin done) AND the leader is mathematically clear,
+          // show '🏆 <team>' above the table so customers see the season is
+          // wrapped and who won.
+          const maxPlayed = Math.max(...std.map(t => t.all?.played ?? 0));
+          const everyoneDone = std.every(t => (t.all?.played ?? 0) === maxPlayed);
+          const seasonOver = everyoneDone && maxPlayed > 0;
+          const leader = std[0];
+          const runnerUp = std[1];
+          const champ = seasonOver && leader && (!runnerUp || (leader.points ?? 0) > (runnerUp.points ?? 0))
+            ? leader
+            : null;
+          const champStrip = champ
+            ? `<div class="msc-champ">
+                ${champ.team?.logo ? `<img src="${esc(champ.team.logo)}" alt="">` : '<span>🏆</span>'}
+                <div class="msc-champ-text">
+                  <div class="msc-champ-eyebrow">🏆 Champion · ${esc(leagueObj.name || 'League')} ${esc(leagueObj.season || '')}</div>
+                  <div class="msc-champ-name">${esc(champ.team?.name || '')}</div>
+                </div>
+                <div class="msc-champ-pts">${esc(champ.points ?? 0)}<span>pts</span></div>
+               </div>`
+            : '';
+          elTable.innerHTML = `${champStrip}<div class="msc-head"><div></div><div>Team</div><div>MP</div><div>W</div><div>L</div><div>PTS</div></div>${tableRows(std, 10)}`;
+        } catch (e) { elTable.innerHTML = empty('Could not load table'); }
+      }
+
+      function renderScorers(data) {
+        try {
+          const list = data?.response || [];
+          if (!list.length) { elScorers.innerHTML = empty('Top scorer data not available'); return; }
+          elScorers.innerHTML = list.slice(0, 10).map((p, i) => {
+            const stat = p.statistics?.[0] || {};
+            return `<div class="msc-row t-scorer">
+              <div class="msc-rank ${i<3?'top':''}">${i+1}</div>
+              <div class="msc-pl">${p.player?.photo ? `<img src="${esc(p.player.photo)}" alt="">` : '<img alt="">'}<div class="msc-pl-info"><div class="msc-pl-name">${esc(p.player?.name || '')}</div><div class="msc-pl-club">${esc(stat.team?.name || '')}</div></div></div>
+              <div class="msc-goals">${esc(stat.goals?.total ?? 0)}</div>
+            </div>`;
+          }).join('');
+        } catch (e) { elScorers.innerHTML = empty('Could not load top scorers'); }
+      }
+
+      function fxRow(fx, isResult) {
+        const home = esc(fx.teams?.home?.name || '');
+        const away = esc(fx.teams?.away?.name || '');
+        const date = mytDate(fx.fixture?.date);
+        const time = myt(fx.fixture?.date);
+        let right;
+        if (isResult) {
+          const sh = fx.goals?.home, sa = fx.goals?.away;
+          if (sh != null && sa != null) {
+            right = `<div class="msc-fx-score">${sh<sa?'<span>'+esc(sh)+'</span>':sh>sa?'<span class="win">'+esc(sh)+'</span>':esc(sh)}<span style="color:var(--text3)">–</span>${sh>sa?'<span>'+esc(sa)+'</span>':sh<sa?'<span class="win">'+esc(sa)+'</span>':esc(sa)}</div>`;
+          } else right = `<div class="msc-fx-time">FT</div>`;
+        } else {
+          right = `<div class="msc-fx-time">${esc(time)} MYT</div>`;
+        }
+        return `<div class="msc-fx"><span class="msc-fx-date">${esc(date)}</span><div><div class="msc-fx-teams">${home}<span class="msc-fx-vs">vs</span>${away}</div></div>${right}</div>`;
+      }
+
+      function renderUpcoming(data) {
+        try {
+          const list = data?.leagues?.[0]?.next || [];
+          if (!list.length) { elUpcoming.innerHTML = empty('No upcoming fixtures returned'); return; }
+          elUpcoming.innerHTML = list.slice(0, 8).map(fx => fxRow(fx, false)).join('');
+        } catch (e) { elUpcoming.innerHTML = empty('Could not load fixtures'); }
+      }
+
+      function renderResults(data) {
+        try {
+          const list = data?.leagues?.[0]?.last || [];
+          if (!list.length) { elResults.innerHTML = empty('No recent results returned'); return; }
+          elResults.innerHTML = list.slice(0, 8).map(fx => fxRow(fx, true)).join('');
+        } catch (e) { elResults.innerHTML = empty('Could not load results'); }
+      }
+
+      async function loadLeague(leagueId) {
+        if (cache[leagueId]) {
+          const c = cache[leagueId];
+          renderTable(c.std); renderScorers(c.scor); renderUpcoming(c.fx); renderResults(c.fx);
+          return;
+        }
+        // Show loading state
+        elTable.innerHTML = '<div class="msc-loading">Loading league table…</div>';
+        elScorers.innerHTML = '<div class="msc-loading">Loading top scorers…</div>';
+        elUpcoming.innerHTML = '<div class="msc-loading">Loading fixtures…</div>';
+        elResults.innerHTML = '<div class="msc-loading">Loading results…</div>';
+
+        const season = seasonOf(leagueId);
+        const [std, scor, fx] = await Promise.all([
+          fetch(`/api/standings?league=${leagueId}&season=${season}`).then(r => r.ok ? r.json() : null).catch(() => null),
+          fetch(`/api/topscorers?league=${leagueId}&season=${season}`).then(r => r.ok ? r.json() : null).catch(() => null),
+          fetch(`/api/fixtures?league=${leagueId}&season=${season}`).then(r => r.ok ? r.json() : null).catch(() => null),
+        ]);
+        cache[leagueId] = { std, scor, fx };
+        renderTable(std); renderScorers(scor); renderUpcoming(fx); renderResults(fx);
+      }
+
+      tabs.forEach(t => t.addEventListener('click', () => {
+        tabs.forEach(b => b.classList.remove('active'));
+        t.classList.add('active');
+        loadLeague(t.dataset.league);
+      }));
+
+      // Initial load — FIFA World Cup during the tournament
+      loadLeague('1');
+
+      /* ── WORLD CUP FULL SCHEDULE (all 104 matches) ── */
+      const wcsList = document.getElementById('wcs-list');
+      const wcsCount = document.getElementById('wcs-count');
+      const wcsChips = document.querySelectorAll('.wcs-chip');
+      const WCS_LIVE = new Set(['1H','2H','HT','ET','BT','P','LIVE']);
+      let wcsMatches = null;
+      let wcsStage = 'upcoming';
+
+      const klDate = iso => { try { return new Date(new Date(iso).getTime() + 8*3600*1000).toISOString().slice(0,10); } catch { return ''; } };
+      const wcsDateHead = iso => { try { return new Date(iso).toLocaleDateString('en-MY',{timeZone:'Asia/Kuala_Lumpur',weekday:'short',day:'numeric',month:'short'}).toUpperCase(); } catch { return ''; } };
+
+      function wcsStageOf(round) {
+        const r = String(round || '').toLowerCase();
+        if (r.includes('group')) return 'group';
+        if (r.includes('32')) return 'r32';
+        if (r.includes('16')) return 'r16';
+        if (r.includes('quarter')) return 'qf';
+        if (r.includes('semi')) return 'sf';
+        return 'final';
+      }
+      const WCS_STAGE_NAME = { group:'First Stage', r32:'Round of 32', r16:'Round of 16', qf:'Quarter-finals', sf:'Semi-finals', final:'Final' };
+
+      function wcsCard(m) {
+        const live = WCS_LIVE.has(m.status);
+        const done = ['FT','AET','PEN'].includes(m.status);
+        const stage = WCS_STAGE_NAME[wcsStageOf(m.round)] || m.round;
+        const where = [stage, m.group, m.venue && (m.venue + (m.city ? ', ' + m.city : ''))].filter(Boolean).join(' · ');
+        const gh = m.goals?.home, ga = m.goals?.away;
+        const homeWin = done && gh != null && ga != null && (gh > ga || (m.penalty?.home ?? 0) > (m.penalty?.away ?? 0));
+        const awayWin = done && gh != null && ga != null && (ga > gh || (m.penalty?.away ?? 0) > (m.penalty?.home ?? 0));
+        const teamRow = (t, goal, win) => `<div class="wcs-team${win ? ' winner' : ''}">${t.logo ? `<img src="${esc(t.logo)}" alt="" loading="lazy" onerror="this.style.display='none'">` : '<span style="width:24px;text-align:center;flex:none;">⚽</span>'}<span>${esc(t.name)}</span>${(live || done) && goal != null ? `<span class="wcs-goal">${esc(goal)}</span>` : ''}</div>`;
+        let right;
+        if (live) right = `<div class="wcs-right"><div class="wcs-live">● LIVE ${esc(m.elapsed ?? '')}'</div></div>`;
+        else if (done) right = `<div class="wcs-right"><div class="wcs-ft">${m.status === 'PEN' ? `PEN ${esc(m.penalty?.home ?? '')}-${esc(m.penalty?.away ?? '')}` : m.status === 'AET' ? 'AET' : 'FT'}</div></div>`;
+        else right = `<div class="wcs-right"><div class="wcs-time">${esc(myt(m.date))}<small>MYT</small></div></div>`;
+        return `<div class="wcs-card" onclick="openMatchDetail(${Number(m.fixture_id) || 0})">
+          <div class="wcs-meta"><span class="wcs-stagename">${esc(where)}</span><span>${esc(mytDate(m.date))}</span></div>
+          <div class="wcs-body"><div class="wcs-teams">${teamRow(m.home, gh, homeWin)}${teamRow(m.away, ga, awayWin)}</div>${right}</div>
+        </div>`;
+      }
+
+      function wcsRender() {
+        if (!wcsMatches) return;
+        const today = klDate(new Date().toISOString());
+        const now = Date.now();
+        let list;
+        if (wcsStage === 'upcoming') {
+          const live = wcsMatches.filter(m => WCS_LIVE.has(m.status));
+          const next = wcsMatches.filter(m => !WCS_LIVE.has(m.status) && !['FT','AET','PEN'].includes(m.status) && new Date(m.date).getTime() > now - 3*3600*1000);
+          list = [...live, ...next].slice(0, 16);
+        } else if (wcsStage === 'today') {
+          list = wcsMatches.filter(m => klDate(m.date) === today);
+        } else if (wcsStage === 'all') {
+          list = wcsMatches;
+        } else {
+          list = wcsMatches.filter(m => wcsStageOf(m.round) === wcsStage);
+        }
+        if (wcsCount) wcsCount.textContent = list.length ? `${list.length} of ${wcsMatches.length} matches` : '';
+        if (!list.length) {
+          wcsList.innerHTML = '<div class="wcs-empty">No matches in this view — check another stage.</div>';
+          return;
+        }
+        let html = '', lastDay = '';
+        for (const m of list) {
+          const day = klDate(m.date);
+          if (day !== lastDay) { html += `<div class="wcs-date">${esc(wcsDateHead(m.date))}</div>`; lastDay = day; }
+          html += wcsCard(m);
+        }
+        wcsList.innerHTML = html;
+      }
+
+      wcsChips.forEach(c => c.addEventListener('click', () => {
+        wcsChips.forEach(b => b.classList.remove('active'));
+        c.classList.add('active');
+        wcsStage = c.dataset.stage;
+        wcsRender();
+      }));
+
+      fetch('/api/wc-schedule')
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          wcsMatches = data?.matches || [];
+          if (!wcsMatches.length) { wcsList.innerHTML = '<div class="wcs-empty">World Cup schedule unavailable right now — refresh shortly.</div>'; return; }
+          wcsRender();
+          // Refresh scores every 2 min while matches are live
+          setInterval(async () => {
+            try {
+              const fresh = await fetch('/api/wc-schedule').then(r => r.ok ? r.json() : null);
+              if (fresh?.matches?.length) { wcsMatches = fresh.matches; wcsRender(); }
+            } catch {}
+          }, 120000);
+        })
+        .catch(() => { wcsList.innerHTML = '<div class="wcs-empty">Could not load the World Cup schedule.</div>'; });
+    })();
+    </script>
+  </div>
+</section>
+
+
 <section id="predictions" style="position:relative;z-index:1;background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
   <div class="sec">
     <div class="stag">Daily Pro Picks</div>
-    <h2 class="stitle" id="hl-predtitle">Match Predictions</h2>
-    <p class="ssub" id="hl-predsub">Updated daily 08:00 MYT · Big matches & international only · Powered by ScoreOcs8 Pro Analysis</p>
+    <h2 class="stitle" id="hl-predtitle">FIFA World Cup Predictions</h2>
+    <p class="ssub" id="hl-predsub">Updated daily 08:00 MYT · FIFA World Cup 2026 & big matches · Powered by ScoreOcs8 Pro Analysis</p>
     <div class="mtabs">
       <button class="mtab active" data-mode="upcoming" onclick="switchMTab(this)">⏰ Upcoming</button>
       <button class="mtab" data-mode="today" onclick="switchMTab(this)">📅 Today</button>
@@ -1591,288 +2013,6 @@ footer{
     });
   })();
   </script>
-</section>
-
-<section id="highlights" style="position:relative;z-index:1;background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
-  <div class="sec">
-    <div class="stag">Live Match Center</div>
-    <h2 class="stitle">Match Schedule</h2>
-    <p class="ssub">Live tables, top scorers, upcoming fixtures and latest results from major leagues — auto-updated</p>
-
-    <div class="msc-tabs fu">
-      <button class="msc-tab active" data-league="39" data-name="Premier League">🏴󠁧󠁢󠁥󠁮󠁧󠁿 EPL</button>
-      <button class="msc-tab" data-league="2" data-name="Champions League">⭐ UCL</button>
-      <button class="msc-tab" data-league="140" data-name="La Liga">🇪🇸 La Liga</button>
-      <button class="msc-tab" data-league="135" data-name="Serie A">🇮🇹 Serie A</button>
-      <button class="msc-tab" data-league="78" data-name="Bundesliga">🇩🇪 Bundesliga</button>
-      <button class="msc-tab" data-league="61" data-name="Ligue 1">🇫🇷 Ligue 1</button>
-      <button class="msc-tab" data-league="1" data-name="FIFA World Cup">🏆 FIFA WC</button>
-    </div>
-
-    <div class="msc-grid fu">
-      <div class="msc-card">
-        <div class="msc-card-h"><span class="msc-card-icon">📊</span><span>Live Table</span><span class="msc-fresh" id="msc-table-fresh"></span></div>
-        <div class="msc-card-b" id="msc-table"><div class="msc-loading">Loading league table…</div></div>
-      </div>
-      <div class="msc-card">
-        <div class="msc-card-h"><span class="msc-card-icon">⚽</span><span>Top Scorers</span></div>
-        <div class="msc-card-b" id="msc-scorers"><div class="msc-loading">Loading top scorers…</div></div>
-      </div>
-      <div class="msc-card">
-        <div class="msc-card-h"><span class="msc-card-icon">📅</span><span>Upcoming Matches</span></div>
-        <div class="msc-card-b" id="msc-upcoming"><div class="msc-loading">Loading fixtures…</div></div>
-      </div>
-      <div class="msc-card">
-        <div class="msc-card-h"><span class="msc-card-icon">✅</span><span>Latest Results</span></div>
-        <div class="msc-card-b" id="msc-results"><div class="msc-loading">Loading results…</div></div>
-      </div>
-    </div>
-
-    <style>
-      .msc-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
-      .msc-tab{font-family:var(--ff);font-size:16px;font-weight:700;letter-spacing:.03em;padding:11px 18px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.04);color:var(--text2);border-radius:999px;backdrop-filter:blur(12px);cursor:pointer;transition:all .2s;white-space:nowrap;}
-      .msc-tab:hover{background:rgba(255,255,255,0.08);color:var(--text);border-color:rgba(249,115,22,0.30);}
-      .msc-tab.active{background:linear-gradient(180deg,#ff9c4a 0%,#f97316 50%,#c75808 100%);color:#fff;border-color:transparent;box-shadow:0 4px 14px rgba(249,115,22,0.40),inset 0 1px 0 rgba(255,255,255,0.30);}
-      .msc-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-      @media(max-width:760px){.msc-grid{grid-template-columns:1fr;}}
-      .msc-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);border-radius:18px;backdrop-filter:blur(18px) saturate(160%);box-shadow:0 14px 40px rgba(0,0,0,0.32),inset 0 1px 0 rgba(255,255,255,0.08);overflow:hidden;position:relative;}
-      .msc-card::before{content:'';position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.30),transparent);}
-      .msc-card-h{padding:16px 18px;display:flex;align-items:center;gap:10px;font-family:var(--ff);font-size:18px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text);border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);}
-      .msc-fresh{margin-left:auto;font-family:var(--fm);font-size:11px;font-weight:500;letter-spacing:.04em;color:var(--text3);text-transform:none;}
-      .msc-fresh::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:6px;vertical-align:middle;box-shadow:0 0 6px var(--green);}
-      .msc-card-icon{font-size:19px;}
-      .msc-card-b{padding:8px 0;max-height:440px;overflow-y:auto;}
-      .msc-card-b::-webkit-scrollbar{width:6px;}
-      .msc-card-b::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.10);border-radius:3px;}
-      .msc-loading,.msc-empty{padding:32px 18px;text-align:center;color:var(--text3);font-family:var(--fm);font-size:14px;letter-spacing:.04em;}
-      /* Live table rows */
-      .msc-row{display:grid;align-items:center;gap:12px;padding:13px 18px;border-top:1px solid rgba(255,255,255,0.04);font-size:16px;}
-      .msc-row:first-child{border-top:none;}
-      .msc-row.t-table{grid-template-columns:32px minmax(0,1fr) 42px 42px 42px 52px;}
-      .msc-rank{font-family:var(--fm);font-size:15px;color:var(--text3);text-align:center;}
-      .msc-rank.top{color:var(--accent);font-weight:700;}
-      .msc-team{display:flex;align-items:center;gap:10px;min-width:0;}
-      .msc-team img{width:24px;height:24px;object-fit:contain;flex-shrink:0;}
-      .msc-team-name{font-family:var(--ff);font-size:18px;font-weight:700;line-height:1.15;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-      .msc-stat{font-family:var(--fm);font-size:15px;color:var(--text2);text-align:center;}
-      .msc-pts{font-family:var(--ff);font-size:18px;font-weight:700;color:var(--accent);text-align:center;}
-      .msc-head{display:grid;grid-template-columns:32px minmax(0,1fr) 42px 42px 42px 52px;gap:12px;padding:10px 18px;font-family:var(--fm);font-size:11px;letter-spacing:.08em;color:var(--text3);text-transform:uppercase;border-top:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);}
-      .msc-champ{display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 18px;background:linear-gradient(135deg,rgba(249,115,22,.18),rgba(245,166,35,.08));border-bottom:1px solid rgba(249,115,22,.30);box-shadow:inset 0 1px 0 rgba(255,255,255,.10);}
-      .msc-champ img{width:42px;height:42px;object-fit:contain;}
-      .msc-champ-eyebrow{font-family:var(--fm);font-size:11px;font-weight:600;letter-spacing:.10em;text-transform:uppercase;color:var(--accent);}
-      .msc-champ-name{font-family:var(--ff);font-size:20px;font-weight:800;color:var(--text);line-height:1.1;margin-top:2px;}
-      .msc-champ-pts{font-family:var(--ff);font-size:26px;font-weight:800;color:var(--accent);text-align:right;line-height:1;}
-      .msc-champ-pts span{display:block;font-family:var(--fm);font-size:10px;font-weight:500;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-top:3px;}
-      /* Top scorers */
-      .msc-row.t-scorer{grid-template-columns:32px minmax(0,1fr) 52px;}
-      .msc-pl{display:flex;align-items:center;gap:11px;min-width:0;}
-      .msc-pl img{width:36px;height:36px;border-radius:50%;object-fit:cover;background:rgba(255,255,255,0.06);flex-shrink:0;}
-      .msc-pl-info{min-width:0;}
-      .msc-pl-name{font-family:var(--ff);font-size:17px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-      .msc-pl-club{font-family:var(--fm);font-size:13px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-      .msc-goals{font-family:var(--ff);font-size:19px;font-weight:700;color:var(--accent);text-align:center;}
-      /* Fixtures / results */
-      .msc-fx{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:14px 18px;border-top:1px solid rgba(255,255,255,0.04);}
-      .msc-fx:first-child{border-top:none;}
-      .msc-fx-date{font-family:var(--fm);font-size:12px;letter-spacing:.08em;color:var(--accent);text-transform:uppercase;background:rgba(249,115,22,0.10);border:1px solid rgba(249,115,22,0.22);border-radius:999px;padding:4px 10px;white-space:nowrap;}
-      .msc-fx-teams{font-family:var(--ff);font-size:17px;font-weight:700;color:var(--text);min-width:0;}
-      .msc-fx-vs{color:var(--text3);font-weight:400;margin:0 6px;}
-      .msc-fx-meta{font-family:var(--fm);font-size:13px;color:var(--text3);margin-top:2px;}
-      .msc-fx-time{font-family:var(--fm);font-size:14px;color:var(--amber);white-space:nowrap;text-align:right;}
-      .msc-fx-score{font-family:var(--ff);font-size:19px;font-weight:700;color:var(--text);white-space:nowrap;text-align:right;}
-      .msc-fx-score .win{color:var(--green);}
-      @media(max-width:640px){
-        .msc-card-h{font-size:16px;padding:15px 16px;}
-        .msc-card-b{max-height:420px;}
-        .msc-row{gap:9px;padding:12px 14px;}
-        .msc-row.t-table,.msc-head{grid-template-columns:28px minmax(0,1fr) 34px 34px 34px 42px;}
-        .msc-head{gap:9px;padding:9px 14px;font-size:10px;}
-        .msc-team{gap:8px;}
-        .msc-team img{width:22px;height:22px;}
-        .msc-team-name{font-size:16px;}
-        .msc-stat,.msc-rank{font-size:13px;}
-        .msc-pts{font-size:16px;}
-        .msc-row.t-scorer{grid-template-columns:28px minmax(0,1fr) 44px;}
-        .msc-pl img{width:32px;height:32px;}
-        .msc-pl-name{font-size:16px;}
-        .msc-pl-club{font-size:12px;}
-        .msc-goals{font-size:17px;}
-        .msc-fx{grid-template-columns:1fr;gap:7px;padding:14px;}
-        .msc-fx-date{width:max-content;font-size:11px;}
-        .msc-fx-teams{font-size:16px;}
-        .msc-fx-meta{font-size:12px;}
-        .msc-fx-time,.msc-fx-score{text-align:left;}
-      }
-    </style>
-
-    <script>
-    (function(){
-      const tabs = document.querySelectorAll('.msc-tab');
-      const elTable = document.getElementById('msc-table');
-      const elScorers = document.getElementById('msc-scorers');
-      const elUpcoming = document.getElementById('msc-upcoming');
-      const elResults = document.getElementById('msc-results');
-      const cache = {};
-      const SEASON = '2025';
-      // API-Football tags tournaments by start year — WC 2026 is season 2026.
-      const SEASON_BY_LEAGUE = { '1': '2026' };
-      const seasonOf = id => SEASON_BY_LEAGUE[String(id)] || SEASON;
-      const esc = s => String(s ?? '').replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
-      const myt = d => { try { return new Date(d).toLocaleString('en-MY',{timeZone:'Asia/Kuala_Lumpur',hour:'2-digit',minute:'2-digit',hour12:false}); } catch { return ''; } };
-      const mytDate = d => { try { return new Date(d).toLocaleDateString('en-MY',{timeZone:'Asia/Kuala_Lumpur',day:'numeric',month:'short'}).toUpperCase(); } catch { return ''; } };
-
-      const empty = msg => `<div class="msc-empty">${esc(msg)}</div>`;
-
-      function fmtAgo(ms) {
-        if (!ms) return '';
-        const s = Math.max(0, Math.round((Date.now() - ms) / 1000));
-        if (s < 60) return 'updated just now';
-        const m = Math.round(s / 60);
-        if (m < 60) return `updated ${m}m ago`;
-        const h = Math.round(m / 60);
-        if (h < 24) return `updated ${h}h ago`;
-        const d = Math.round(h / 24);
-        return `updated ${d}d ago`;
-      }
-      function tableRows(list, limit) {
-        return list.slice(0, limit).map((t, i) => {
-          const rankClass = i < 3 ? 'top' : '';
-          return `<div class="msc-row t-table">
-            <div class="msc-rank ${rankClass}">${esc(t.rank ?? i+1)}</div>
-            <div class="msc-team">${t.team?.logo ? `<img src="${esc(t.team.logo)}" alt="">` : ''}<span class="msc-team-name">${esc(t.team?.name || '')}</span></div>
-            <div class="msc-stat">${esc(t.all?.played ?? 0)}</div>
-            <div class="msc-stat">${esc(t.all?.win ?? 0)}</div>
-            <div class="msc-stat">${esc(t.all?.lose ?? 0)}</div>
-            <div class="msc-pts">${esc(t.points ?? 0)}</div>
-          </div>`;
-        }).join('');
-      }
-
-      function renderTable(data) {
-        try {
-          const groups = data?.response?.[0]?.league?.standings || [];
-          const std = groups[0] || [];
-          const leagueObj = data?.response?.[0]?.league || {};
-          const freshEl = document.getElementById('msc-table-fresh');
-          if (freshEl) freshEl.textContent = std.length ? fmtAgo(data?.updated) : '';
-          if (!std.length) { elTable.innerHTML = empty('Standings not available for this league'); return; }
-          // Cup competitions (FIFA WC) return one standings array per group —
-          // render every group under its own header instead of a single table.
-          if (groups.length > 1) {
-            const head = `<div class="msc-head"><div></div><div>Team</div><div>MP</div><div>W</div><div>L</div><div>PTS</div></div>`;
-            elTable.innerHTML = groups.map(g => {
-              const label = g?.[0]?.group || '';
-              return `<div style="margin:10px 0 4px;font-family:var(--fm,monospace);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text2);">${esc(label)}</div>${head}${tableRows(g, g.length)}`;
-            }).join('');
-            return;
-          }
-          // Champion strip — when every team has played the same max number
-          // of games (round-robin done) AND the leader is mathematically clear,
-          // show '🏆 <team>' above the table so customers see the season is
-          // wrapped and who won.
-          const maxPlayed = Math.max(...std.map(t => t.all?.played ?? 0));
-          const everyoneDone = std.every(t => (t.all?.played ?? 0) === maxPlayed);
-          const seasonOver = everyoneDone && maxPlayed > 0;
-          const leader = std[0];
-          const runnerUp = std[1];
-          const champ = seasonOver && leader && (!runnerUp || (leader.points ?? 0) > (runnerUp.points ?? 0))
-            ? leader
-            : null;
-          const champStrip = champ
-            ? `<div class="msc-champ">
-                ${champ.team?.logo ? `<img src="${esc(champ.team.logo)}" alt="">` : '<span>🏆</span>'}
-                <div class="msc-champ-text">
-                  <div class="msc-champ-eyebrow">🏆 Champion · ${esc(leagueObj.name || 'League')} ${esc(leagueObj.season || '')}</div>
-                  <div class="msc-champ-name">${esc(champ.team?.name || '')}</div>
-                </div>
-                <div class="msc-champ-pts">${esc(champ.points ?? 0)}<span>pts</span></div>
-               </div>`
-            : '';
-          elTable.innerHTML = `${champStrip}<div class="msc-head"><div></div><div>Team</div><div>MP</div><div>W</div><div>L</div><div>PTS</div></div>${tableRows(std, 10)}`;
-        } catch (e) { elTable.innerHTML = empty('Could not load table'); }
-      }
-
-      function renderScorers(data) {
-        try {
-          const list = data?.response || [];
-          if (!list.length) { elScorers.innerHTML = empty('Top scorer data not available'); return; }
-          elScorers.innerHTML = list.slice(0, 10).map((p, i) => {
-            const stat = p.statistics?.[0] || {};
-            return `<div class="msc-row t-scorer">
-              <div class="msc-rank ${i<3?'top':''}">${i+1}</div>
-              <div class="msc-pl">${p.player?.photo ? `<img src="${esc(p.player.photo)}" alt="">` : '<img alt="">'}<div class="msc-pl-info"><div class="msc-pl-name">${esc(p.player?.name || '')}</div><div class="msc-pl-club">${esc(stat.team?.name || '')}</div></div></div>
-              <div class="msc-goals">${esc(stat.goals?.total ?? 0)}</div>
-            </div>`;
-          }).join('');
-        } catch (e) { elScorers.innerHTML = empty('Could not load top scorers'); }
-      }
-
-      function fxRow(fx, isResult) {
-        const home = esc(fx.teams?.home?.name || '');
-        const away = esc(fx.teams?.away?.name || '');
-        const date = mytDate(fx.fixture?.date);
-        const time = myt(fx.fixture?.date);
-        let right;
-        if (isResult) {
-          const sh = fx.goals?.home, sa = fx.goals?.away;
-          if (sh != null && sa != null) {
-            right = `<div class="msc-fx-score">${sh<sa?'<span>'+esc(sh)+'</span>':sh>sa?'<span class="win">'+esc(sh)+'</span>':esc(sh)}<span style="color:var(--text3)">–</span>${sh>sa?'<span>'+esc(sa)+'</span>':sh<sa?'<span class="win">'+esc(sa)+'</span>':esc(sa)}</div>`;
-          } else right = `<div class="msc-fx-time">FT</div>`;
-        } else {
-          right = `<div class="msc-fx-time">${esc(time)} MYT</div>`;
-        }
-        return `<div class="msc-fx"><span class="msc-fx-date">${esc(date)}</span><div><div class="msc-fx-teams">${home}<span class="msc-fx-vs">vs</span>${away}</div></div>${right}</div>`;
-      }
-
-      function renderUpcoming(data) {
-        try {
-          const list = data?.leagues?.[0]?.next || [];
-          if (!list.length) { elUpcoming.innerHTML = empty('No upcoming fixtures returned'); return; }
-          elUpcoming.innerHTML = list.slice(0, 8).map(fx => fxRow(fx, false)).join('');
-        } catch (e) { elUpcoming.innerHTML = empty('Could not load fixtures'); }
-      }
-
-      function renderResults(data) {
-        try {
-          const list = data?.leagues?.[0]?.last || [];
-          if (!list.length) { elResults.innerHTML = empty('No recent results returned'); return; }
-          elResults.innerHTML = list.slice(0, 8).map(fx => fxRow(fx, true)).join('');
-        } catch (e) { elResults.innerHTML = empty('Could not load results'); }
-      }
-
-      async function loadLeague(leagueId) {
-        if (cache[leagueId]) {
-          const c = cache[leagueId];
-          renderTable(c.std); renderScorers(c.scor); renderUpcoming(c.fx); renderResults(c.fx);
-          return;
-        }
-        // Show loading state
-        elTable.innerHTML = '<div class="msc-loading">Loading league table…</div>';
-        elScorers.innerHTML = '<div class="msc-loading">Loading top scorers…</div>';
-        elUpcoming.innerHTML = '<div class="msc-loading">Loading fixtures…</div>';
-        elResults.innerHTML = '<div class="msc-loading">Loading results…</div>';
-
-        const season = seasonOf(leagueId);
-        const [std, scor, fx] = await Promise.all([
-          fetch(`/api/standings?league=${leagueId}&season=${season}`).then(r => r.ok ? r.json() : null).catch(() => null),
-          fetch(`/api/topscorers?league=${leagueId}&season=${season}`).then(r => r.ok ? r.json() : null).catch(() => null),
-          fetch(`/api/fixtures?league=${leagueId}&season=${season}`).then(r => r.ok ? r.json() : null).catch(() => null),
-        ]);
-        cache[leagueId] = { std, scor, fx };
-        renderTable(std); renderScorers(scor); renderUpcoming(fx); renderResults(fx);
-      }
-
-      tabs.forEach(t => t.addEventListener('click', () => {
-        tabs.forEach(b => b.classList.remove('active'));
-        t.classList.add('active');
-        loadLeague(t.dataset.league);
-      }));
-
-      // Initial load — EPL
-      loadLeague('39');
-    })();
-    </script>
-  </div>
 </section>
 
 <!-- ── RECENT ODDS SNAPSHOTS ── -->
@@ -2208,9 +2348,9 @@ document.addEventListener('click',e=>{if(e.target.classList&&e.target.classList.
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeBurger();});
 document.addEventListener('click',e=>{const li=document.getElementById('auth-logged-in');const lw=document.getElementById('lang-wrap');const am=document.getElementById('auth-modal');const ld=document.getElementById('league-dropdown');if(li&&!li.contains(e.target))document.getElementById('profile-dropdown').style.display='none';if(lw&&!lw.contains(e.target)){const lm=document.getElementById('lang-menu');if(lm)lm.style.display='none';}if(ld&&!ld.contains(e.target)){ld.classList.remove('open');const a=ld.querySelector('a');if(a)a.setAttribute('aria-expanded','false');}if(e.target===am)closeModal();});
 function setLang(lang,flag){document.getElementById('lang-current').textContent='🌐 '+lang;document.getElementById('lang-menu').style.display='none';
-const t={EN:{hero1:'Pro Match',hero2:'Predictions',hero3:'Live Picks',herosub:"See today's best match first, then read simple pro picks with confidence, H2H history, live score context, and settled result proof.",btn1:'View Predictions',btn2:'Live Streaming',acc:'Accuracy',users:'Active Users',matches:'Matches Analysed',sat:'Satisfaction',predtitle:'Match Predictions',predsub:'Updated daily 08:00 MYT · Major leagues only · Powered by ScoreOcs8 Pro Analysis',motdtitle:'Match of the Day',tgtitle:'Get Picks on Telegram',tgsub:'Join @scoreocs8 — predictions auto-posted before every match. Free forever.'},
-BM:{hero1:'Ramalan Pro',hero2:'Perlawanan',hero3:'Pilihan Live',herosub:'Lihat perlawanan terbaik hari ini dahulu, kemudian baca pilihan pro ringkas dengan keyakinan, sejarah H2H, skor live dan bukti keputusan.',btn1:'Lihat Ramalan',btn2:'Siaran Langsung',acc:'Ketepatan',users:'Pengguna Aktif',matches:'Perlawanan Dianalisa',sat:'Kepuasan',predtitle:'Ramalan Perlawanan',predsub:'Dikemas kini harian 08:00 MYT · Liga utama sahaja · Dikuasakan oleh ScoreOcs8 Pro Analysis',motdtitle:'Perlawanan Hari Ini',tgtitle:'Dapatkan Pilihan di Telegram',tgsub:'Sertai @scoreocs8 — ramalan dipos automatik sebelum setiap perlawanan. Percuma selamanya.'},
-中文:{hero1:'AI比赛',hero2:'预测',hero3:'实时推荐',herosub:'先看今日焦点赛事，再阅读清楚的AI推荐、信心指数、交手历史、实时比分和赛果证明。',btn1:'查看预测',btn2:'直播',acc:'准确率',users:'活跃用户',matches:'已分析比赛',sat:'满意度',predtitle:'比赛预测',predsub:'每日08:00 MYT更新 · 仅主要联赛 · 由ScoreOcs8 Pro Analysis驱动',motdtitle:'今日焦点赛事',tgtitle:'在Telegram获取预测',tgsub:'加入@scoreocs8 — 每场比赛前自动发布预测。永久免费。'}};
+const t={EN:{hero1:'Pro Match',hero2:'Predictions',hero3:'Live Picks',herosub:"See today's best match first, then read simple pro picks with confidence, H2H history, live score context, and settled result proof.",btn1:'View Predictions',btn2:'Live Streaming',acc:'Accuracy',users:'Active Users',matches:'Matches Analysed',sat:'Satisfaction',predtitle:'FIFA World Cup Predictions',predsub:'Updated daily 08:00 MYT · Major leagues only · Powered by ScoreOcs8 Pro Analysis',motdtitle:'Match of the Day',tgtitle:'Get Picks on Telegram',tgsub:'Join @scoreocs8 — predictions auto-posted before every match. Free forever.'},
+BM:{hero1:'Ramalan Pro',hero2:'Perlawanan',hero3:'Pilihan Live',herosub:'Lihat perlawanan terbaik hari ini dahulu, kemudian baca pilihan pro ringkas dengan keyakinan, sejarah H2H, skor live dan bukti keputusan.',btn1:'Lihat Ramalan',btn2:'Siaran Langsung',acc:'Ketepatan',users:'Pengguna Aktif',matches:'Perlawanan Dianalisa',sat:'Kepuasan',predtitle:'Ramalan Piala Dunia FIFA',predsub:'Dikemas kini harian 08:00 MYT · Liga utama sahaja · Dikuasakan oleh ScoreOcs8 Pro Analysis',motdtitle:'Perlawanan Hari Ini',tgtitle:'Dapatkan Pilihan di Telegram',tgsub:'Sertai @scoreocs8 — ramalan dipos automatik sebelum setiap perlawanan. Percuma selamanya.'},
+中文:{hero1:'AI比赛',hero2:'预测',hero3:'实时推荐',herosub:'先看今日焦点赛事，再阅读清楚的AI推荐、信心指数、交手历史、实时比分和赛果证明。',btn1:'查看预测',btn2:'直播',acc:'准确率',users:'活跃用户',matches:'已分析比赛',sat:'满意度',predtitle:'世界杯比赛预测',predsub:'每日08:00 MYT更新 · 仅主要联赛 · 由ScoreOcs8 Pro Analysis驱动',motdtitle:'今日焦点赛事',tgtitle:'在Telegram获取预测',tgsub:'加入@scoreocs8 — 每场比赛前自动发布预测。永久免费。'}};
 const d=t[lang]||t['EN'];
 const ids=[['hl-hero1',d.hero1],['hl-hero2',d.hero2],['hl-hero3',d.hero3],['hl-herosub',d.herosub],['hl-btn1',d.btn1],['hl-btn2',d.btn2],['hl-acc',d.acc],['hl-users',d.users],['hl-matches',d.matches],['hl-sat',d.sat],['hl-predtitle',d.predtitle],['hl-predsub',d.predsub],['hl-motdtitle',d.motdtitle],['hl-tgtitle',d.tgtitle],['hl-tgsub',d.tgsub]];
 ids.forEach(([id,val])=>{const el=document.getElementById(id);if(el)el.textContent=val;});
@@ -2225,7 +2365,7 @@ const SCOREOCS8_I18N = {
       hero2: 'Predictions',
       hero3: 'For Big Matches',
       heroSub: 'ScoreOcs8 focuses on major football matches only. Check upcoming fixtures, simple pro picks, H2H context, and settled pick results in one place.',
-      schedule: '📅 Match Schedule',
+      schedule: '📅 FIFA World Cup',
       prediction: '📊 Match Prediction',
       how: '💡 How It Works',
       accuracy: 'Accuracy',
@@ -2250,8 +2390,8 @@ const SCOREOCS8_I18N = {
       step3: 'Read the Pick',
       step3d: 'Open a match, read the pro analysis, then decide what to do next.',
       dailyPicks: 'Daily Pro Picks',
-      predTitle: 'Match Predictions',
-      predSub: 'Updated daily 08:00 MYT · Big matches & international only · Powered by ScoreOcs8 Pro Analysis',
+      predTitle: 'FIFA World Cup Predictions',
+      predSub: 'Updated daily 08:00 MYT · FIFA World Cup 2026 & big matches · Powered by ScoreOcs8 Pro Analysis',
       upcoming: '⏰ Upcoming',
       today: '📅 Today',
       completed: '✅ Completed',
@@ -2281,9 +2421,9 @@ const SCOREOCS8_I18N = {
       highlightsTitle: 'Highlights',
       highlightsSub: 'Finished big matches with result cards first. Official YouTube links appear here when matched from trusted channels.',
       viewAll: 'View All',
-      matchCenter: 'Live Match Center',
-      matchScheduleTitle: 'Match Schedule',
-      matchScheduleSub: 'Live tables, top scorers, upcoming fixtures and latest results from major leagues — auto-updated',
+      matchCenter: 'FIFA World Cup 2026™',
+      matchScheduleTitle: 'Follow the FIFA World Cup',
+      matchScheduleSub: 'All 104 matches · 11 June – 19 July 2026 · Group tables, kickoff times in MYT, live scores and results — auto-updated',
       liveTable: 'Live Table',
       topScorers: 'Top Scorers',
       upcomingMatches: 'Upcoming Matches',
@@ -2338,7 +2478,7 @@ const SCOREOCS8_I18N = {
       hero2: 'Setiap Hari',
       hero3: 'Untuk Perlawanan Besar',
       heroSub: 'ScoreOcs8 fokus pada perlawanan bola sepak utama sahaja. Semak jadual akan datang, pilihan pro ringkas, konteks H2H dan rekod keputusan di satu tempat.',
-      schedule: '📅 Jadual Perlawanan',
+      schedule: '📅 Piala Dunia FIFA',
       prediction: '📊 Ramalan Perlawanan',
       how: '💡 Cara Ia Berfungsi',
       accuracy: 'Ketepatan',
@@ -2363,8 +2503,8 @@ const SCOREOCS8_I18N = {
       step3: 'Baca Pilihan',
       step3d: 'Buka perlawanan, baca analisis pro, kemudian buat keputusan seterusnya.',
       dailyPicks: 'Pilihan Pro Harian',
-      predTitle: 'Ramalan Perlawanan',
-      predSub: 'Dikemas kini setiap hari 08:00 MYT · Perlawanan besar & antarabangsa sahaja · Dikuasakan oleh ScoreOcs8 Pro Analysis',
+      predTitle: 'Ramalan Piala Dunia FIFA',
+      predSub: 'Dikemas kini setiap hari 08:00 MYT · Piala Dunia FIFA 2026 & perlawanan besar · Dikuasakan oleh ScoreOcs8 Pro Analysis',
       upcoming: '⏰ Akan Datang',
       today: '📅 Hari Ini',
       completed: '✅ Selesai',
@@ -2394,9 +2534,9 @@ const SCOREOCS8_I18N = {
       highlightsTitle: 'Highlights',
       highlightsSub: 'Perlawanan besar yang selesai dengan kad keputusan dahulu. Link YouTube rasmi muncul di sini apabila dipadankan daripada channel dipercayai.',
       viewAll: 'Lihat Semua',
-      matchCenter: 'Pusat Perlawanan Live',
-      matchScheduleTitle: 'Jadual Perlawanan',
-      matchScheduleSub: 'Carta liga, penjaring terbanyak, jadual akan datang dan keputusan terkini liga utama — auto-update',
+      matchCenter: 'Piala Dunia FIFA 2026™',
+      matchScheduleTitle: 'Ikuti Piala Dunia FIFA',
+      matchScheduleSub: 'Kesemua 104 perlawanan · 11 Jun – 19 Julai 2026 · Carta kumpulan, masa kick-off dalam MYT, skor langsung dan keputusan — auto-update',
       liveTable: 'Carta Liga Live',
       topScorers: 'Penjaring Terbanyak',
       upcomingMatches: 'Perlawanan Akan Datang',
@@ -2451,7 +2591,7 @@ const SCOREOCS8_I18N = {
       hero2: '赛事预测',
       hero3: '专注大赛',
       heroSub: 'ScoreOcs8 只专注主要足球赛事。你可以在一个页面查看即将开赛、简单专业推荐、H2H 数据和已结算赛果记录。',
-      schedule: '📅 赛事时间表',
+      schedule: '📅 FIFA世界杯',
       prediction: '📊 比赛预测',
       how: '💡 如何使用',
       accuracy: '准确率',
@@ -2476,8 +2616,8 @@ const SCOREOCS8_I18N = {
       step3: '阅读推荐',
       step3d: '打开比赛，阅读专业分析，然后再决定下一步。',
       dailyPicks: '每日专业推荐',
-      predTitle: '比赛预测',
-      predSub: '每日 08:00 MYT 更新 · 只做大赛和国际赛事 · 由 ScoreOcs8 Pro Analysis 驱动',
+      predTitle: '世界杯比赛预测',
+      predSub: '每日 08:00 MYT 更新 · 2026 FIFA世界杯及重大赛事 · 由 ScoreOcs8 Pro Analysis 驱动',
       upcoming: '⏰ 即将开赛',
       today: '📅 今日',
       completed: '✅ 已结束',
@@ -2507,9 +2647,9 @@ const SCOREOCS8_I18N = {
       highlightsTitle: '比赛精华',
       highlightsSub: '已结束大赛会先显示赛果卡。匹配到可信频道后，这里会显示官方 YouTube 链接。',
       viewAll: '查看全部',
-      matchCenter: '实时赛事中心',
-      matchScheduleTitle: '赛事时间表',
-      matchScheduleSub: '主要联赛的实时积分榜、射手榜、即将开赛和最新赛果 — 自动更新',
+      matchCenter: '2026 FIFA世界杯™',
+      matchScheduleTitle: '关注FIFA世界杯',
+      matchScheduleSub: '全部104场比赛 · 2026年6月11日–7月19日 · 小组积分榜、开球时间（MYT）、实时比分与赛果 — 自动更新',
       liveTable: '实时积分榜',
       topScorers: '射手榜',
       upcomingMatches: '即将开赛',
@@ -3195,6 +3335,10 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
       list = all.filter(fx => fx.fixture?.status?.short === 'FT')
         .sort((a,b) => new Date(b.fixture.date) - new Date(a.fixture.date));
     }
+    // FIFA World Cup first while tournament fixtures are in the feed
+    // (stable partition keeps date order within each side).
+    const isWC = fx => fx.league?.id === 1;
+    if (list.some(isWC)) list = [...list.filter(isWC), ...list.filter(fx => !isWC(fx))];
     list = list.slice(0, 6);
     if (!list.length) {
       const msg = mode === 'completed' ? 'No completed fixtures in this feed yet.' : mode === 'today' ? 'No matches scheduled today.' : 'No upcoming fixtures in covered leagues. Check back later.';
