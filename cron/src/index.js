@@ -297,9 +297,18 @@ async function queueFtChecks(env, output, date) {
   // gets the prominent pre-match + post-match virtual bet slip posts.
   // The other featured fixtures only track silently (accuracy + history)
   // so the channel isn't flooded with 3 result posts per day.
-  const queue = fixtures.map((fx, i) => {
+  //
+  // Entries are bucketed under their KICKOFF MYT date, not the generation
+  // date: the KO-30 / FT / recap readers all look up ft-queue:<todayMYT>,
+  // and World Cup matches mostly kick off 01:00-09:00 MYT the morning
+  // after the 07:00 MYT generation run — a generation-dated queue would
+  // hide them from every reader.
+  const byDate = {};
+  fixtures.forEach((fx, i) => {
     const kickoffMs = new Date(fx.fixture.date).getTime();
-    return {
+    let kickoffDate = date;
+    try { kickoffDate = new Date(fx.fixture.date).toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' }); } catch {}
+    (byDate[kickoffDate] = byDate[kickoffDate] || []).push({
       fixture_id: fx.fixture.id,
       home: fx.teams?.home?.name,
       away: fx.teams?.away?.name,
@@ -309,11 +318,21 @@ async function queueFtChecks(env, output, date) {
       attempts: 0,
       posted: false,
       is_motd: i === 0,
-    };
+    });
   });
 
-  await env.CACHE.put(`ft-queue:${date}`, JSON.stringify(queue), { expirationTtl: 48 * 3600 });
-  return { count: queue.length };
+  let count = 0;
+  for (const [kd, entries] of Object.entries(byDate)) {
+    // Merge with any queue already written for that date (an earlier run
+    // may have queued other fixtures kicking off the same day).
+    const existing = (await env.CACHE.get(`ft-queue:${kd}`, 'json').catch(() => null)) || [];
+    const seen = new Set(existing.map(e => e.fixture_id));
+    const fresh = entries.filter(e => !seen.has(e.fixture_id));
+    if (!fresh.length) continue;
+    await env.CACHE.put(`ft-queue:${kd}`, JSON.stringify(existing.concat(fresh)), { expirationTtl: 72 * 3600 });
+    count += fresh.length;
+  }
+  return { count };
 }
 
 // --- Daily social posting pipeline (Step 2 + 3) -----------------------------
