@@ -7,9 +7,19 @@
 
 const TG_API = 'https://api.telegram.org';
 
+// Global kill-switch: KV tg:posting = 'off' silences the channel without
+// touching credentials (set while repositioning content, e.g. WC focus).
+// Missing key or any other value = posting ON. Senders return
+// { disabled: true } instead of throwing so cron jobs proceed quietly and
+// mark their events handled rather than retrying them forever.
+async function postingOff(env) {
+  try { return (await env.CACHE?.get('tg:posting')) === 'off'; } catch { return false; }
+}
+
 // sendPhoto with PNG bytes as multipart form data.
 // Returns Telegram's message object on success.
 export async function sendPhoto(env, { photoBytes, caption, parseMode = 'HTML' }) {
+  if (await postingOff(env)) return { disabled: true };
   assertCreds(env);
 
   const form = new FormData();
@@ -37,6 +47,7 @@ export async function sendPhoto(env, { photoBytes, caption, parseMode = 'HTML' }
 
 // sendMessage for text-only posts (polls, accuracy tracker, etc.).
 export async function sendMessage(env, { text, parseMode = 'HTML', disablePreview = false }) {
+  if (await postingOff(env)) return { disabled: true };
   assertCreds(env);
 
   const res = await fetch(`${TG_API}/bot${env.TG_BOT_TOKEN}/sendMessage`, {
@@ -61,6 +72,7 @@ export async function sendMessage(env, { text, parseMode = 'HTML', disablePrevie
 // sendPoll for anonymous fan polls (e.g., 12h pre-match "Who wins?").
 // Telegram poll API: question max 300 chars, 2-10 options, each max 100 chars.
 export async function sendPoll(env, { question, options, isAnonymous = true }) {
+  if (await postingOff(env)) return { disabled: true };
   assertCreds(env);
   if (!Array.isArray(options) || options.length < 2 || options.length > 10) {
     throw new Error(`sendPoll needs 2-10 options, got ${options?.length}`);
