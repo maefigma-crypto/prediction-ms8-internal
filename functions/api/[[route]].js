@@ -58,10 +58,15 @@ async function cached(env, key, ttl, fetcher, opts = {}) {
   }
   const data = await fetcher();
   // opts.validate guards against poisoning the cache with empty payloads
-  // when API-Football transiently returns nothing — serve the empty
-  // response but let the next request hit the origin again.
-  if (!opts.validate || opts.validate(data)) {
-    await env.CACHE.put(key, JSON.stringify(data), { expirationTtl: ttl });
+  // when API-Football transiently returns nothing. A failing validate is
+  // either a transient blip or a genuinely-empty table (knockout bracket
+  // with no standings yet). opts.emptyTtl caches the empty briefly so a
+  // blip self-heals within minutes without hammering the API every
+  // request; with no emptyTtl the empty isn't cached at all.
+  const ok = !opts.validate || opts.validate(data);
+  const writeTtl = ok ? ttl : (opts.emptyTtl || 0);
+  if (writeTtl > 0) {
+    await env.CACHE.put(key, JSON.stringify(data), { expirationTtl: writeTtl });
   }
   return { data, source: opts.refresh ? 'refreshed' : 'origin' };
 }
@@ -270,7 +275,7 @@ async function handleStandings(env, url) {
       // Knockout comps (UCL, FIFA WC) don't have a league table — return empty.
       return { updated: Date.now(), leagueId, season, response: [], error: String(err.message || err) };
     }
-  }, { refresh });
+  }, { refresh, validate: d => (d.response || []).length > 0, emptyTtl: 600 });
 }
 
 async function handleTopScorers(env, url) {
@@ -284,7 +289,7 @@ async function handleTopScorers(env, url) {
     } catch (err) {
       return { updated: Date.now(), leagueId, season, response: [], error: String(err.message || err) };
     }
-  }, { refresh });
+  }, { refresh, validate: d => (d.response || []).length > 0, emptyTtl: 600 });
 }
 
 async function handleOdds(env, url) {

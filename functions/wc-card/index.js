@@ -65,21 +65,35 @@ export async function onRequestGet({ request }) {
   const matches = sched?.matches || [];
   const groups = standings?.response?.[0]?.league?.standings || [];
 
+  // Build a team→group map from standings so we don't depend on the
+  // wc-schedule group join (which can be momentarily empty after an
+  // API blip). Falls back to the match's own group field if present.
+  const teamGroup = {};
+  for (const g of groups) {
+    for (const row of g) {
+      if (row?.team?.id) teamGroup[row.team.id] = (row.group || '').replace(/^Group\s*/i, '').toUpperCase();
+    }
+  }
+  const groupOfMatch = m => {
+    const byTeam = teamGroup[m.home?.id] || teamGroup[m.away?.id] || '';
+    return (byTeam || (m.group || '').replace(/^Group\s*/i, '').toUpperCase());
+  };
+
   // Pick which group to feature: explicit param wins; else the group of the
   // next upcoming match (or, if none upcoming, the most recent).
   let group = wantGroup;
   if (!group) {
     const now = Date.now();
     const upcoming = matches
-      .filter(m => m.group && new Date(m.date).getTime() >= now - 2 * 3600 * 1000)
+      .filter(m => groupOfMatch(m) && new Date(m.date).getTime() >= now - 2 * 3600 * 1000)
       .sort((a, b) => new Date(a.date) - new Date(b.date));
-    group = (upcoming[0] || matches.find(m => m.group) || {}).group || 'A';
+    group = groupOfMatch(upcoming[0] || matches.find(m => groupOfMatch(m)) || {}) || 'A';
   }
   group = String(group).replace(/^Group\s*/i, '').toUpperCase();
 
   // Fixtures for this group on the target day (default today, else that
   // group's next match day so the card is never empty between rounds).
-  const groupMatches = matches.filter(m => (m.group || '').replace(/^Group\s*/i, '').toUpperCase() === group);
+  const groupMatches = matches.filter(m => groupOfMatch(m) === group);
   let dayKey = wantDate || todayMYT();
   if (!groupMatches.some(m => mytDateKey(m.date) === dayKey)) {
     const now = Date.now();
