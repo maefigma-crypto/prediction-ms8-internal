@@ -1261,9 +1261,9 @@ footer{
   <div class="hglow"></div><div class="hglow2"></div>
   <div class="hero-inner">
     <div>
-      <div class="eyebrow">Pro picks · Live scores · Results proof · Malaysia</div>
-      <h1><span id="hl-hero1">Daily Soccer</span><br><span class="hl" id="hl-hero2">Predictions</span><br><span id="hl-hero3">For Big Matches</span></h1>
-      <p class="hero-sub" id="hl-herosub">ScoreOcs8 focuses on major football matches only. Check upcoming fixtures, simple pro picks, H2H context, and settled pick results in one place.</p>
+      <div class="eyebrow">FIFA World Cup 2026 · Pro picks · Live scores · Malaysia</div>
+      <h1><span id="hl-hero1">FIFA World Cup</span><br><span class="hl" id="hl-hero2">Predictions</span><br><span id="hl-hero3">All 104 Matches</span></h1>
+      <p class="hero-sub" id="hl-herosub">ScoreOcs8 is your FIFA World Cup 2026 hub — full match schedule in MYT, group tables, daily pro picks with H2H context, and settled results in one place.</p>
       <div class="hero-btns">
         <a href="#highlights" class="btn-p" id="hl-btn2">📅 FIFA World Cup</a>
         <a href="/predictions/" class="btn-o" id="hl-btn1">📊 Match Prediction</a>
@@ -2348,9 +2348,9 @@ document.addEventListener('click',e=>{if(e.target.classList&&e.target.classList.
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeBurger();});
 document.addEventListener('click',e=>{const li=document.getElementById('auth-logged-in');const lw=document.getElementById('lang-wrap');const am=document.getElementById('auth-modal');const ld=document.getElementById('league-dropdown');if(li&&!li.contains(e.target))document.getElementById('profile-dropdown').style.display='none';if(lw&&!lw.contains(e.target)){const lm=document.getElementById('lang-menu');if(lm)lm.style.display='none';}if(ld&&!ld.contains(e.target)){ld.classList.remove('open');const a=ld.querySelector('a');if(a)a.setAttribute('aria-expanded','false');}if(e.target===am)closeModal();});
 function setLang(lang,flag){document.getElementById('lang-current').textContent='🌐 '+lang;document.getElementById('lang-menu').style.display='none';
-const t={EN:{hero1:'Pro Match',hero2:'Predictions',hero3:'Live Picks',herosub:"See today's best match first, then read simple pro picks with confidence, H2H history, live score context, and settled result proof.",btn1:'View Predictions',btn2:'Live Streaming',acc:'Accuracy',users:'Active Users',matches:'Matches Analysed',sat:'Satisfaction',predtitle:'FIFA World Cup Predictions',predsub:'Updated daily 08:00 MYT · Major leagues only · Powered by ScoreOcs8 Pro Analysis',motdtitle:'Match of the Day',tgtitle:'Get Picks on Telegram',tgsub:'Join @scoreocs8 — predictions auto-posted before every match. Free forever.'},
-BM:{hero1:'Ramalan Pro',hero2:'Perlawanan',hero3:'Pilihan Live',herosub:'Lihat perlawanan terbaik hari ini dahulu, kemudian baca pilihan pro ringkas dengan keyakinan, sejarah H2H, skor live dan bukti keputusan.',btn1:'Lihat Ramalan',btn2:'Siaran Langsung',acc:'Ketepatan',users:'Pengguna Aktif',matches:'Perlawanan Dianalisa',sat:'Kepuasan',predtitle:'Ramalan Piala Dunia FIFA',predsub:'Dikemas kini harian 08:00 MYT · Liga utama sahaja · Dikuasakan oleh ScoreOcs8 Pro Analysis',motdtitle:'Perlawanan Hari Ini',tgtitle:'Dapatkan Pilihan di Telegram',tgsub:'Sertai @scoreocs8 — ramalan dipos automatik sebelum setiap perlawanan. Percuma selamanya.'},
-中文:{hero1:'AI比赛',hero2:'预测',hero3:'实时推荐',herosub:'先看今日焦点赛事，再阅读清楚的AI推荐、信心指数、交手历史、实时比分和赛果证明。',btn1:'查看预测',btn2:'直播',acc:'准确率',users:'活跃用户',matches:'已分析比赛',sat:'满意度',predtitle:'世界杯比赛预测',predsub:'每日08:00 MYT更新 · 仅主要联赛 · 由ScoreOcs8 Pro Analysis驱动',motdtitle:'今日焦点赛事',tgtitle:'在Telegram获取预测',tgsub:'加入@scoreocs8 — 每场比赛前自动发布预测。永久免费。'}};
+const t={EN:{hero1:'FIFA World Cup',hero2:'Predictions',hero3:'All 104 Matches',herosub:"ScoreOcs8 is your FIFA World Cup 2026 hub — full match schedule in MYT, group tables, daily pro picks with H2H context, and settled results in one place.",btn1:'View Predictions',btn2:'Live Streaming',acc:'Accuracy',users:'Active Users',matches:'Matches Analysed',sat:'Satisfaction',predtitle:'FIFA World Cup Predictions',predsub:'Updated daily 08:00 MYT · Major leagues only · Powered by ScoreOcs8 Pro Analysis',motdtitle:'Match of the Day',tgtitle:'Get Picks on Telegram',tgsub:'Join @scoreocs8 — predictions auto-posted before every match. Free forever.'},
+BM:{hero1:'Piala Dunia FIFA',hero2:'Ramalan Pro',hero3:'Kesemua 104 Perlawanan',herosub:'ScoreOcs8 ialah hab Piala Dunia FIFA 2026 anda — jadual penuh dalam MYT, carta kumpulan, pilihan pro harian dengan konteks H2H dan rekod keputusan di satu tempat.',btn1:'Lihat Ramalan',btn2:'Siaran Langsung',acc:'Ketepatan',users:'Pengguna Aktif',matches:'Perlawanan Dianalisa',sat:'Kepuasan',predtitle:'Ramalan Piala Dunia FIFA',predsub:'Dikemas kini harian 08:00 MYT · Liga utama sahaja · Dikuasakan oleh ScoreOcs8 Pro Analysis',motdtitle:'Perlawanan Hari Ini',tgtitle:'Dapatkan Pilihan di Telegram',tgsub:'Sertai @scoreocs8 — ramalan dipos automatik sebelum setiap perlawanan. Percuma selamanya.'},
+中文:{hero1:'FIFA世界杯',hero2:'赛事预测',hero3:'全部104场比赛',herosub:'ScoreOcs8 是你的2026世界杯主场——完整赛程（MYT）、小组积分榜、每日专业推荐、H2H 数据与已结算赛果，一站全包。',btn1:'查看预测',btn2:'直播',acc:'准确率',users:'活跃用户',matches:'已分析比赛',sat:'满意度',predtitle:'世界杯比赛预测',predsub:'每日08:00 MYT更新 · 仅主要联赛 · 由ScoreOcs8 Pro Analysis驱动',motdtitle:'今日焦点赛事',tgtitle:'在Telegram获取预测',tgsub:'加入@scoreocs8 — 每场比赛前自动发布预测。永久免费。'}};
 const d=t[lang]||t['EN'];
 const ids=[['hl-hero1',d.hero1],['hl-hero2',d.hero2],['hl-hero3',d.hero3],['hl-herosub',d.herosub],['hl-btn1',d.btn1],['hl-btn2',d.btn2],['hl-acc',d.acc],['hl-users',d.users],['hl-matches',d.matches],['hl-sat',d.sat],['hl-predtitle',d.predtitle],['hl-predsub',d.predsub],['hl-motdtitle',d.motdtitle],['hl-tgtitle',d.tgtitle],['hl-tgsub',d.tgsub]];
 ids.forEach(([id,val])=>{const el=document.getElementById(id);if(el)el.textContent=val;});
@@ -2360,11 +2360,11 @@ const SCOREOCS8_I18N = {
     html: 'en',
     button: '🌐 🇬🇧 EN',
     text: {
-      heroEyebrow: 'Pro picks · Live scores · Results proof · Malaysia',
-      hero1: 'Daily Soccer',
+      heroEyebrow: 'FIFA World Cup 2026 · Pro picks · Live scores · Malaysia',
+      hero1: 'FIFA World Cup',
       hero2: 'Predictions',
-      hero3: 'For Big Matches',
-      heroSub: 'ScoreOcs8 focuses on major football matches only. Check upcoming fixtures, simple pro picks, H2H context, and settled pick results in one place.',
+      hero3: 'All 104 Matches',
+      heroSub: 'ScoreOcs8 is your FIFA World Cup 2026 hub — full match schedule in MYT, group tables, daily pro picks with H2H context, and settled results in one place.',
       schedule: '📅 FIFA World Cup',
       prediction: '📊 Match Prediction',
       how: '💡 How It Works',
@@ -2473,11 +2473,11 @@ const SCOREOCS8_I18N = {
     html: 'ms',
     button: '🌐 🇲🇾 BM',
     text: {
-      heroEyebrow: 'Pilihan pro · Skor langsung · Bukti keputusan · Malaysia',
-      hero1: 'Ramalan Bola',
-      hero2: 'Setiap Hari',
-      hero3: 'Untuk Perlawanan Besar',
-      heroSub: 'ScoreOcs8 fokus pada perlawanan bola sepak utama sahaja. Semak jadual akan datang, pilihan pro ringkas, konteks H2H dan rekod keputusan di satu tempat.',
+      heroEyebrow: 'Piala Dunia FIFA 2026 · Pilihan pro · Skor langsung · Malaysia',
+      hero1: 'Piala Dunia FIFA',
+      hero2: 'Ramalan Pro',
+      hero3: 'Kesemua 104 Perlawanan',
+      heroSub: 'ScoreOcs8 ialah hab Piala Dunia FIFA 2026 anda — jadual penuh dalam MYT, carta kumpulan, pilihan pro harian dengan konteks H2H dan rekod keputusan di satu tempat.',
       schedule: '📅 Piala Dunia FIFA',
       prediction: '📊 Ramalan Perlawanan',
       how: '💡 Cara Ia Berfungsi',
@@ -2586,11 +2586,11 @@ const SCOREOCS8_I18N = {
     html: 'zh-Hans',
     button: '🌐 🇨🇳 中文',
     text: {
-      heroEyebrow: '专业推荐 · 实时比分 · 赛果证明 · 马来西亚',
-      hero1: '每日足球',
+      heroEyebrow: '2026 FIFA世界杯 · 专业推荐 · 实时比分 · 马来西亚',
+      hero1: 'FIFA世界杯',
       hero2: '赛事预测',
-      hero3: '专注大赛',
-      heroSub: 'ScoreOcs8 只专注主要足球赛事。你可以在一个页面查看即将开赛、简单专业推荐、H2H 数据和已结算赛果记录。',
+      hero3: '全部104场比赛',
+      heroSub: 'ScoreOcs8 是你的2026世界杯主场——完整赛程（MYT）、小组积分榜、每日专业推荐、H2H 数据与已结算赛果，一站全包。',
       schedule: '📅 FIFA世界杯',
       prediction: '📊 比赛预测',
       how: '💡 如何使用',
