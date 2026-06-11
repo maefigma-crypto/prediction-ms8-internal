@@ -25,6 +25,7 @@ export async function onRequestGet({ env, request }) {
     { loc: `${SITE_URL}/predictions/bundesliga/`,         priority: '0.9', changefreq: 'daily',  lastmod: today },
     { loc: `${SITE_URL}/predictions/ligue-1/`,            priority: '0.9', changefreq: 'daily',  lastmod: today },
     { loc: `${SITE_URL}/predictions/fifa-world-cup/`,     priority: '0.9', changefreq: 'weekly', lastmod: today },
+    { loc: `${SITE_URL}/worldcup-markets/`,               priority: '0.9', changefreq: 'daily',  lastmod: today },
   ];
 
   // Dynamic per-match pages: /match/<id>-<home>-vs-<away>/

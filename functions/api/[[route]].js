@@ -179,6 +179,85 @@ async function handleWcSchedule(env, url) {
   }, { refresh, validate: d => (d.matches || []).length > 0 });
 }
 
+// ───── World Cup prediction markets (fan votes + AI lean, no money) ─────
+// Votes accumulate in KV (mkt:votes:<id>); a market settles when the
+// panel/admin writes mkt:result:<id> = 'yes' | 'no' | 'void'. Displayed
+// percentages blend the AI lean as a prior so day-one bars aren't empty:
+// the lean counts as MARKET_PRIOR_WEIGHT virtual votes.
+const MARKET_PRIOR_WEIGHT = 40;
+const WC_MARKETS = [
+  // Daily / match-specific
+  { id: 'mex-rsa-mexico-2plus', cat: 'daily', q: 'Mexico vs South Africa — Will Mexico win by 2+ goals?', ai: 48, closes: '2026-06-11T19:00:00Z', event: '2026-06-11T19:00:00Z' },
+  { id: 'mex-rsa-mexico-first', cat: 'daily', q: 'Mexico vs South Africa — Will Mexico score first?', ai: 85, closes: '2026-06-11T19:00:00Z', event: '2026-06-11T19:00:00Z' },
+  { id: 'kor-cze-korea-win', cat: 'daily', q: 'Korea Republic vs Czechia — Will Korea Republic win?', ai: 38, closes: '2026-06-12T02:00:00Z', event: '2026-06-12T02:00:00Z' },
+  // Group stage
+  { id: 'goals-55-md1', cat: 'group', q: 'Will there be 55+ goals across Matchday 1 (24 matches)?', ai: 60, closes: '2026-06-11T19:00:00Z' },
+  { id: 'hattrick-md1', cat: 'group', q: 'Will a player score a hat-trick in Matchday 1?', ai: 35, closes: '2026-06-11T19:00:00Z' },
+  { id: 'owngoals-2-md1', cat: 'group', q: 'Will there be 2+ own goals in Matchday 1?', ai: 45, closes: '2026-06-11T19:00:00Z' },
+  { id: 'hosts-all-r32', cat: 'group', q: 'Will all three host nations (USA, Mexico, Canada) reach the Round of 32?', ai: 64, closes: '2026-06-24T00:00:00Z' },
+  { id: 'asian-3-r32', cat: 'group', q: 'Will 3+ Asian teams reach the Round of 32?', ai: 74, closes: '2026-06-24T00:00:00Z' },
+  { id: 'usa-r16', cat: 'group', q: 'Will USA reach the Round of 16?', ai: 51, closes: '2026-06-28T00:00:00Z' },
+  { id: 'japan-r16', cat: 'group', q: 'Will Japan reach the Round of 16?', ai: 76, closes: '2026-06-28T00:00:00Z' },
+  { id: 'korea-r16', cat: 'group', q: 'Will Korea Republic reach the Round of 16?', ai: 30, closes: '2026-06-28T00:00:00Z' },
+  // Knockout
+  { id: 'portugal-qf', cat: 'knockout', q: 'Will Portugal reach the Quarter-finals?', ai: 89, closes: '2026-06-28T00:00:00Z' },
+  { id: 'argentina-qf', cat: 'knockout', q: 'Will Argentina reach the Quarter-finals?', ai: 84, closes: '2026-06-28T00:00:00Z' },
+  { id: 'brazil-qf', cat: 'knockout', q: 'Will Brazil reach the Quarter-finals?', ai: 81, closes: '2026-06-28T00:00:00Z' },
+  { id: 'germany-qf', cat: 'knockout', q: 'Will Germany reach the Quarter-finals?', ai: 81, closes: '2026-06-28T00:00:00Z' },
+  { id: 'france-sf', cat: 'knockout', q: 'Will France reach the Semi-finals?', ai: 80, closes: '2026-06-28T00:00:00Z' },
+  { id: 'spain-sf', cat: 'knockout', q: 'Will Spain reach the Semi-finals?', ai: 79, closes: '2026-06-28T00:00:00Z' },
+  { id: 'england-sf', cat: 'knockout', q: 'Will England reach the Semi-finals?', ai: 58, closes: '2026-06-28T00:00:00Z' },
+  { id: 'champion-europe', cat: 'knockout', q: 'Will the World Cup winner be from Europe?', ai: 55, closes: '2026-06-28T00:00:00Z' },
+  { id: 'final-both-europe', cat: 'knockout', q: 'Will both teams in the final be from Europe?', ai: 52, closes: '2026-06-28T00:00:00Z' },
+  { id: 'champion-top4', cat: 'knockout', q: 'Will the champion be France, Spain, Argentina or England?', ai: 45, closes: '2026-06-28T00:00:00Z' },
+  { id: 'champion-unbeaten', cat: 'knockout', q: 'Will the champion stay unbeaten all tournament?', ai: 46, closes: '2026-06-28T00:00:00Z' },
+  { id: 'shootouts-5', cat: 'knockout', q: 'Will there be 5+ penalty shootouts in the tournament?', ai: 70, closes: '2026-06-28T00:00:00Z' },
+  // Players
+  { id: 'mbappe-2plus-group', cat: 'player', q: 'Will Kylian Mbappé score 2+ goals in a single group-stage match?', ai: 84, closes: '2026-06-24T00:00:00Z' },
+  { id: 'haaland-2plus-group', cat: 'player', q: 'Will Erling Haaland score 2+ goals in a single group-stage match?', ai: 72, closes: '2026-06-24T00:00:00Z' },
+  { id: 'kane-2plus-group', cat: 'player', q: 'Will Harry Kane score 2+ goals in a single group-stage match?', ai: 64, closes: '2026-06-24T00:00:00Z' },
+  { id: 'kane-hattrick', cat: 'player', q: 'Will Harry Kane score a hat-trick during the tournament?', ai: 27, closes: '2026-06-28T00:00:00Z' },
+  { id: 'messi-vs-ronaldo', cat: 'player', q: 'Will Lionel Messi score more goals than Cristiano Ronaldo?', ai: 63, closes: '2026-06-28T00:00:00Z' },
+  { id: 'goldenboot-7', cat: 'player', q: 'Will the Golden Boot winner score 7+ goals?', ai: 41, closes: '2026-06-28T00:00:00Z' },
+];
+
+function marketShape(m, votes, result) {
+  const v = votes || { yes: 0, no: 0 };
+  const total = (v.yes || 0) + (v.no || 0);
+  const yesPct = Math.round((((m.ai / 100) * MARKET_PRIOR_WEIGHT) + (v.yes || 0)) / (MARKET_PRIOR_WEIGHT + total) * 100);
+  return {
+    id: m.id, cat: m.cat, q: m.q, ai: m.ai,
+    closes: m.closes, event: m.event || null,
+    votes: total, yesPct, noPct: 100 - yesPct,
+    status: result ? 'settled' : (Date.parse(m.closes) < Date.now() ? 'closed' : 'open'),
+    result: result || null,
+  };
+}
+
+async function handleMarkets(env) {
+  const [votes, results] = await Promise.all([
+    Promise.all(WC_MARKETS.map(m => env.CACHE.get(`mkt:votes:${m.id}`, 'json').catch(() => null))),
+    Promise.all(WC_MARKETS.map(m => env.CACHE.get(`mkt:result:${m.id}`).catch(() => null))),
+  ]);
+  return { updated: Date.now(), count: WC_MARKETS.length, markets: WC_MARKETS.map((m, i) => marketShape(m, votes[i], results[i])) };
+}
+
+async function handleMarketVote(env, url) {
+  const id = url.searchParams.get('id') || '';
+  const side = url.searchParams.get('side');
+  const m = WC_MARKETS.find(x => x.id === id);
+  if (!m || (side !== 'yes' && side !== 'no')) return { error: 'invalid market or side', status: 400 };
+  if (Date.parse(m.closes) < Date.now()) return { error: 'market closed', status: 409 };
+  const result = await env.CACHE.get(`mkt:result:${id}`).catch(() => null);
+  if (result) return { error: 'market settled', status: 409 };
+  const key = `mkt:votes:${id}`;
+  // KV read-modify-write can drop concurrent votes; fine for fan sentiment.
+  const v = (await env.CACHE.get(key, 'json').catch(() => null)) || { yes: 0, no: 0 };
+  v[side] = (v[side] || 0) + 1;
+  await env.CACHE.put(key, JSON.stringify(v));
+  return marketShape(m, v, null);
+}
+
 async function handleStandings(env, url) {
   const refresh = url.searchParams.get('refresh') === '1';
   const leagueId = parseInt(url.searchParams.get('league') || String(LEAGUES.EPL), 10);
@@ -674,6 +753,13 @@ export async function onRequest(context) {
         result = await handleStandings(env, url); break;
       case 'wc-schedule':
         result = await handleWcSchedule(env, url); break;
+      case 'markets':
+        return json(await handleMarkets(env));
+      case 'markets/vote': {
+        const vote = await handleMarketVote(env, url);
+        if (vote.status && vote.error) return json({ error: vote.error }, vote.status);
+        return json(vote);
+      }
       case 'topscorers':
         result = await handleTopScorers(env, url); break;
       case 'odds':
