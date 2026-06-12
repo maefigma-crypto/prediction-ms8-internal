@@ -647,7 +647,9 @@ function firstPickLine(item) {
 // Hardcoded defaults are used for any missing template keys, or when KV is
 // empty — so this endpoint always returns a usable preview.
 
-const SPORTSBOOK_TEMPLATE_KEYS = ['prediction', 'upcoming', 'reminder', 'result', 'proof', 'blog'];
+// 'proof' (What Our Users Say) intentionally dropped — sample testimonials
+// don't fit the World Cup focus. Re-add it here to bring the template back.
+const SPORTSBOOK_TEMPLATE_KEYS = ['prediction', 'upcoming', 'reminder', 'result', 'blog'];
 
 // Affiliate signup URL — appended via {signupCta} to every default template
 // and exposed as a placeholder so user-customized templates can reuse it.

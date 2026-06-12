@@ -2026,83 +2026,7 @@ footer{
   </script>
 </section>
 
-<!-- ── RECENT ODDS SNAPSHOTS ── -->
-<section id="testimonials" style="position:relative;z-index:1;background:var(--bg);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
-  <div class="sec">
-    <div class="stag">Customer Proof</div>
-    <h2 class="stitle">What Our Users Say</h2>
-    <p class="ssub">Five customer-style proof examples from WhatsApp and Telegram. Replace the sample text with real screenshots or verified messages anytime.</p>
-    <div class="proof-grid fu">
-      <article class="proof-chat-card whatsapp">
-        <div class="proof-chat-head"><span>WhatsApp</span><strong>online</strong></div>
-        <div class="proof-chat">
-          <div class="bubble left">Boss this AI pick too sharp already.</div>
-          <div class="bubble left">I followed Arsenal correct score and won RM20K+.</div>
-          <div class="bubble left">Never thought prediction can be this accurate.</div>
-          <div class="bubble right">Congrats. Always manage stake and follow only major match picks.</div>
-        </div>
-        <blockquote>Won RM20K+ following the AI prediction.</blockquote>
-        <div class="proof-author">- MJ</div>
-      </article>
-      <article class="proof-chat-card telegram">
-        <div class="proof-chat-head"><span>Telegram</span><strong>member</strong></div>
-        <div class="proof-chat">
-          <div class="bubble left">Bro the UCL pick hit again.</div>
-          <div class="bubble left">I only copied your AI prediction, profit RM8,700 tonight.</div>
-          <div class="bubble right">Nice one. We focus on form, H2H and odds movement before posting.</div>
-        </div>
-        <blockquote>Copied the UCL pick and made RM8,700 profit.</blockquote>
-        <div class="proof-author">- AL</div>
-      </article>
-      <article class="proof-chat-card whatsapp">
-        <div class="proof-chat-head"><span>WhatsApp</span><strong>online</strong></div>
-        <div class="proof-chat">
-          <div class="bubble left">La Liga result exactly same as your call.</div>
-          <div class="bubble left">Small stake became RM3,250. Very good AI.</div>
-          <div class="bubble right">Good discipline. Wait for the next major match only.</div>
-        </div>
-        <blockquote>La Liga call landed, RM3,250 return.</blockquote>
-        <div class="proof-author">- TAN</div>
-      </article>
-      <article class="proof-chat-card telegram">
-        <div class="proof-chat-head"><span>Telegram</span><strong>member</strong></div>
-        <div class="proof-chat">
-          <div class="bubble left">Your Bayern pick saved my slip.</div>
-          <div class="bubble left">Hit combo and cashed out RM12K.</div>
-          <div class="bubble right">Great result. Please keep bankroll safe.</div>
-        </div>
-        <blockquote>Bayern prediction helped cash out RM12K.</blockquote>
-        <div class="proof-author">- KS</div>
-      </article>
-      <article class="proof-chat-card whatsapp">
-        <div class="proof-chat-head"><span>WhatsApp</span><strong>online</strong></div>
-        <div class="proof-chat">
-          <div class="bubble left">I joined because my friend showed your score proof.</div>
-          <div class="bubble left">First day follow already win RM1,980.</div>
-          <div class="bubble right">Welcome. Check the match detail before every bet.</div>
-        </div>
-        <blockquote>First day following ScoreOcs8, RM1,980 win.</blockquote>
-        <div class="proof-author">- CY</div>
-      </article>
-    </div>
-  </div>
-  <style>
-    .proof-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;align-items:stretch;}
-    .proof-chat-card{background:rgba(255,255,255,.035);border:1px solid rgba(249,115,22,.22);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.26);padding:16px;display:flex;flex-direction:column;min-height:410px;}
-    .proof-chat-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#075e54;color:#fff;font-family:var(--fb);font-size:13px;}
-    .proof-chat-head strong{font-family:var(--fm);font-size:10px;color:#b8f5d1;text-transform:uppercase;letter-spacing:.08em;}
-    .proof-chat-card.telegram .proof-chat-head{background:#229ed9;}
-    .proof-chat{flex:1;padding:14px;background:#efe7d7;background-image:radial-gradient(rgba(0,0,0,.05) 1px,transparent 1px);background-size:18px 18px;display:flex;flex-direction:column;gap:8px;border-radius:0 0 12px 12px;min-height:220px;}
-    .bubble{max-width:86%;padding:9px 11px;border-radius:10px;font-size:12px;line-height:1.45;color:#1f2933;box-shadow:0 1px 2px rgba(0,0,0,.08);}
-    .bubble.left{align-self:flex-start;background:#fff;border-top-left-radius:3px;}
-    .bubble.right{align-self:flex-end;background:#dcf8c6;border-top-right-radius:3px;}
-    .proof-chat-card blockquote{font-family:var(--ff);font-size:21px;font-weight:700;line-height:1.16;color:var(--text);margin:16px 0 8px;}
-    .proof-author{font-family:var(--ff);font-size:17px;font-weight:800;color:var(--accent);}
-    @media(max-width:1280px){.proof-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
-    @media(max-width:860px){.proof-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
-    @media(max-width:640px){.proof-grid{grid-template-columns:1fr}.proof-chat-card{min-height:auto}.proof-chat-card blockquote{font-size:20px}}
-  </style>
-</section>
+<!-- testimonials section removed -->
 
 
 <section id="blog" style="position:relative;z-index:1;background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
@@ -2785,9 +2709,6 @@ function setLang(lang) {
   i18nSetText('#highlights .ssub', d.matchScheduleSub);
   i18nSetAll('#highlights .msc-card-h span:last-child', [d.liveTable, d.topScorers, d.upcomingMatches, d.latestResults]);
 
-  i18nSetText('#testimonials .stag', d.customerProof);
-  i18nSetText('#testimonials .stitle', d.usersSay);
-  i18nSetText('#testimonials .ssub', d.usersSaySub);
   i18nSetText('#blog .stag', d.blogTag);
   i18nSetText('#blog .stitle', d.blogTitle);
   i18nSetText('#blog .ssub', d.blogSub);
