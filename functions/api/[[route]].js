@@ -64,7 +64,9 @@ async function cached(env, key, ttl, fetcher, opts = {}) {
   // blip self-heals within minutes without hammering the API every
   // request; with no emptyTtl the empty isn't cached at all.
   const ok = !opts.validate || opts.validate(data);
-  const writeTtl = ok ? ttl : (opts.emptyTtl || 0);
+  // opts.ttlFor(data) lets the fetcher pick the TTL from the result — e.g.
+  // a short window for an in-progress match, long once it's finished.
+  let writeTtl = ok ? (opts.ttlFor ? opts.ttlFor(data) : ttl) : (opts.emptyTtl || 0);
   if (writeTtl > 0) {
     await env.CACHE.put(key, JSON.stringify(data), { expirationTtl: writeTtl });
   }
@@ -342,8 +344,19 @@ async function lookupFixture(env, fixtureId) {
       }
     }
   }
-  // 3. Last resort — fetch each priority league fresh and scan
-  for (const lgId of [39, 2, 1, 140, 135, 78, 61]) {
+  // 3. Cup competitions (WC=1, UCL=2): the next/last pagination params are
+  // unreliable (a finished group match may appear in neither), so fetch the
+  // FULL season — same call wc-schedule uses — and scan it. This is what
+  // makes a finished WC fixture resolve with its real FT score.
+  for (const lgId of [1, 2]) {
+    try {
+      const data = await afGet(env, '/fixtures', { league: lgId, season: seasonFor(lgId) });
+      const found = (data.response || []).find(fx => fx.fixture?.id === id);
+      if (found) return found;
+    } catch { /* try next */ }
+  }
+  // 4. Last resort — fetch each priority league fresh (paginated) and scan
+  for (const lgId of [39, 140, 135, 78, 61]) {
     try {
       const season = seasonFor(lgId);
       const [next, last, today] = await Promise.all([
@@ -397,11 +410,19 @@ async function handlePredictions(env, url) {
   });
 }
 
+const FINISHED_STATUS = new Set(['FT', 'AET', 'PEN', 'WO', 'AWD']);
+const LIVE_STATUS = new Set(['1H', '2H', 'HT', 'ET', 'BT', 'P', 'LIVE', 'SUSP', 'INT']);
+
 async function handleMatchDetail(env, url) {
   const fixtureId = url.searchParams.get('fixture_id');
   if (!fixtureId) return { error: 'fixture_id required', status: 400 };
+  const refresh = url.searchParams.get('refresh') === '1';
 
   // v5: adds /fixtures/lineups-derived 'lineups' for the Formation pitch.
+  // Dynamic TTL: a finished match is immutable (cache 24h), a live one
+  // changes every minute (60s), and an upcoming one only needs to flip to
+  // live/FT near kickoff (5 min). A flat 24h previously froze the
+  // pre-kickoff "Not Started" snapshot long after full-time.
   return cached(env, `match-detail:v5:${fixtureId}`, TTL.matchDetail, async () => {
     const fx = await lookupFixture(env, fixtureId);
     if (!fx) throw new Error('fixture not found');
@@ -526,6 +547,14 @@ async function handleMatchDetail(env, url) {
         return out;
       })(),
     };
+  }, {
+    refresh,
+    ttlFor: (d) => {
+      const s = d?.fixture?.fixture?.status?.short;
+      if (FINISHED_STATUS.has(s)) return TTL.matchDetail; // immutable result
+      if (LIVE_STATUS.has(s)) return 60;                  // changes per minute
+      return 5 * 60;                                      // upcoming — flip near KO
+    },
   });
 }
 
