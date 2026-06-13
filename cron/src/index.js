@@ -9,6 +9,7 @@ import {
   buildResultCaption,
   buildPreMatchMotdCaption,
   buildMatchUpdateCaption,
+  buildWcCardCaption,
 } from './lib/caption.js';
 import { saveSnap } from './lib/snap.js';
 import * as X from './lib/x.js';
@@ -1247,6 +1248,23 @@ function highlightImageUrl(fx) {
   return `${SITE_URL}/og/highlight?${params.toString()}`;
 }
 
+// Telegram-optimized full-time result card (1280x720 SVG, rasterized to PNG
+// by Browser Rendering). Built straight from an API-Football fixture object.
+function tgResultCardUrl(fx, correct) {
+  const params = new URLSearchParams({
+    home:   fx?.teams?.home?.name || 'Home',
+    away:   fx?.teams?.away?.name || 'Away',
+    league: fx?.league?.name || 'Football',
+    score:  `${fx?.goals?.home ?? 0}-${fx?.goals?.away ?? 0}`,
+    date:   fx?.fixture?.date || '',
+  });
+  if (fx?.teams?.home?.logo) params.set('home_logo', fx.teams.home.logo);
+  if (fx?.teams?.away?.logo) params.set('away_logo', fx.teams.away.logo);
+  if (correct === true) params.set('pick_was', 'correct');
+  if (correct === false) params.set('pick_was', 'wrong');
+  return `${PUBLIC_SITE_URL}/og/tg-result?${params.toString()}`;
+}
+
 function youtubeSearchUrl(fx) {
   const home = fx?.teams?.home?.name || '';
   const away = fx?.teams?.away?.name || '';
@@ -1671,7 +1689,22 @@ async function checkFinishedMatches(env) {
           weekAcc,
           siteUrl: SITE_URL,
         });
-        const msg = await sendMessage(env, { text: caption });
+        // Render the branded /og/tg-result card and post it as a photo.
+        // If the screenshot fails, fall back to a text result so a finished
+        // match is never silently dropped.
+        let msg;
+        try {
+          const png = await screenshot(env, {
+            url: tgResultCardUrl(fx, correct),
+            viewport: { width: 1280, height: 720 },
+            waitUntil: 'networkidle0',
+            timeoutMs: 25000,
+          });
+          msg = await sendPhoto(env, { photoBytes: png, caption });
+        } catch (e) {
+          msg = await sendMessage(env, { text: caption });
+          report.errors.push({ fixture_id: item.fixture_id, error: 'tg-result render failed, sent text: ' + (e.message || String(e)) });
+        }
         item.message_id = msg.message_id;
         report.posted += 1;
       } else {
@@ -1888,6 +1921,43 @@ async function postDailyRecap(env) {
   }
 }
 
+// --- Daily World Cup group card -------------------------------------------
+//
+// Screenshots /wc-card/ (the group fixtures + standings digest) once per day
+// and posts it to Telegram. The page auto-features the group with the next
+// kickoff, so the card is always relevant. Dedup: posted:wc-card:<date>.
+//
+// Cost: one Browser Rendering screenshot + one sendPhoto per day.
+async function postWorldCupCard(env) {
+  if (!env.TG_BOT_TOKEN || !env.TG_CHANNEL_ID) {
+    return { status: 'skipped', reason: 'telegram not configured' };
+  }
+  const date = todayMYT();
+  const dedupKey = `posted:wc-card:${date}`;
+  if (await env.CACHE.get(dedupKey).catch(() => null)) {
+    return { status: 'skipped', reason: 'already posted today', date };
+  }
+  try {
+    const png = await screenshot(env, {
+      url: `${SITE_URL}/wc-card/?v=${Date.now()}`,
+      viewport: { width: 1080, height: 1350 },
+      waitUntil: 'networkidle0',
+      timeoutMs: 30000,
+    });
+    const caption = buildWcCardCaption({ date, siteUrl: SITE_URL });
+    const msg = await sendPhoto(env, { photoBytes: png, caption });
+    // sendPhoto returns { disabled: true } when the kill-switch is on — don't
+    // burn the dedup slot in that case so it posts once posting is re-enabled.
+    if (msg?.disabled) return { status: 'skipped', reason: 'posting disabled (tg:posting=off)', date };
+    await env.CACHE.put(dedupKey, JSON.stringify({ message_id: msg.message_id, ts: Date.now() }), {
+      expirationTtl: 36 * 3600,
+    });
+    return { status: 'ok', date, message_id: msg.message_id };
+  } catch (e) {
+    return { status: 'error', error: String(e.message || e), date };
+  }
+}
+
 export default {
   async scheduled(event, env, ctx) {
     // Dispatch by cron pattern:
@@ -1902,6 +1972,7 @@ export default {
       ctx.waitUntil(runSportsbookDaily(env));
     } else if (cron.startsWith('0 2 ')) {
       ctx.waitUntil(postDailyToAll(env));
+      ctx.waitUntil(postWorldCupCard(env));
     } else if (cron.startsWith('*/15 ')) {
       // Heartbeat does three things:
       //   1. KO-30 pre-match alert for the MOTD fixture
@@ -1920,11 +1991,12 @@ export default {
     if (url.searchParams.get('key') !== env.CRON_SECRET) {
       return new Response('unauthorized', { status: 401 });
     }
-    // Manual triggers: generate | wc-queue | post | check | poll | premat | recap | push-test | sportsbook-test
+    // Manual triggers: generate | wc-queue | wc-card | post | check | poll | premat | recap | push-test | sportsbook-test
     const task = url.searchParams.get('task') || 'generate';
     let result;
     if (task === 'sportsbook-test') result = await postSportsbookTemplateTest(env);
     else if (task === 'wc-queue') result = await queueWorldCupFixtures(env);
+    else if (task === 'wc-card') result = await postWorldCupCard(env);
     else if (task === 'post') result = await postDailyToAll(env);
     else if (task === 'check') result = await checkFinishedMatches(env);
     else if (task === 'poll') result = await postPrematchPolls(env);

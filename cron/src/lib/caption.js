@@ -299,3 +299,25 @@ export function buildResultCaption({ fixture, pickCorrect = null, weekAcc = null
 
   return lines.join('\n');
 }
+
+// Caption for the daily /wc-card/ group digest screenshot. The card image
+// carries the fixtures + standings, so the caption is a short framing line
+// plus the schedule link and signup CTA.
+export function buildWcCardCaption({ date, siteUrl = 'https://scoreocs8.com' }) {
+  const lines = [];
+  lines.push(`🏆 <b>2026 World Cup · Today's Group Snapshot</b> | 今日世界杯`);
+  if (date) lines.push(`📅 ${esc(fmtDate(date))}`);
+  lines.push('');
+  lines.push(`Standings &amp; fixtures — live in Malaysia Time 🇲🇾`);
+  lines.push(`积分榜与赛程，马来西亚时间实时更新。`);
+  lines.push('');
+  lines.push(`🔗 <b>Full schedule &amp; AI picks</b> | 完整赛程与预测:`);
+  lines.push(`👉 ${siteUrl}/predictions/fifa-world-cup/`);
+  lines.push('');
+  lines.push(`🆕 <b>Sign up · OCS8 Sports</b> | 立即注册:`);
+  lines.push(`👉 https://ocs8my.com/signup?ref=OCSFMZ6HVI`);
+  lines.push('');
+  lines.push(`#WorldCup2026 #ScoreOcs8 #足球预测`);
+  const out = lines.join('\n');
+  return out.length > 1020 ? out.slice(0, 1017) + '...' : out;
+}
