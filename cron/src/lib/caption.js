@@ -223,11 +223,10 @@ export function buildPreMatchMotdCaption({
 }
 
 // Lightweight pre-match update used for full World Cup coverage. Unlike
-// buildPreMatchMotdCaption (which frames a virtual bet slip and REQUIRES a
-// pro pick), this posts a clean "kicking off soon" card for any fixture and
-// folds in the AI pick only when one is ready — so every WC match gets an
-// alert even before/without analysis.
-export function buildMatchUpdateCaption({ fixture, pick = null, siteUrl = 'https://scoreocs8.com' }) {
+// buildPreMatchMotdCaption (which frames a virtual bet slip around a pro
+// pick), this posts a clean "kicking off soon" card — teams, kickoff in MYT,
+// venue — with no AI-pick framing, so every WC match gets a neutral alert.
+export function buildMatchUpdateCaption({ fixture, siteUrl = 'https://scoreocs8.com' }) {
   const home = fixture?.teams?.home?.name || 'Home';
   const away = fixture?.teams?.away?.name || 'Away';
   const leagueId = fixture?.league?.id;
@@ -243,8 +242,6 @@ export function buildMatchUpdateCaption({ fixture, pick = null, siteUrl = 'https
     });
   } catch {}
 
-  const pickLabel = pick?.pickLabel || pick?.pick || '';
-
   const lines = [];
   lines.push(`⏰ <b>Kicking off soon · 即将开赛</b>`);
   lines.push(`${flag} <b>${esc(league)}</b>`);
@@ -252,11 +249,6 @@ export function buildMatchUpdateCaption({ fixture, pick = null, siteUrl = 'https
   lines.push(`⚽ <b>${esc(home)} vs ${esc(away)}</b>`);
   lines.push(`🕐 Kickoff · 开赛: ${esc(kickoff)} MYT`);
   if (venue) lines.push(`🏟️ ${esc(venue)}${city ? ', ' + esc(city) : ''}`);
-  if (pickLabel) {
-    const conf = pick?.confidence != null ? ` (${pick.confidence}%)` : '';
-    lines.push('');
-    lines.push(`⚡ <b>Pro Pick · 智能推荐</b>: ${esc(pickLabel)}${conf}`);
-  }
   lines.push('');
   lines.push(`🔗 Live tracking · 实时追踪: ${siteUrl}/`);
   lines.push('');
@@ -311,7 +303,7 @@ export function buildWcCardCaption({ date, siteUrl = 'https://scoreocs8.com' }) 
   lines.push(`Standings &amp; fixtures — live in Malaysia Time 🇲🇾`);
   lines.push(`积分榜与赛程，马来西亚时间实时更新。`);
   lines.push('');
-  lines.push(`🔗 <b>Full schedule &amp; AI picks</b> | 完整赛程与预测:`);
+  lines.push(`🔗 <b>Full schedule &amp; standings</b> | 完整赛程与积分榜:`);
   lines.push(`👉 ${siteUrl}/predictions/fifa-world-cup/`);
   lines.push('');
   lines.push(`🆕 <b>Sign up · OCS8 Sports</b> | 立即注册:`);

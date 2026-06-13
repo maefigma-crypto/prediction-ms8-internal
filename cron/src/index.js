@@ -1541,12 +1541,11 @@ async function postPreMatchAlerts(env) {
         continue;
       }
 
-      // MOTD with a ready pick → rich virtual-bet-slip caption.
-      // Everything else (incl. every WC match) → lightweight match update,
-      // folding in the pick only when one is ready.
-      const caption = (item.is_motd && pickReady)
-        ? buildPreMatchMotdCaption({ fixture: fx, pick, siteUrl: SITE_URL })
-        : buildMatchUpdateCaption({ fixture: fx, pick: pickReady ? pick : null, siteUrl: SITE_URL });
+      // World Cup posts are kept clean of any AI-pick framing — always a
+      // plain match update. Non-WC MOTD keeps its pick-led bet-slip caption.
+      const caption = item.is_wc
+        ? buildMatchUpdateCaption({ fixture: fx, siteUrl: SITE_URL })
+        : buildPreMatchMotdCaption({ fixture: fx, pick, siteUrl: SITE_URL });
 
       const msg = await sendMessage(env, { text: caption });
       // 6h TTL — past kickoff the flag self-expires so KV stays clean.
@@ -1562,9 +1561,10 @@ async function postPreMatchAlerts(env) {
         const home = fx?.teams?.home?.name || 'Home';
         const away = fx?.teams?.away?.name || 'Away';
         const slug = `${home}-vs-${away}`.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 64);
+        const pickText = pick?.pickLabel || pick?.pick;
         const pushResult = await broadcastPush(env, {
           title: `⚡ Starts in 30 min · ${home} vs ${away}`,
-          body: `Pro pick: ${pick?.pickLabel || pick?.pick || 'see analysis'}`,
+          body: pickText ? `Pro pick: ${pickText}` : `Kicks off in ~30 min — tap for live tracking`,
           url: `/match/${item.fixture_id}-${slug}/`,
           tag: `premat30-${item.fixture_id}`,
         });
@@ -1652,12 +1652,34 @@ async function checkFinishedMatches(env) {
       const accAfter = correct === null ? null : await bumpAccuracy(env, correct);
 
       // Result posting:
-      //   • MOTD → rich virtual-bet-slip screenshot (needs a real pick).
-      //   • Any other World Cup match → lightweight text full-time result,
-      //     so the whole tournament is covered without a screenshot render
-      //     per match.
+      //   • World Cup match → clean branded /og/tg-result card (score only,
+      //     no AI-pick verdict / accuracy / badge). Text fallback if the
+      //     screenshot fails so a finished match is never dropped.
+      //   • Non-WC MOTD → rich virtual-bet-slip screenshot (needs a pick).
       //   • Everything else → tracked silently.
-      if (item.is_motd) {
+      if (item.is_wc) {
+        const caption = buildResultCaption({
+          fixture: fx,
+          pickCorrect: null,
+          weekAcc: null,
+          siteUrl: SITE_URL,
+        });
+        let msg;
+        try {
+          const png = await screenshot(env, {
+            url: tgResultCardUrl(fx, null),
+            viewport: { width: 1280, height: 720 },
+            waitUntil: 'networkidle0',
+            timeoutMs: 25000,
+          });
+          msg = await sendPhoto(env, { photoBytes: png, caption });
+        } catch (e) {
+          msg = await sendMessage(env, { text: caption });
+          report.errors.push({ fixture_id: item.fixture_id, error: 'tg-result render failed, sent text: ' + (e.message || String(e)) });
+        }
+        item.message_id = msg.message_id;
+        report.posted += 1;
+      } else if (item.is_motd) {
         const slipStatus = correct === true ? 'won' : (correct === false ? 'lost' : 'running');
         const slipUrl = `${SITE_URL}${slipPath(item.fixture_id, item.home, item.away)}?status=${slipStatus}&stake=100&v=${Date.now()}`;
         const png = await screenshot(env, {
@@ -1677,34 +1699,6 @@ async function checkFinishedMatches(env) {
         });
 
         const msg = await sendPhoto(env, { photoBytes: png, caption });
-        item.message_id = msg.message_id;
-        report.posted += 1;
-      } else if (item.is_wc) {
-        const weekAcc = (accAfter && correct !== null)
-          ? { hits: accAfter.hits, total: accAfter.total, pct: Math.round((accAfter.hits / accAfter.total) * 100) }
-          : null;
-        const caption = buildResultCaption({
-          fixture: fx,
-          pickCorrect: correct,
-          weekAcc,
-          siteUrl: SITE_URL,
-        });
-        // Render the branded /og/tg-result card and post it as a photo.
-        // If the screenshot fails, fall back to a text result so a finished
-        // match is never silently dropped.
-        let msg;
-        try {
-          const png = await screenshot(env, {
-            url: tgResultCardUrl(fx, correct),
-            viewport: { width: 1280, height: 720 },
-            waitUntil: 'networkidle0',
-            timeoutMs: 25000,
-          });
-          msg = await sendPhoto(env, { photoBytes: png, caption });
-        } catch (e) {
-          msg = await sendMessage(env, { text: caption });
-          report.errors.push({ fixture_id: item.fixture_id, error: 'tg-result render failed, sent text: ' + (e.message || String(e)) });
-        }
         item.message_id = msg.message_id;
         report.posted += 1;
       } else {

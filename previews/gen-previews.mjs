@@ -5,46 +5,45 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const R = (p) => resolve(__dirname, '..', p);
 
 const cap = await import(R('cron/src/lib/caption.js'));
-
 const SITE = 'https://scoreocs8.com';
 const today = '2026-06-13';
 
-// --- Sample WC fixture (real-ish): Brazil vs Morocco, Group C ---------------
+// flagcdn flags as a guaranteed-to-load stand-in for the live API-Football
+// national-team crests (loads when you open the file in a browser).
+const FLAG = c => `https://flagcdn.com/w160/${c}.png`;
+
+// Sample WC fixture: Brazil vs Morocco, Group C.
 const braMor = {
   teams: { home: { name: 'Brazil' }, away: { name: 'Morocco' } },
   league: { id: 1, name: 'FIFA World Cup' },
   fixture: { date: '2026-06-13T22:00:00+00:00', venue: { name: 'NY/NJ Stadium', city: 'East Rutherford' } },
 };
 const braMorFT = { ...braMor, goals: { home: 2, away: 1 } };
-const pick = { pickLabel: 'Brazil to win', pick: 'HOME', confidence: 72 };
 
-// --- Build every caption ----------------------------------------------------
+// Captions — NO AI picks anywhere in the WC flow.
 const captions = {
   'Daily WC group card (10:00 MYT)': cap.buildWcCardCaption({ date: today, siteUrl: SITE }),
-  'Pre-match update — no AI pick (every WC match, ~KO-30)': cap.buildMatchUpdateCaption({ fixture: braMor, pick: null, siteUrl: SITE }),
-  'Pre-match update — with AI pick': cap.buildMatchUpdateCaption({ fixture: braMor, pick, siteUrl: SITE }),
-  'Match of the Day pre-match slip (when WC match is MOTD + pick ready)': cap.buildPreMatchMotdCaption({ fixture: braMor, pick, siteUrl: SITE }),
-  'Full-time result (every WC match) — caption under the image card': cap.buildResultCaption({ fixture: braMorFT, pickCorrect: true, weekAcc: { hits: 7, total: 10, pct: 70 }, siteUrl: SITE }),
+  'Pre-match update (~KO-30, every WC match)': cap.buildMatchUpdateCaption({ fixture: braMor, siteUrl: SITE }),
+  'Full-time result (every WC match, under the image card)': cap.buildResultCaption({ fixture: braMorFT, pickCorrect: null, weekAcc: null, siteUrl: SITE }),
 };
 
-// --- Render the /og/tg-result card SVG (no logos -> initials fallback) ------
+// /og/tg-result card — with flag logos, NO pick badge.
 const tgResult = await import(R('functions/og/tg-result.js'));
-const params = new URLSearchParams({ home: 'Brazil', away: 'Morocco', league: 'FIFA World Cup', score: '2-1', date: braMor.fixture.date, pick_was: 'correct' });
+const params = new URLSearchParams({ home: 'Brazil', away: 'Morocco', league: 'FIFA World Cup', score: '2-1', date: braMor.fixture.date, home_logo: FLAG('br'), away_logo: FLAG('ma') });
 const resp = await tgResult.onRequestGet({ request: { url: `${SITE}/og/tg-result?${params}` } });
 const resultSvg = await resp.text();
 writeFileSync(R('previews/wc-result-card.svg'), resultSvg);
 
-// --- Render the /wc-card/ group card with MOCKED live data ------------------
+// /wc-card/ group card with MOCKED live data — now WITH country flag logos.
 const scheduleSample = { matches: [
-  { home: { id: 10, name: 'Qatar' }, away: { id: 11, name: 'Switzerland' }, date: '2026-06-13T19:00:00+00:00', status: 'FT', goals: { home: 0, away: 2 }, group: 'B' },
-  { home: { id: 1, name: 'Brazil' }, away: { id: 2, name: 'Morocco' }, date: '2026-06-13T22:00:00+00:00', status: 'NS', goals: {}, group: 'C' },
-  { home: { id: 3, name: 'Haiti' }, away: { id: 4, name: 'Scotland' }, date: '2026-06-14T01:00:00+00:00', status: 'NS', goals: {}, group: 'C' },
+  { home: { id: 1, name: 'Brazil', logo: FLAG('br') }, away: { id: 2, name: 'Morocco', logo: FLAG('ma') }, date: '2026-06-13T22:00:00+00:00', status: 'NS', goals: {}, group: 'C' },
+  { home: { id: 3, name: 'Haiti', logo: FLAG('ht') }, away: { id: 4, name: 'Scotland', logo: FLAG('gb-sct') }, date: '2026-06-14T01:00:00+00:00', status: 'NS', goals: {}, group: 'C' },
 ]};
 const standingsSample = { response: [ { league: { standings: [ [
-  { team: { id: 1, name: 'Brazil' }, all: { played: 0 }, goalsDiff: 0, points: 0, group: 'Group C' },
-  { team: { id: 4, name: 'Scotland' }, all: { played: 0 }, goalsDiff: 0, points: 0, group: 'Group C' },
-  { team: { id: 2, name: 'Morocco' }, all: { played: 0 }, goalsDiff: 0, points: 0, group: 'Group C' },
-  { team: { id: 3, name: 'Haiti' }, all: { played: 0 }, goalsDiff: 0, points: 0, group: 'Group C' },
+  { team: { id: 1, name: 'Brazil', logo: FLAG('br') }, all: { played: 0 }, goalsDiff: 0, points: 0, group: 'Group C' },
+  { team: { id: 4, name: 'Scotland', logo: FLAG('gb-sct') }, all: { played: 0 }, goalsDiff: 0, points: 0, group: 'Group C' },
+  { team: { id: 2, name: 'Morocco', logo: FLAG('ma') }, all: { played: 0 }, goalsDiff: 0, points: 0, group: 'Group C' },
+  { team: { id: 3, name: 'Haiti', logo: FLAG('ht') }, all: { played: 0 }, goalsDiff: 0, points: 0, group: 'Group C' },
 ] ] } } ] };
 global.fetch = async (url) => ({ ok: true, json: async () => (String(url).includes('standings') ? standingsSample : scheduleSample) });
 const wcCard = await import(R('functions/wc-card/index.js'));
@@ -52,19 +51,14 @@ const wcResp = await wcCard.onRequestGet({ request: { url: `${SITE}/wc-card/?gro
 const wcHtml = await wcResp.text();
 writeFileSync(R('previews/wc-group-card.html'), wcHtml);
 
-// --- Master Telegram-style mockup ------------------------------------------
+// Master Telegram-style mockup.
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-// captions already contain safe Telegram HTML (<b>,<a>) from our own templates
 const bubble = (title, html, extra='') => `
-  <div class="msg">
-    <div class="tag">${esc(title)}</div>
-    ${extra}
-    <div class="body">${html.replace(/\n/g,'<br>')}</div>
-  </div>`;
+  <div class="msg"><div class="tag">${esc(title)}</div>${extra}<div class="body">${html.replace(/\n/g,'<br>')}</div></div>`;
 
 const master = `<!DOCTYPE html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ScoreOCS8 — Telegram post previews</title>
+<title>ScoreOCS8 — WC post previews</title>
 <style>
   body{margin:0;background:#0e1621;font-family:-apple-system,Segoe UI,Roboto,sans-serif;color:#e8eef5;}
   .head{position:sticky;top:0;background:#17212b;padding:14px 18px;border-bottom:1px solid #0a1119;font-weight:600;}
@@ -74,30 +68,21 @@ const master = `<!DOCTYPE html><html><head><meta charset="utf-8">
   .tag{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:#5fa8e6;margin-bottom:10px;font-weight:700;}
   .body{font-size:15px;line-height:1.5;word-wrap:break-word;}
   .body b{color:#fff;} .body a{color:#6fb4ef;text-decoration:none;}
-  img.card{width:100%;border-radius:10px;display:block;margin-bottom:10px;border:1px solid #0a1119;}
-  iframe.card{width:100%;height:540px;border:1px solid #0a1119;border-radius:10px;display:block;margin-bottom:10px;background:#05070f;}
   .card svg{width:100%;height:auto;display:block;border-radius:10px;border:1px solid #0a1119;margin-bottom:10px;}
+  iframe.card{width:100%;height:560px;border:1px solid #0a1119;border-radius:10px;display:block;margin-bottom:10px;background:#05070f;}
   .note{color:#8aa0b6;font-size:12px;margin:4px 0 0;}
 </style></head><body>
-<div class="head">📣 ScoreOCS8 Channel — post previews <small>· sample data · 2026 World Cup</small></div>
+<div class="head">📣 ScoreOCS8 Channel — World Cup posts <small>· no AI picks · country logos · sample data</small></div>
 <div class="feed">
   ${bubble('1 · Daily WC group card (image post)', captions['Daily WC group card (10:00 MYT)'],
-    `<iframe class="card" srcdoc="${esc(wcHtml).replace(/"/g,'&quot;')}"></iframe><p class="note">↑ the /wc-card/ screenshot (group auto-selected). Logos load live; shown here with initials.</p>`)}
-  ${bubble('2 · Pre-match update — no AI pick (text post, every WC match)', captions['Pre-match update — no AI pick (every WC match, ~KO-30)'])}
-  ${bubble('3 · Pre-match update — with AI pick', captions['Pre-match update — with AI pick'])}
-  ${bubble('4 · Match of the Day slip (when a WC match is the featured pick)', captions['Match of the Day pre-match slip (when WC match is MOTD + pick ready)'])}
-  ${bubble('5 · Full-time result (image card + caption)', captions['Full-time result (every WC match) — caption under the image card'],
-    `<div class="card">${resultSvg}</div><p class="note">↑ the /og/tg-result card (logos live; shown with initials).</p>`)}
+    `<iframe class="card" srcdoc="${esc(wcHtml).replace(/"/g,'&quot;')}"></iframe><p class="note">↑ /wc-card/ with country logos (flags shown as a stand-in; live = API-Football crests).</p>`)}
+  ${bubble('2 · Pre-match update (text post, every WC match ~KO-30)', captions['Pre-match update (~KO-30, every WC match)'])}
+  ${bubble('3 · Full-time result (image card + caption)', captions['Full-time result (every WC match, under the image card)'],
+    `<div class="card">${resultSvg}</div><p class="note">↑ /og/tg-result with logos, no AI-pick badge.</p>`)}
 </div></body></html>`;
 writeFileSync(R('previews/telegram-preview.html'), master);
 
-// Plain-text captions too
-let md = '# ScoreOCS8 — Telegram caption previews (2026 World Cup)\n\n';
+let md = '# ScoreOCS8 — World Cup Telegram captions (no AI picks)\n\n';
 for (const [k,v] of Object.entries(captions)) md += `\n## ${k}\n\n\`\`\`\n${v.replace(/<\/?b>/g,'').replace(/<a href="([^"]+)">([^<]+)<\/a>/g,'$2 ($1)')}\n\`\`\`\n`;
 writeFileSync(R('previews/captions.md'), md);
-
-console.log('Generated:');
-console.log(' - previews/telegram-preview.html  (open this — full feed mockup)');
-console.log(' - previews/wc-group-card.html     (the group card alone)');
-console.log(' - previews/wc-result-card.svg     (the FT result card alone)');
-console.log(' - previews/captions.md            (plain captions)');
+console.log('regenerated previews (logos on, picks removed)');

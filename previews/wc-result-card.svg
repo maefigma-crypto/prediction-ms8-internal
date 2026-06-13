@@ -57,8 +57,8 @@
   <!-- team rings -->
   <circle cx="224" cy="390" r="100" fill="url(#teamRing)" stroke="rgba(255,255,255,.10)" stroke-width="2"/>
   <circle cx="1056" cy="390" r="100" fill="url(#teamRing)" stroke="rgba(255,255,255,.10)" stroke-width="2"/>
-  <text x="224" y="412" font-family="system-ui,-apple-system,sans-serif" font-size="62" font-weight="900" fill="#ffffff" text-anchor="middle" opacity=".85">BR</text>
-  <text x="1056" y="412" font-family="system-ui,-apple-system,sans-serif" font-size="62" font-weight="900" fill="#ffffff" text-anchor="middle" opacity=".85">MO</text>
+  <image href="https://flagcdn.com/w160/br.png" x="146" y="312" width="156" height="156" preserveAspectRatio="xMidYMid meet"/>
+  <image href="https://flagcdn.com/w160/ma.png" x="978" y="312" width="156" height="156" preserveAspectRatio="xMidYMid meet"/>
 
   <!-- score in middle, dominant -->
   <text x="640" y="408" font-family="system-ui,-apple-system,'Segoe UI',sans-serif" font-size="132" font-weight="900" fill="url(#scoreGrad)" text-anchor="middle" letter-spacing="-2">2 <tspan fill="rgba(255,255,255,.35)">·</tspan> 1</text>
@@ -69,10 +69,6 @@
   <text x="1056" y="540" font-family="system-ui,-apple-system,'Segoe UI',sans-serif" font-size="36" font-weight="800" fill="#ffffff" text-anchor="middle">Morocco</text>
 
   
-  <g>
-    <rect x="499.5" y="595" width="281" height="56" rx="28" fill="rgba(255,255,255,.04)" stroke="#00e5a0" stroke-width="1.5" stroke-opacity=".55"/>
-    <text x="640" y="630" font-family="Menlo,monospace" font-size="16" fill="#00e5a0" text-anchor="middle" letter-spacing="3">AI PICK CORRECT ✓</text>
-  </g>
 
   <!-- footer -->
   <text x="60" y="694" font-family="Menlo,monospace" font-size="12" fill="rgba(255,255,255,.4)" letter-spacing="2">18+ · NOT BETTING ADVICE · VIRTUAL CURRENCY</text>
