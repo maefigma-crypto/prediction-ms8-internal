@@ -1581,10 +1581,28 @@ async function checkFinishedMatches(env) {
 
   const report = { date, checked: due.length, posted: 0, still_live: 0, gave_up: 0, errors: [] };
 
+  // Batch the status lookups: one API-Football call per 20 due fixtures
+  // instead of one call per fixture. This keeps quota flat even on a busy
+  // 6-match World Cup day — a heartbeat tick now costs a single /fixtures
+  // read regardless of how many matches are being checked.
+  const fxById = new Map();
+  let batchError = null;
+  try {
+    for (let i = 0; i < due.length; i += 20) {
+      const ids = due.slice(i, i + 20).map(d => d.fixture_id).join('-');
+      const data = await afGet(env, '/fixtures', { ids });
+      for (const fx of (data.response || [])) {
+        if (fx?.fixture?.id != null) fxById.set(fx.fixture.id, fx);
+      }
+    }
+  } catch (e) {
+    batchError = String(e.message || e);
+  }
+
   for (const item of due) {
     try {
-      const fxData = await afGet(env, '/fixtures', { id: item.fixture_id });
-      const fx = fxData.response?.[0];
+      if (batchError) throw new Error(batchError);
+      const fx = fxById.get(item.fixture_id);
       const short = fx?.fixture?.status?.short;
       item.attempts = (item.attempts || 0) + 1;
 
@@ -1680,7 +1698,11 @@ async function checkFinishedMatches(env) {
         ts: Date.now(),
       });
 
-      const youtube = await findYoutubeHighlight(env, fx);
+      // YouTube highlight lookup is the priciest per-match external call
+      // (a few search units each). Limit it to the Match of the Day; other
+      // World Cup matches still get a highlights-feed entry below, just with
+      // the zero-cost search URL instead of a resolved video.
+      const youtube = item.is_motd ? await findYoutubeHighlight(env, fx) : null;
       await appendHighlight(env, {
         fixture_id: item.fixture_id,
         kickoff_iso: fx.fixture.date,
