@@ -222,6 +222,52 @@ export function buildPreMatchMotdCaption({
   return lines.join('\n');
 }
 
+// Lightweight pre-match update used for full World Cup coverage. Unlike
+// buildPreMatchMotdCaption (which frames a virtual bet slip and REQUIRES a
+// pro pick), this posts a clean "kicking off soon" card for any fixture and
+// folds in the AI pick only when one is ready — so every WC match gets an
+// alert even before/without analysis.
+export function buildMatchUpdateCaption({ fixture, pick = null, siteUrl = 'https://scoreocs8.com' }) {
+  const home = fixture?.teams?.home?.name || 'Home';
+  const away = fixture?.teams?.away?.name || 'Away';
+  const leagueId = fixture?.league?.id;
+  const flag = LEAGUE_EMOJI[leagueId] || '⚽';
+  const league = LEAGUE_SHORT[leagueId] || fixture?.league?.name || '';
+  const venue = fixture?.fixture?.venue?.name || '';
+  const city = fixture?.fixture?.venue?.city || '';
+
+  let kickoff = '—';
+  try {
+    kickoff = new Date(fixture.fixture.date).toLocaleTimeString('en-MY', {
+      timeZone: 'Asia/Kuala_Lumpur', hour: '2-digit', minute: '2-digit', hour12: false,
+    });
+  } catch {}
+
+  const pickLabel = pick?.pickLabel || pick?.pick || '';
+
+  const lines = [];
+  lines.push(`⏰ <b>Kicking off soon · 即将开赛</b>`);
+  lines.push(`${flag} <b>${esc(league)}</b>`);
+  lines.push('');
+  lines.push(`⚽ <b>${esc(home)} vs ${esc(away)}</b>`);
+  lines.push(`🕐 Kickoff · 开赛: ${esc(kickoff)} MYT`);
+  if (venue) lines.push(`🏟️ ${esc(venue)}${city ? ', ' + esc(city) : ''}`);
+  if (pickLabel) {
+    const conf = pick?.confidence != null ? ` (${pick.confidence}%)` : '';
+    lines.push('');
+    lines.push(`⚡ <b>Pro Pick · 智能推荐</b>: ${esc(pickLabel)}${conf}`);
+  }
+  lines.push('');
+  lines.push(`🔗 Live tracking · 实时追踪: ${siteUrl}/`);
+  lines.push('');
+  lines.push(`🆕 <b>Sign up · OCS8 Sports</b> | 立即注册:`);
+  lines.push(`👉 https://ocs8my.com/signup?ref=OCSFMZ6HVI`);
+  lines.push('');
+  lines.push(`⚠ 18+ · Not betting advice`);
+  lines.push(`#WorldCup2026 #ScoreOcs8 #足球预测`);
+  return lines.join('\n');
+}
+
 // Caption for match result posts: "FT · Team A 2-1 Team B"
 export function buildResultCaption({ fixture, pickCorrect = null, weekAcc = null, siteUrl = 'https://scoreocs8.com' }) {
   const home = fixture?.teams?.home?.name || 'Home';
