@@ -385,28 +385,30 @@ async function handlePredictions(env, url) {
   const analysisWindowMs = 12 * 3600 * 1000;
   const isFinishedOrLive = ['1H','2H','HT','ET','BT','P','LIVE','FT','AET','PEN'].includes(fx.fixture?.status?.short);
   if (!isFinishedOrLive && Number.isFinite(msUntilKickoff) && msUntilKickoff > analysisWindowMs) {
-    return { data: {
-      updated: Date.now(),
-      fixtureId,
-      pending: true,
-      opensAt: kickoffMs - analysisWindowMs,
-      analysisWindowHours: 12,
-      pick: '',
-      pickLabel: 'Pro analysis pending',
-      confidence: null,
-      risk: 'PENDING',
-      analysis: 'Pro analysis opens 12 hours before kickoff.',
-    }, source: 'pending' };
+    // >12h out: a lightweight form & matchup preview built from the fixture
+    // itself (no extra API calls, no AI cost) so the page is never blank.
+    return { data: { updated: Date.now(), fixtureId, ...buildFormPreview(fx, []) }, source: 'preview' };
   }
 
   return cached(env, `prediction:${fixtureId}`, TTL.predictions, async () => {
     const home = fx.teams.home.id;
     const away = fx.teams.away.id;
-    const h2hData = await afGet(env, '/fixtures/headtohead', { h2h: `${home}-${away}`, last: 5 });
+    let h2hResp = [];
+    try {
+      const h2hData = await afGet(env, '/fixtures/headtohead', { h2h: `${home}-${away}`, last: 5 });
+      h2hResp = h2hData.response || [];
+    } catch (_) { /* H2H is optional context */ }
 
-    const prompt = buildPredictionPrompt(fx, h2hData.response || []);
-    const prediction = await callClaude(env, prompt);
-    return { updated: Date.now(), fixtureId, ...prediction };
+    // Premium AI analysis when an Anthropic key is configured; otherwise (or if
+    // the call fails — e.g. no balance) fall back to a data-driven form preview
+    // so there is always something useful on the page.
+    if (env.ANTHROPIC_API_KEY) {
+      try {
+        const prediction = await callClaude(env, buildPredictionPrompt(fx, h2hResp));
+        return { updated: Date.now(), fixtureId, source: 'ai', ...prediction };
+      } catch (_) { /* fall through to form preview */ }
+    }
+    return { updated: Date.now(), fixtureId, ...buildFormPreview(fx, h2hResp) };
   });
 }
 
@@ -589,6 +591,56 @@ Respond with exactly this JSON shape:
   "analysis": "<2-3 sentence reasoning>"
 }
 Probabilities must sum to 100. Risk is LOW if confidence>=70, MEDIUM if 50-69, HIGH if <50.`;
+}
+
+// Data-driven "form & matchup" preview — built from the fixture and recent
+// head-to-head with NO external AI call. Used whenever the premium AI pick
+// isn't available (no Anthropic key, call failed, or kickoff still far off),
+// so a match page is never blank. Honest by design: a form lean, not a tip.
+function buildFormPreview(fx, h2h = []) {
+  const home = fx.teams?.home?.name || 'Home';
+  const away = fx.teams?.away?.name || 'Away';
+  const homeId = fx.teams?.home?.id;
+  const round = fx.league?.round || '';
+  const vName = fx.fixture?.venue?.name || '';
+  const vCity = fx.fixture?.venue?.city || '';
+  const venue = vName ? (vCity ? `${vName}, ${vCity}` : vName) : '';
+
+  // Head-to-head from the home team's perspective.
+  let hw = 0, hd = 0, hl = 0, gf = 0, ga = 0, n = 0;
+  for (const m of (h2h || []).slice(0, 5)) {
+    const gh = m.goals?.home, gg = m.goals?.away;
+    if (gh == null || gg == null) continue;
+    const isHome = m.teams?.home?.id === homeId;
+    const f = isHome ? gh : gg, a = isHome ? gg : gh;
+    gf += f; ga += a; n++;
+    if (f > a) hw++; else if (f < a) hl++; else hd++;
+  }
+
+  // Lean: a clear H2H edge tips the pick; otherwise home advantage, balanced.
+  let pick = 'HOME', pickLabel = home, confidence = 52, edge = 'even';
+  if (n >= 2 && hw - hl >= 2) { pick = 'HOME'; pickLabel = home; confidence = Math.min(68, 54 + (hw - hl) * 4); edge = 'home'; }
+  else if (n >= 2 && hl - hw >= 2) { pick = 'AWAY'; pickLabel = away; confidence = Math.min(66, 52 + (hl - hw) * 4); edge = 'away'; }
+
+  const risk = confidence >= 70 ? 'LOW' : confidence >= 50 ? 'MEDIUM' : 'HIGH';
+  const rem = 100 - confidence;
+  const probabilities = pick === 'AWAY'
+    ? { home: Math.round(rem * 0.55), draw: 0, away: confidence }
+    : { home: confidence, draw: 0, away: Math.round(rem * 0.55) };
+  probabilities.draw = 100 - probabilities.home - probabilities.away;
+
+  const parts = [];
+  if (n > 0) {
+    parts.push(`${home} and ${away} have met ${n} time${n > 1 ? 's' : ''} recently — ${hw}W-${hd}D-${hl}L for ${home} (${((gf + ga) / n).toFixed(1)} goals per game).`);
+  } else {
+    parts.push(`${home} and ${away} have no recent head-to-head on record${round ? ` ahead of this ${round}` : ''}.`);
+  }
+  if (venue) parts.push(`${home} take the home side at ${venue}.`);
+  if (edge === 'home') parts.push(`Recent meetings lean towards ${home} — a form-and-history guide, not a guaranteed result.`);
+  else if (edge === 'away') parts.push(`Recent meetings lean towards ${away} — a form-and-history guide, not a guaranteed result.`);
+  else parts.push(`There's little between them on record; home advantage gives ${home} a slight edge in a tie that looks finely balanced.`);
+
+  return { pick, pickLabel, confidence, probabilities, risk, analysis: parts.join(' '), source: 'form' };
 }
 
 const HIGHLIGHT_FINISHED = new Set(['FT', 'AET', 'PEN']);

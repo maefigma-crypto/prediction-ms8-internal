@@ -44,9 +44,10 @@ export async function onRequest(context) {
   const fixtureId = parseInt(m[1], 10);
 
   const origin = new URL(context.request.url).origin;
-  const [detail, pickRaw] = await Promise.all([
+  const [detail, pickRaw, posts] = await Promise.all([
     fetchJson(origin, `/api/match-detail?fixture_id=${fixtureId}`),
     fetchJson(origin, `/api/predictions?fixture_id=${fixtureId}`),
+    fetchJson(origin, `/api/posts`),
   ]);
 
   const fx = detail?.fixture || {};
@@ -238,9 +239,19 @@ export async function onRequest(context) {
     return new Response('', { status: 301, headers: { location: `/match/${canonicalSlug}/` } });
   }
 
-  const pickLabel = pickRaw?.pickLabel || pickRaw?.pick || 'Pro analysis pending';
+  const pickLabel = pickRaw?.pickLabel || pickRaw?.pick || 'Preview coming up';
   const confidence = pickRaw?.confidence != null ? pickRaw.confidence + '%' : '—';
-  const reason = pickRaw?.reason || pickRaw?.analysis || 'Pro analysis opens 12 hours before kickoff.';
+  const reason = pickRaw?.reason || pickRaw?.analysis || '';
+  // Label honestly: premium AI pick vs the data-driven form preview.
+  const pickKindLabel = pickRaw?.source === 'ai' ? 'Pro Pick' : 'Form Pick';
+
+  // Related blog posts that mention either team (when any exist).
+  const relatedPosts = Array.isArray(posts)
+    ? posts.filter(p => {
+        const hay = `${p?.title || ''} ${p?.excerpt || ''}`.toLowerCase();
+        return [home, away].some(t => t && hay.includes(String(t).toLowerCase()));
+      }).slice(0, 3)
+    : [];
 
   // Head-to-head & summary
   const summary = detail?.summary || {};
@@ -564,7 +575,7 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
     <div class="pick-card">
       <div class="pick-row">
         <div>
-          <div class="label">Pro Pick</div>
+          <div class="label">${pickKindLabel}</div>
           <div class="pick">${esc(pickLabel)}</div>
         </div>
         <div style="text-align:right;">
@@ -575,6 +586,17 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
       ${reason ? `<div class="pick-reason">${esc(reason)}</div>` : ''}
     </div>
   </article>
+
+  ${relatedPosts.length ? `
+  <section class="section">
+    <h2>Related reading <small>· ${esc(home)} &amp; ${esc(away)}</small></h2>
+    <div style="display:grid;gap:10px;">
+      ${relatedPosts.map(p => `<a href="/blog/${esc(p.slug)}/?lang=en" style="display:block;padding:14px 16px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);text-decoration:none;color:var(--text);">
+        <div style="font-family:var(--ff);font-weight:700;font-size:17px;line-height:1.3;">${esc(p.title)}</div>
+        <div style="font-family:var(--fm);font-size:11px;color:var(--text3);margin-top:5px;">${esc(p.category_label || 'Blog')}${p.date ? ` · ${esc(p.date)}` : ''} · Read →</div>
+      </a>`).join('')}
+    </div>
+  </section>` : ''}
 
   ${timelineEvents.length ? `
   <section class="section">

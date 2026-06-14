@@ -2840,7 +2840,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
       .filter(fx => {
         const id = fx?.fixture?.id;
         const kickoff = new Date(fx?.fixture?.date || 0).getTime();
-        return id && !map[id] && kickoff > now && kickoff - now <= 12 * 3600 * 1000;
+        return id && !map[id] && kickoff > now;
       })
       .slice(0, 6);
     await Promise.all(candidates.map(async fx => {
