@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
 Disallow: /admin/
+Disallow: /panel/
 Sitemap: https://scoreocs8.com/sitemap.xml
