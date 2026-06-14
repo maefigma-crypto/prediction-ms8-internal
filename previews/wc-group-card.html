@@ -2,7 +2,7 @@
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=1080, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>WC Card · Group C</title>
+<title>WC Card · Group D</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Outfit:wght@400;500;600;700;800&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
@@ -37,7 +37,7 @@
   .grouptag::before,.grouptag::after{content:'';display:inline-block;width:46px;height:2px;background:linear-gradient(90deg,transparent,#3d8fff);vertical-align:middle;margin:0 14px;}
   .grouptag::after{background:linear-gradient(90deg,#3d8fff,transparent);}
   /* fixtures */
-  .fixtures{display:flex;flex-direction:column;gap:14px;margin-bottom:26px;}
+  .fixtures{display:flex;flex-direction:column;gap:14px;}
   .fx{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:20px 24px;backdrop-filter:blur(6px);}
   .fx-team{display:flex;align-items:center;gap:14px;min-width:0;}
   .fx-team.away{justify-content:flex-end;}
@@ -52,7 +52,10 @@
   .fx-when.live{color:#ff4757;}
   .fx-empty{text-align:center;color:#8a9ab5;font-size:22px;padding:40px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10);border-radius:18px;}
   /* standings */
-  .tablebox{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:10px 24px 16px;backdrop-filter:blur(6px);margin-top:auto;}
+  /* center the fixtures + standings as one block so a 1-fixture day
+     doesn't leave a big void in the middle of the card */
+  .content{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;gap:22px;min-height:0;}
+  .tablebox{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:10px 24px 16px;backdrop-filter:blur(6px);}
   table{width:100%;border-collapse:collapse;}
   thead th{font-family:'DM Mono';font-size:15px;color:#8a9ab5;letter-spacing:.10em;text-transform:uppercase;text-align:center;padding:14px 6px 10px;font-weight:500;}
   thead th.h-team{text-align:left;}
@@ -81,47 +84,45 @@
     </div>
     <div class="title">
       <div class="t1">2026 WORLD CUP</div>
-      <div class="t2">Standings &amp; Fixtures</div>
-      <div class="grouptag">Group C</div>
+      <div class="t2">Results &amp; Standing</div>
+      <div class="grouptag">Group D</div>
     </div>
-    <div class="fixtures"><div class="fx">
-      <div class="fx-team"><img src="https://flagcdn.com/w160/br.png" alt=""><span>Brazil</span></div>
-      <div class="fx-mid"><div class="fx-time">06:00</div><div class="fx-when">Sun, 14 Jun · MYT</div></div>
-      <div class="fx-team away"><span>Morocco</span><img src="https://flagcdn.com/w160/ma.png" alt=""></div>
-    </div><div class="fx">
-      <div class="fx-team"><img src="https://flagcdn.com/w160/ht.png" alt=""><span>Haiti</span></div>
-      <div class="fx-mid"><div class="fx-time">09:00</div><div class="fx-when">Sun, 14 Jun · MYT</div></div>
-      <div class="fx-team away"><span>Scotland</span><img src="https://flagcdn.com/w160/gb-sct.png" alt=""></div>
+    <div class="content">
+      <div class="fixtures"><div class="fx">
+      <div class="fx-team"><img src="https://flagcdn.com/w160/au.png" alt=""><span>Australia</span></div>
+      <div class="fx-mid"><div class="fx-score">2<span>-</span>0</div><div class="fx-when ">FT</div></div>
+      <div class="fx-team away"><span>Türkiye</span><img src="https://flagcdn.com/w160/tr.png" alt=""></div>
     </div></div>
-    <div class="tablebox">
-      <table>
-        <thead><tr><th>#</th><th class="h-team">Team</th><th>PL</th><th>GD</th><th>PTS</th></tr></thead>
-        <tbody><tr class="qual">
+      <div class="tablebox">
+        <table>
+          <thead><tr><th>#</th><th class="h-team">Team</th><th>PL</th><th>GD</th><th>PTS</th></tr></thead>
+          <tbody><tr class="qual">
       <td class="t-rank">1</td>
-      <td class="t-team"><img src="https://flagcdn.com/w160/br.png" alt=""><span>Brazil</span></td>
-      <td>0</td>
-      <td>+0</td>
-      <td class="t-pts">0</td>
+      <td class="t-team"><img src="https://flagcdn.com/w160/us.png" alt=""><span>USA</span></td>
+      <td>1</td>
+      <td>+3</td>
+      <td class="t-pts">3</td>
     </tr><tr class="qual">
       <td class="t-rank">2</td>
-      <td class="t-team"><img src="https://flagcdn.com/w160/gb-sct.png" alt=""><span>Scotland</span></td>
-      <td>0</td>
-      <td>+0</td>
-      <td class="t-pts">0</td>
+      <td class="t-team"><img src="https://flagcdn.com/w160/au.png" alt=""><span>Australia</span></td>
+      <td>1</td>
+      <td>+2</td>
+      <td class="t-pts">3</td>
     </tr><tr>
       <td class="t-rank">3</td>
-      <td class="t-team"><img src="https://flagcdn.com/w160/ma.png" alt=""><span>Morocco</span></td>
-      <td>0</td>
-      <td>+0</td>
+      <td class="t-team"><img src="https://flagcdn.com/w160/tr.png" alt=""><span>Türkiye</span></td>
+      <td>1</td>
+      <td>-2</td>
       <td class="t-pts">0</td>
     </tr><tr>
       <td class="t-rank">4</td>
-      <td class="t-team"><img src="https://flagcdn.com/w160/ht.png" alt=""><span>Haiti</span></td>
-      <td>0</td>
-      <td>+0</td>
+      <td class="t-team"><img src="https://flagcdn.com/w160/py.png" alt=""><span>Paraguay</span></td>
+      <td>1</td>
+      <td>-3</td>
       <td class="t-pts">0</td>
     </tr></tbody>
-      </table>
+        </table>
+      </div>
     </div>
     <div class="foot"><span class="o" style="color:#fff;font-family:'Rajdhani';">OCS8</span> ✕ <span style="color:#fff;">Score<b>OCS8</b></span><span class="dot"></span><span class="tag">Advanced Prediction · Big Win · scoreocs8.com</span></div>
   </div>

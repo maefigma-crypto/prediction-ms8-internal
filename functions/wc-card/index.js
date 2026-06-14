@@ -137,6 +137,12 @@ export async function onRequestGet({ request }) {
     </tr>`;
   }).join('') || `<tr><td colspan="5" class="t-empty">Standings update after the first matches kick off</td></tr>`;
 
+  // Title adapts: once every fixture shown is finished it's a results card,
+  // otherwise it's a fixtures card (live/upcoming).
+  const ftShown = dayMatches.filter(m => ['FT', 'AET', 'PEN'].includes(m.status)).length;
+  const resultsMode = dayMatches.length > 0 && ftShown === dayMatches.length;
+  const subtitle = resultsMode ? 'Results &amp; Standing' : 'Fixtures &amp; Standing';
+
   const html = `<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=1080, initial-scale=1">
@@ -176,7 +182,7 @@ export async function onRequestGet({ request }) {
   .grouptag::before,.grouptag::after{content:'';display:inline-block;width:46px;height:2px;background:linear-gradient(90deg,transparent,#3d8fff);vertical-align:middle;margin:0 14px;}
   .grouptag::after{background:linear-gradient(90deg,#3d8fff,transparent);}
   /* fixtures */
-  .fixtures{display:flex;flex-direction:column;gap:14px;margin-bottom:26px;}
+  .fixtures{display:flex;flex-direction:column;gap:14px;}
   .fx{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:20px 24px;backdrop-filter:blur(6px);}
   .fx-team{display:flex;align-items:center;gap:14px;min-width:0;}
   .fx-team.away{justify-content:flex-end;}
@@ -191,7 +197,10 @@ export async function onRequestGet({ request }) {
   .fx-when.live{color:#ff4757;}
   .fx-empty{text-align:center;color:#8a9ab5;font-size:22px;padding:40px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10);border-radius:18px;}
   /* standings */
-  .tablebox{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:10px 24px 16px;backdrop-filter:blur(6px);margin-top:auto;}
+  /* center the fixtures + standings as one block so a 1-fixture day
+     doesn't leave a big void in the middle of the card */
+  .content{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;gap:22px;min-height:0;}
+  .tablebox{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:10px 24px 16px;backdrop-filter:blur(6px);}
   table{width:100%;border-collapse:collapse;}
   thead th{font-family:'DM Mono';font-size:15px;color:#8a9ab5;letter-spacing:.10em;text-transform:uppercase;text-align:center;padding:14px 6px 10px;font-weight:500;}
   thead th.h-team{text-align:left;}
@@ -220,15 +229,17 @@ export async function onRequestGet({ request }) {
     </div>
     <div class="title">
       <div class="t1">2026 WORLD CUP</div>
-      <div class="t2">Standings &amp; Fixtures</div>
+      <div class="t2">${subtitle}</div>
       <div class="grouptag">Group ${esc(group)}</div>
     </div>
-    <div class="fixtures">${fixtureRows}</div>
-    <div class="tablebox">
-      <table>
-        <thead><tr><th>#</th><th class="h-team">Team</th><th>PL</th><th>GD</th><th>PTS</th></tr></thead>
-        <tbody>${tableRows}</tbody>
-      </table>
+    <div class="content">
+      <div class="fixtures">${fixtureRows}</div>
+      <div class="tablebox">
+        <table>
+          <thead><tr><th>#</th><th class="h-team">Team</th><th>PL</th><th>GD</th><th>PTS</th></tr></thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>
     </div>
     <div class="foot"><span class="o" style="color:#fff;font-family:'Rajdhani';">OCS8</span> ✕ <span style="color:#fff;">Score<b>OCS8</b></span><span class="dot"></span><span class="tag">Advanced Prediction · Big Win · scoreocs8.com</span></div>
   </div>

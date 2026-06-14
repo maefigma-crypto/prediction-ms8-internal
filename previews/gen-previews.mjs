@@ -34,20 +34,21 @@ const resp = await tgResult.onRequestGet({ request: { url: `${SITE}/og/tg-result
 const resultSvg = await resp.text();
 writeFileSync(R('previews/wc-result-card.svg'), resultSvg);
 
-// /wc-card/ group card with MOCKED live data — now WITH country flag logos.
+// /wc-card/ group card — the exact problem case from image 1: Group D with a
+// SINGLE fixture (which used to leave a big empty gap). Now centered + the
+// title auto-switches to "Results & Standing" because the match is FT.
 const scheduleSample = { matches: [
-  { home: { id: 1, name: 'Brazil', logo: FLAG('br') }, away: { id: 2, name: 'Morocco', logo: FLAG('ma') }, date: '2026-06-13T22:00:00+00:00', status: 'NS', goals: {}, group: 'C' },
-  { home: { id: 3, name: 'Haiti', logo: FLAG('ht') }, away: { id: 4, name: 'Scotland', logo: FLAG('gb-sct') }, date: '2026-06-14T01:00:00+00:00', status: 'NS', goals: {}, group: 'C' },
+  { home: { id: 1, name: 'Australia', logo: FLAG('au') }, away: { id: 2, name: 'Türkiye', logo: FLAG('tr') }, date: '2026-06-14T04:00:00+00:00', status: 'FT', goals: { home: 2, away: 0 }, group: 'D' },
 ]};
 const standingsSample = { response: [ { league: { standings: [ [
-  { team: { id: 1, name: 'Brazil', logo: FLAG('br') }, all: { played: 0 }, goalsDiff: 0, points: 0, group: 'Group C' },
-  { team: { id: 4, name: 'Scotland', logo: FLAG('gb-sct') }, all: { played: 0 }, goalsDiff: 0, points: 0, group: 'Group C' },
-  { team: { id: 2, name: 'Morocco', logo: FLAG('ma') }, all: { played: 0 }, goalsDiff: 0, points: 0, group: 'Group C' },
-  { team: { id: 3, name: 'Haiti', logo: FLAG('ht') }, all: { played: 0 }, goalsDiff: 0, points: 0, group: 'Group C' },
+  { team: { id: 3, name: 'USA', logo: FLAG('us') }, all: { played: 1 }, goalsDiff: 3, points: 3, group: 'Group D' },
+  { team: { id: 1, name: 'Australia', logo: FLAG('au') }, all: { played: 1 }, goalsDiff: 2, points: 3, group: 'Group D' },
+  { team: { id: 2, name: 'Türkiye', logo: FLAG('tr') }, all: { played: 1 }, goalsDiff: -2, points: 0, group: 'Group D' },
+  { team: { id: 4, name: 'Paraguay', logo: FLAG('py') }, all: { played: 1 }, goalsDiff: -3, points: 0, group: 'Group D' },
 ] ] } } ] };
 global.fetch = async (url) => ({ ok: true, json: async () => (String(url).includes('standings') ? standingsSample : scheduleSample) });
 const wcCard = await import(R('functions/wc-card/index.js'));
-const wcResp = await wcCard.onRequestGet({ request: { url: `${SITE}/wc-card/?group=C&date=2026-06-13` } });
+const wcResp = await wcCard.onRequestGet({ request: { url: `${SITE}/wc-card/?group=D&date=2026-06-14` } });
 const wcHtml = await wcResp.text();
 writeFileSync(R('previews/wc-group-card.html'), wcHtml);
 

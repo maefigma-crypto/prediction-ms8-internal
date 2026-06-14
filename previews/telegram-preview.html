@@ -21,7 +21,7 @@
 &lt;html lang=&quot;en&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;
 &lt;meta name=&quot;viewport&quot; content=&quot;width=1080, initial-scale=1&quot;&gt;
 &lt;meta name=&quot;robots&quot; content=&quot;noindex,nofollow&quot;&gt;
-&lt;title&gt;WC Card · Group C&lt;/title&gt;
+&lt;title&gt;WC Card · Group D&lt;/title&gt;
 &lt;link rel=&quot;preconnect&quot; href=&quot;https://fonts.googleapis.com&quot;&gt;
 &lt;link rel=&quot;preconnect&quot; href=&quot;https://fonts.gstatic.com&quot; crossorigin&gt;
 &lt;link href=&quot;https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&amp;family=Outfit:wght@400;500;600;700;800&amp;family=DM+Mono:wght@500&amp;display=swap&quot; rel=&quot;stylesheet&quot;&gt;
@@ -56,7 +56,7 @@
   .grouptag::before,.grouptag::after{content:'';display:inline-block;width:46px;height:2px;background:linear-gradient(90deg,transparent,#3d8fff);vertical-align:middle;margin:0 14px;}
   .grouptag::after{background:linear-gradient(90deg,#3d8fff,transparent);}
   /* fixtures */
-  .fixtures{display:flex;flex-direction:column;gap:14px;margin-bottom:26px;}
+  .fixtures{display:flex;flex-direction:column;gap:14px;}
   .fx{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:20px 24px;backdrop-filter:blur(6px);}
   .fx-team{display:flex;align-items:center;gap:14px;min-width:0;}
   .fx-team.away{justify-content:flex-end;}
@@ -71,7 +71,10 @@
   .fx-when.live{color:#ff4757;}
   .fx-empty{text-align:center;color:#8a9ab5;font-size:22px;padding:40px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10);border-radius:18px;}
   /* standings */
-  .tablebox{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:10px 24px 16px;backdrop-filter:blur(6px);margin-top:auto;}
+  /* center the fixtures + standings as one block so a 1-fixture day
+     doesn't leave a big void in the middle of the card */
+  .content{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;gap:22px;min-height:0;}
+  .tablebox{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:10px 24px 16px;backdrop-filter:blur(6px);}
   table{width:100%;border-collapse:collapse;}
   thead th{font-family:'DM Mono';font-size:15px;color:#8a9ab5;letter-spacing:.10em;text-transform:uppercase;text-align:center;padding:14px 6px 10px;font-weight:500;}
   thead th.h-team{text-align:left;}
@@ -100,47 +103,45 @@
     &lt;/div&gt;
     &lt;div class=&quot;title&quot;&gt;
       &lt;div class=&quot;t1&quot;&gt;2026 WORLD CUP&lt;/div&gt;
-      &lt;div class=&quot;t2&quot;&gt;Standings &amp;amp; Fixtures&lt;/div&gt;
-      &lt;div class=&quot;grouptag&quot;&gt;Group C&lt;/div&gt;
+      &lt;div class=&quot;t2&quot;&gt;Results &amp;amp; Standing&lt;/div&gt;
+      &lt;div class=&quot;grouptag&quot;&gt;Group D&lt;/div&gt;
     &lt;/div&gt;
-    &lt;div class=&quot;fixtures&quot;&gt;&lt;div class=&quot;fx&quot;&gt;
-      &lt;div class=&quot;fx-team&quot;&gt;&lt;img src=&quot;https://flagcdn.com/w160/br.png&quot; alt=&quot;&quot;&gt;&lt;span&gt;Brazil&lt;/span&gt;&lt;/div&gt;
-      &lt;div class=&quot;fx-mid&quot;&gt;&lt;div class=&quot;fx-time&quot;&gt;06:00&lt;/div&gt;&lt;div class=&quot;fx-when&quot;&gt;Sun, 14 Jun · MYT&lt;/div&gt;&lt;/div&gt;
-      &lt;div class=&quot;fx-team away&quot;&gt;&lt;span&gt;Morocco&lt;/span&gt;&lt;img src=&quot;https://flagcdn.com/w160/ma.png&quot; alt=&quot;&quot;&gt;&lt;/div&gt;
-    &lt;/div&gt;&lt;div class=&quot;fx&quot;&gt;
-      &lt;div class=&quot;fx-team&quot;&gt;&lt;img src=&quot;https://flagcdn.com/w160/ht.png&quot; alt=&quot;&quot;&gt;&lt;span&gt;Haiti&lt;/span&gt;&lt;/div&gt;
-      &lt;div class=&quot;fx-mid&quot;&gt;&lt;div class=&quot;fx-time&quot;&gt;09:00&lt;/div&gt;&lt;div class=&quot;fx-when&quot;&gt;Sun, 14 Jun · MYT&lt;/div&gt;&lt;/div&gt;
-      &lt;div class=&quot;fx-team away&quot;&gt;&lt;span&gt;Scotland&lt;/span&gt;&lt;img src=&quot;https://flagcdn.com/w160/gb-sct.png&quot; alt=&quot;&quot;&gt;&lt;/div&gt;
+    &lt;div class=&quot;content&quot;&gt;
+      &lt;div class=&quot;fixtures&quot;&gt;&lt;div class=&quot;fx&quot;&gt;
+      &lt;div class=&quot;fx-team&quot;&gt;&lt;img src=&quot;https://flagcdn.com/w160/au.png&quot; alt=&quot;&quot;&gt;&lt;span&gt;Australia&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;fx-mid&quot;&gt;&lt;div class=&quot;fx-score&quot;&gt;2&lt;span&gt;-&lt;/span&gt;0&lt;/div&gt;&lt;div class=&quot;fx-when &quot;&gt;FT&lt;/div&gt;&lt;/div&gt;
+      &lt;div class=&quot;fx-team away&quot;&gt;&lt;span&gt;Türkiye&lt;/span&gt;&lt;img src=&quot;https://flagcdn.com/w160/tr.png&quot; alt=&quot;&quot;&gt;&lt;/div&gt;
     &lt;/div&gt;&lt;/div&gt;
-    &lt;div class=&quot;tablebox&quot;&gt;
-      &lt;table&gt;
-        &lt;thead&gt;&lt;tr&gt;&lt;th&gt;#&lt;/th&gt;&lt;th class=&quot;h-team&quot;&gt;Team&lt;/th&gt;&lt;th&gt;PL&lt;/th&gt;&lt;th&gt;GD&lt;/th&gt;&lt;th&gt;PTS&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
-        &lt;tbody&gt;&lt;tr class=&quot;qual&quot;&gt;
+      &lt;div class=&quot;tablebox&quot;&gt;
+        &lt;table&gt;
+          &lt;thead&gt;&lt;tr&gt;&lt;th&gt;#&lt;/th&gt;&lt;th class=&quot;h-team&quot;&gt;Team&lt;/th&gt;&lt;th&gt;PL&lt;/th&gt;&lt;th&gt;GD&lt;/th&gt;&lt;th&gt;PTS&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+          &lt;tbody&gt;&lt;tr class=&quot;qual&quot;&gt;
       &lt;td class=&quot;t-rank&quot;&gt;1&lt;/td&gt;
-      &lt;td class=&quot;t-team&quot;&gt;&lt;img src=&quot;https://flagcdn.com/w160/br.png&quot; alt=&quot;&quot;&gt;&lt;span&gt;Brazil&lt;/span&gt;&lt;/td&gt;
-      &lt;td&gt;0&lt;/td&gt;
-      &lt;td&gt;+0&lt;/td&gt;
-      &lt;td class=&quot;t-pts&quot;&gt;0&lt;/td&gt;
+      &lt;td class=&quot;t-team&quot;&gt;&lt;img src=&quot;https://flagcdn.com/w160/us.png&quot; alt=&quot;&quot;&gt;&lt;span&gt;USA&lt;/span&gt;&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;+3&lt;/td&gt;
+      &lt;td class=&quot;t-pts&quot;&gt;3&lt;/td&gt;
     &lt;/tr&gt;&lt;tr class=&quot;qual&quot;&gt;
       &lt;td class=&quot;t-rank&quot;&gt;2&lt;/td&gt;
-      &lt;td class=&quot;t-team&quot;&gt;&lt;img src=&quot;https://flagcdn.com/w160/gb-sct.png&quot; alt=&quot;&quot;&gt;&lt;span&gt;Scotland&lt;/span&gt;&lt;/td&gt;
-      &lt;td&gt;0&lt;/td&gt;
-      &lt;td&gt;+0&lt;/td&gt;
-      &lt;td class=&quot;t-pts&quot;&gt;0&lt;/td&gt;
+      &lt;td class=&quot;t-team&quot;&gt;&lt;img src=&quot;https://flagcdn.com/w160/au.png&quot; alt=&quot;&quot;&gt;&lt;span&gt;Australia&lt;/span&gt;&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;+2&lt;/td&gt;
+      &lt;td class=&quot;t-pts&quot;&gt;3&lt;/td&gt;
     &lt;/tr&gt;&lt;tr&gt;
       &lt;td class=&quot;t-rank&quot;&gt;3&lt;/td&gt;
-      &lt;td class=&quot;t-team&quot;&gt;&lt;img src=&quot;https://flagcdn.com/w160/ma.png&quot; alt=&quot;&quot;&gt;&lt;span&gt;Morocco&lt;/span&gt;&lt;/td&gt;
-      &lt;td&gt;0&lt;/td&gt;
-      &lt;td&gt;+0&lt;/td&gt;
+      &lt;td class=&quot;t-team&quot;&gt;&lt;img src=&quot;https://flagcdn.com/w160/tr.png&quot; alt=&quot;&quot;&gt;&lt;span&gt;Türkiye&lt;/span&gt;&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;-2&lt;/td&gt;
       &lt;td class=&quot;t-pts&quot;&gt;0&lt;/td&gt;
     &lt;/tr&gt;&lt;tr&gt;
       &lt;td class=&quot;t-rank&quot;&gt;4&lt;/td&gt;
-      &lt;td class=&quot;t-team&quot;&gt;&lt;img src=&quot;https://flagcdn.com/w160/ht.png&quot; alt=&quot;&quot;&gt;&lt;span&gt;Haiti&lt;/span&gt;&lt;/td&gt;
-      &lt;td&gt;0&lt;/td&gt;
-      &lt;td&gt;+0&lt;/td&gt;
+      &lt;td class=&quot;t-team&quot;&gt;&lt;img src=&quot;https://flagcdn.com/w160/py.png&quot; alt=&quot;&quot;&gt;&lt;span&gt;Paraguay&lt;/span&gt;&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;-3&lt;/td&gt;
       &lt;td class=&quot;t-pts&quot;&gt;0&lt;/td&gt;
     &lt;/tr&gt;&lt;/tbody&gt;
-      &lt;/table&gt;
+        &lt;/table&gt;
+      &lt;/div&gt;
     &lt;/div&gt;
     &lt;div class=&quot;foot&quot;&gt;&lt;span class=&quot;o&quot; style=&quot;color:#fff;font-family:'Rajdhani';&quot;&gt;OCS8&lt;/span&gt; ✕ &lt;span style=&quot;color:#fff;&quot;&gt;Score&lt;b&gt;OCS8&lt;/b&gt;&lt;/span&gt;&lt;span class=&quot;dot&quot;&gt;&lt;/span&gt;&lt;span class=&quot;tag&quot;&gt;Advanced Prediction · Big Win · scoreocs8.com&lt;/span&gt;&lt;/div&gt;
   &lt;/div&gt;
