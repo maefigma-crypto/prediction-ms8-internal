@@ -10,6 +10,7 @@ import {
   buildPreMatchMotdCaption,
   buildMatchUpdateCaption,
   buildWcCardCaption,
+  buildWcUpcomingCaption,
 } from './lib/caption.js';
 import { saveSnap } from './lib/snap.js';
 import * as X from './lib/x.js';
@@ -1777,13 +1778,20 @@ async function checkFinishedMatches(env) {
   // postDailyRecap has its own KV dedup so calling it on every tick after
   // completion is safe.
   let recap = null;
+  let upcoming = null;
   const allDone = queue.length > 0 && queue.every(q => q.posted === true);
   const anyReconciled = queue.some(q => q.correct === true || q.correct === false);
+  if (allDone) {
+    // Post the next day's upcoming-matches card right after the day's last
+    // final whistle. Independent of pick reconciliation (WC matches carry no
+    // pick), KV-deduped so it fires once per day.
+    upcoming = await postWcUpcomingCard(env);
+  }
   if (allDone && anyReconciled) {
     recap = await postDailyRecap(env);
   }
 
-  return { status: 'ok', ...report, total: queue.length, recap };
+  return { status: 'ok', ...report, total: queue.length, recap, upcoming };
 }
 
 // --- Daily recap (event-driven, fires after last FT reconciled) -------------
@@ -1952,6 +1960,40 @@ async function postWorldCupCard(env) {
   }
 }
 
+// --- Upcoming-matches card --------------------------------------------------
+//
+// Screenshots /wc-upcoming/ (next day's fixtures, MatchDay style) and posts it
+// to Telegram. Fired event-driven from checkFinishedMatches once every match
+// in the day's queue is done, so it lands right after the last final whistle.
+// Dedup: posted:wc-upcoming:<date>.
+async function postWcUpcomingCard(env) {
+  if (!env.TG_BOT_TOKEN || !env.TG_CHANNEL_ID) {
+    return { status: 'skipped', reason: 'telegram not configured' };
+  }
+  const date = todayMYT();
+  const dedupKey = `posted:wc-upcoming:${date}`;
+  if (await env.CACHE.get(dedupKey).catch(() => null)) {
+    return { status: 'skipped', reason: 'already posted today', date };
+  }
+  try {
+    const png = await screenshot(env, {
+      url: `${SITE_URL}/wc-upcoming/?v=${Date.now()}`,
+      viewport: { width: 1080, height: 1350 },
+      waitUntil: 'networkidle0',
+      timeoutMs: 30000,
+    });
+    const caption = buildWcUpcomingCaption({ siteUrl: SITE_URL });
+    const msg = await sendPhoto(env, { photoBytes: png, caption });
+    if (msg?.disabled) return { status: 'skipped', reason: 'posting disabled (tg:posting=off)', date };
+    await env.CACHE.put(dedupKey, JSON.stringify({ message_id: msg.message_id, ts: Date.now() }), {
+      expirationTtl: 36 * 3600,
+    });
+    return { status: 'ok', date, message_id: msg.message_id };
+  } catch (e) {
+    return { status: 'error', error: String(e.message || e), date };
+  }
+}
+
 export default {
   async scheduled(event, env, ctx) {
     // Dispatch by cron pattern:
@@ -1985,12 +2027,13 @@ export default {
     if (url.searchParams.get('key') !== env.CRON_SECRET) {
       return new Response('unauthorized', { status: 401 });
     }
-    // Manual triggers: generate | wc-queue | wc-card | post | check | poll | premat | recap | push-test | sportsbook-test
+    // Manual triggers: generate | wc-queue | wc-card | wc-upcoming | post | check | poll | premat | recap | push-test | sportsbook-test
     const task = url.searchParams.get('task') || 'generate';
     let result;
     if (task === 'sportsbook-test') result = await postSportsbookTemplateTest(env);
     else if (task === 'wc-queue') result = await queueWorldCupFixtures(env);
     else if (task === 'wc-card') result = await postWorldCupCard(env);
+    else if (task === 'wc-upcoming') result = await postWcUpcomingCard(env);
     else if (task === 'post') result = await postDailyToAll(env);
     else if (task === 'check') result = await checkFinishedMatches(env);
     else if (task === 'poll') result = await postPrematchPolls(env);

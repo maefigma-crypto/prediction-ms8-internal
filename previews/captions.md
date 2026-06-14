@@ -54,3 +54,21 @@ Brazil 2 — 1 Morocco
 
 #ScoreOcs8 #WC #足球预测
 ```
+
+## Upcoming matches card (after the day’s matches finish)
+
+```
+📅 Upcoming Matches · 即将开赛
+🏆 2026 FIFA World Cup
+
+Next up — all kickoff times in Malaysia Time 🇲🇾 (MYT).
+下一轮赛事，全部为马来西亚时间。
+
+🔗 Full schedule &amp; standings | 完整赛程与积分榜:
+👉 https://scoreocs8.com/predictions/fifa-world-cup/
+
+🆕 Sign up · OCS8 Sports | 立即注册:
+👉 https://ocs8my.com/signup?ref=OCSFMZ6HVI
+
+#WorldCup2026 #ScoreOcs8 #足球预测
+```

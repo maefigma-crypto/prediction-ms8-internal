@@ -313,3 +313,23 @@ export function buildWcCardCaption({ date, siteUrl = 'https://scoreocs8.com' }) 
   const out = lines.join('\n');
   return out.length > 1020 ? out.slice(0, 1017) + '...' : out;
 }
+
+// Caption for the "upcoming matches" card posted after a day's matches finish.
+export function buildWcUpcomingCaption({ siteUrl = 'https://scoreocs8.com' }) {
+  const lines = [];
+  lines.push(`📅 <b>Upcoming Matches · 即将开赛</b>`);
+  lines.push(`🏆 2026 FIFA World Cup`);
+  lines.push('');
+  lines.push(`Next up — all kickoff times in Malaysia Time 🇲🇾 (MYT).`);
+  lines.push(`下一轮赛事，全部为马来西亚时间。`);
+  lines.push('');
+  lines.push(`🔗 <b>Full schedule &amp; standings</b> | 完整赛程与积分榜:`);
+  lines.push(`👉 ${siteUrl}/predictions/fifa-world-cup/`);
+  lines.push('');
+  lines.push(`🆕 <b>Sign up · OCS8 Sports</b> | 立即注册:`);
+  lines.push(`👉 https://ocs8my.com/signup?ref=OCSFMZ6HVI`);
+  lines.push('');
+  lines.push(`#WorldCup2026 #ScoreOcs8 #足球预测`);
+  const out = lines.join('\n');
+  return out.length > 1020 ? out.slice(0, 1017) + '...' : out;
+}

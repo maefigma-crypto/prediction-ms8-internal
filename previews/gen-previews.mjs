@@ -25,6 +25,7 @@ const captions = {
   'Daily WC group card (10:00 MYT)': cap.buildWcCardCaption({ date: today, siteUrl: SITE }),
   'Pre-match update (~KO-30, every WC match)': cap.buildMatchUpdateCaption({ fixture: braMor, siteUrl: SITE }),
   'Full-time result (every WC match, under the image card)': cap.buildResultCaption({ fixture: braMorFT, pickCorrect: null, weekAcc: null, siteUrl: SITE }),
+  'Upcoming matches card (after the day’s matches finish)': cap.buildWcUpcomingCaption({ siteUrl: SITE }),
 };
 
 // /og/tg-result card — with flag logos, NO pick badge.
@@ -51,6 +52,20 @@ const wcCard = await import(R('functions/wc-card/index.js'));
 const wcResp = await wcCard.onRequestGet({ request: { url: `${SITE}/wc-card/?group=D&date=2026-06-14` } });
 const wcHtml = await wcResp.text();
 writeFileSync(R('previews/wc-group-card.html'), wcHtml);
+
+// /wc-upcoming/ — next day's fixtures (MatchDay style). Future dates so the
+// page treats them as upcoming regardless of when this runs.
+const upSched = { matches: [
+  { home: { id: 10, name: 'Qatar', logo: FLAG('qa') }, away: { id: 11, name: 'Switzerland', logo: FLAG('ch') }, date: '2026-06-19T19:00:00+00:00', status: 'NS', goals: {}, group: 'B' },
+  { home: { id: 1, name: 'Brazil', logo: FLAG('br') }, away: { id: 2, name: 'Morocco', logo: FLAG('ma') }, date: '2026-06-19T22:00:00+00:00', status: 'NS', goals: {}, group: 'C' },
+  { home: { id: 3, name: 'Haiti', logo: FLAG('ht') }, away: { id: 4, name: 'Scotland', logo: FLAG('gb-sct') }, date: '2026-06-20T01:00:00+00:00', status: 'NS', goals: {}, group: 'C' },
+  { home: { id: 5, name: 'Australia', logo: FLAG('au') }, away: { id: 6, name: 'Türkiye', logo: FLAG('tr') }, date: '2026-06-20T04:00:00+00:00', status: 'NS', goals: {}, group: 'D' },
+]};
+global.fetch = async (url) => ({ ok: true, json: async () => (String(url).includes('standings') ? { response: [] } : upSched) });
+const wcUpcoming = await import(R('functions/wc-upcoming/index.js'));
+const upResp = await wcUpcoming.onRequestGet({ request: { url: `${SITE}/wc-upcoming/` } });
+const upHtml = await upResp.text();
+writeFileSync(R('previews/wc-upcoming-card.html'), upHtml);
 
 // Master Telegram-style mockup.
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -80,6 +95,8 @@ const master = `<!DOCTYPE html><html><head><meta charset="utf-8">
   ${bubble('2 · Pre-match update (text post, every WC match ~KO-30)', captions['Pre-match update (~KO-30, every WC match)'])}
   ${bubble('3 · Full-time result (image card + caption)', captions['Full-time result (every WC match, under the image card)'],
     `<div class="card">${resultSvg}</div><p class="note">↑ /og/tg-result with logos, no AI-pick badge.</p>`)}
+  ${bubble('4 · Upcoming matches (image post, after the day’s matches finish)', captions['Upcoming matches card (after the day’s matches finish)'],
+    `<iframe class="card" srcdoc="${esc(upHtml).replace(/"/g,'&quot;')}"></iframe><p class="note">↑ /wc-upcoming/ — next day’s fixtures, ScoreOCS8 branded (image 2 style).</p>`)}
 </div></body></html>`;
 writeFileSync(R('previews/telegram-preview.html'), master);
 
