@@ -733,7 +733,7 @@ const SPORTSBOOK_DEFAULTS = {
   prediction: {
     button: '🆕 Sign Up · OCS8 Sports',
     url: SIGNUP_URL,
-    text: `⚽🔥 <b>AI Match Prediction · AI 智能预测</b> 🔥⚽\n⭐ {firstPickLeague}\n\n🏟️ {firstPickName}\n🕐 Kickoff · 开赛: {firstPickKickoff}\n\n⚡ Pro Pick · 智能推荐: <b>{firstPickLabel}</b> 🎯 ({firstPickConfidence})\n\n📊 Full breakdown · 完整分析:\n🔗 {websiteUrl}\n\n{signupCta}\n\n⚠️ 18+ · AI analysis · Not betting advice\n#AIPrediction #ScoreOcs8 #足球预测 ⚽`,
+    text: `⚽🔥 <b>AI Match Prediction · AI 智能预测</b> 🔥⚽\n⭐ {firstPickLeague}\n\n🏟️ {firstPickName}\n🕐 Kickoff · 开赛: {firstPickKickoff}\n\n⚡ Pro Pick · 智能推荐: <b>{firstPickLabel}</b> 🎯 ({firstPickConfidence})\n\n📊 Full breakdown · 完整分析:\n🔗 {websiteUrl}\n\n{signupCta}\n\n⚠️ 18+ · AI analysis\n#AIPrediction #ScoreOcs8 #足球预测 ⚽`,
   },
   upcoming: {
     button: '🆕 Sign Up · OCS8 Sports',

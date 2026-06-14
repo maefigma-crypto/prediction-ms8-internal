@@ -217,7 +217,7 @@ export function buildPreMatchMotdCaption({
   lines.push('');
   lines.push(`🔗 Live tracking: ${siteUrl}/`);
   lines.push('');
-  lines.push(`⚠ 18+ · Not betting advice`);
+  lines.push(`⚠ 18+`);
   lines.push(`#MatchOfTheDay #ScoreOcs8 #足球预测`);
   return lines.join('\n');
 }
@@ -255,7 +255,7 @@ export function buildMatchUpdateCaption({ fixture, siteUrl = 'https://scoreocs8.
   lines.push(`🆕 <b>Sign up · OCS8 Sports</b> | 立即注册:`);
   lines.push(`👉 https://ocs8my.com/signup?ref=OCSFMZ6HVI`);
   lines.push('');
-  lines.push(`⚠ 18+ · Not betting advice`);
+  lines.push(`⚠ 18+`);
   lines.push(`#WorldCup2026 #ScoreOcs8 #足球预测`);
   return lines.join('\n');
 }
