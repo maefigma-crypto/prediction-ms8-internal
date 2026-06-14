@@ -1,0 +1,102 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prediction card — before / after</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Outfit:wght@400;500;600;700&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080b10;--card:#0f1620;--card2:#141e2a;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);--accent:#f97316;--accent2:#ea6a0a;--green:#00e5a0;--blue:#3d8fff;--amber:#f5a623;--text:#e8edf5;--text2:#8a9ab5;--text3:#4a5a72;--ff:'Rajdhani',sans-serif;--fb:'Outfit',sans-serif;--fm:'DM Mono',monospace;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#070a16;color:var(--text);font-family:var(--fb);padding:28px;display:flex;gap:28px;flex-wrap:wrap;justify-content:center;align-items:flex-start}
+.col{width:380px;max-width:100%}
+.col h3{font-family:var(--ff);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:15px;margin-bottom:12px;text-align:center}
+.before h3{color:var(--text2)} .after h3{color:var(--green)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
+
+/* ============ shared structural (same in both) ============ */
+.easy-read{margin-top:0;background:linear-gradient(180deg,rgba(0,229,160,.08),rgba(249,115,22,.06));border:1px solid rgba(0,229,160,.18);border-radius:8px;padding:13px}
+.easy-top{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start;margin-bottom:11px}
+.easy-conf{min-width:84px;text-align:center;background:rgba(8,11,16,.45);border:1px solid var(--border2);border-radius:6px;padding:9px 10px}
+.easy-conf strong{display:block;font-family:var(--ff);font-size:30px;line-height:1;color:var(--green)}
+.quick-vote{margin-top:12px;background:rgba(8,11,16,.42);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:11px}
+.vote-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.vote-btn{min-height:70px;border:1px solid var(--border2);border-radius:12px;background:var(--card2);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:var(--ff)}
+.vote-btn.home{background:linear-gradient(135deg,rgba(61,143,255,.34),rgba(20,30,42,.9))}
+.vote-btn.away{background:linear-gradient(135deg,rgba(249,115,22,.26),rgba(20,30,42,.9))}
+.vote-bar{height:7px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden;margin:10px 0 7px}
+.vote-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--accent));border-radius:99px}
+.easy-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.easy-stat{background:rgba(8,11,16,.35);border:1px solid rgba(255,255,255,.07);border-radius:5px;padding:7px 8px}
+.detail-btn{margin-top:12px;width:100%;display:flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;border:none;border-radius:6px;padding:12px 14px;font-family:var(--ff);font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.pick-help-btn{margin-top:8px;width:100%;display:flex;align-items:center;justify-content:center;background:transparent;color:var(--amber);border:1px solid rgba(245,166,35,.35);border-radius:6px;padding:10px 12px;font-family:var(--ff);font-weight:700}
+
+/* ============ BEFORE (old sizes / dim text) ============ */
+.before .easy-label{font-family:var(--fm);font-size:10px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+.before .easy-pick{font-family:var(--ff);font-size:24px;font-weight:700;line-height:1.1;color:var(--text)}
+.before .easy-conf span{display:block;font-family:var(--fm);font-size:9px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-top:4px}
+.before .easy-why{font-size:15px;color:var(--text2);line-height:1.6;border-top:1px solid rgba(255,255,255,.08);padding-top:11px}
+.before .quick-vote-title{font-family:var(--ff);font-size:17px;font-weight:700;text-align:center;margin-bottom:9px;color:var(--text)}
+.before .vote-btn{font-size:15px}
+.before .vote-row{display:flex;justify-content:space-between;font-family:var(--fm);font-size:11px;color:var(--text2)}
+.before .vote-row strong{font-family:var(--ff);font-size:16px;color:var(--text)}
+.before .vote-note{font-size:11px;color:var(--text3);line-height:1.35;margin-top:7px;text-align:center}
+.before .easy-stat span{display:block;font-family:var(--fm);font-size:8px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px}
+.before .easy-stat strong{display:block;font-family:var(--ff);font-size:15px;font-weight:700;color:var(--text)}
+.before .pick-meaning{font-size:14px;color:var(--green);line-height:1.45;margin-top:7px;font-weight:600}
+.before .detail-btn,.before .pick-help-btn{font-size:15px}
+
+/* ============ AFTER (new sizes / brighter text) ============ */
+.after .easy-label{font-family:var(--fm);font-size:12px;color:var(--text2);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+.after .easy-pick{font-family:var(--ff);font-size:27px;font-weight:700;line-height:1.1;color:var(--text)}
+.after .easy-conf span{display:block;font-family:var(--fm);font-size:11px;color:var(--text2);letter-spacing:.08em;text-transform:uppercase;margin-top:4px}
+.after .easy-why{font-size:16px;color:var(--text2);line-height:1.6;border-top:1px solid rgba(255,255,255,.08);padding-top:11px}
+.after .quick-vote-title{font-family:var(--ff);font-size:19px;font-weight:700;text-align:center;margin-bottom:9px;color:var(--text)}
+.after .vote-btn{font-size:17px}
+.after .vote-row{display:flex;justify-content:space-between;font-family:var(--fm);font-size:13px;color:var(--text2)}
+.after .vote-row strong{font-family:var(--ff);font-size:18px;color:var(--text)}
+.after .vote-note{font-size:13px;color:var(--text2);line-height:1.4;margin-top:7px;text-align:center}
+.after .easy-stat span{display:block;font-family:var(--fm);font-size:10px;color:var(--text2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px}
+.after .easy-stat strong{display:block;font-family:var(--ff);font-size:16px;font-weight:700;color:var(--text)}
+.after .pick-meaning{font-size:15px;color:var(--green);line-height:1.45;margin-top:7px;font-weight:600}
+.after .detail-btn,.after .pick-help-btn{font-size:16px}
+</style></head>
+<body>
+<div class="col before">
+  <h3>Before</h3>
+  <div class="card">
+    <div class="easy-read">
+      <div class="easy-top"><div><div class="easy-label">Quick pick</div><div class="easy-pick">Pro analysis pending</div></div><div class="easy-conf"><strong>--</strong><span>Confidence</span></div></div>
+      <div class="easy-why">Pro analysis opens 12 hours before kickoff (16:00 MYT).</div>
+      <div class="quick-vote">
+        <div class="quick-vote-title">Who will win?</div>
+        <div class="vote-actions"><button class="vote-btn home">Germany</button><button class="vote-btn away">Curaçao</button></div>
+        <div class="vote-bar"><div class="vote-fill" style="width:52%"></div></div>
+        <div class="vote-row"><span><strong>52%</strong> Germany</span><span>Curaçao <strong>48%</strong></span></div>
+        <div class="vote-note">Pro lean preview. Tap a team to save your own customer sentiment on this device.</div>
+      </div>
+      <div class="pick-meaning">Confidence shows how strong the pro analysis rates this pick, not a guaranteed result.</div>
+      <div class="easy-meta"><div class="easy-stat"><span>Risk</span><strong>Pending</strong></div><div class="easy-stat"><span>Kickoff</span><strong>01:00 MYT</strong></div><div class="easy-stat"><span>Market</span><strong>1X2 result</strong></div></div>
+      <a class="detail-btn">Prediction →</a>
+      <button class="pick-help-btn">What does this pick mean?</button>
+    </div>
+  </div>
+</div>
+<div class="col after">
+  <h3>After</h3>
+  <div class="card">
+    <div class="easy-read">
+      <div class="easy-top"><div><div class="easy-label">Quick pick</div><div class="easy-pick">Pro analysis pending</div></div><div class="easy-conf"><strong>--</strong><span>Confidence</span></div></div>
+      <div class="easy-why">Pro analysis opens 12 hours before kickoff (16:00 MYT).</div>
+      <div class="quick-vote">
+        <div class="quick-vote-title">Who will win?</div>
+        <div class="vote-actions"><button class="vote-btn home">Germany</button><button class="vote-btn away">Curaçao</button></div>
+        <div class="vote-bar"><div class="vote-fill" style="width:52%"></div></div>
+        <div class="vote-row"><span><strong>52%</strong> Germany</span><span>Curaçao <strong>48%</strong></span></div>
+        <div class="vote-note">👉 Tap your team to add your vote</div>
+      </div>
+      <div class="pick-meaning">A confidence guide — not a guaranteed result.</div>
+      <div class="easy-meta"><div class="easy-stat"><span>Risk</span><strong>Pending</strong></div><div class="easy-stat"><span>Kickoff</span><strong>01:00 MYT</strong></div><div class="easy-stat"><span>Market</span><strong>1X2 result</strong></div></div>
+      <a class="detail-btn">Prediction →</a>
+      <button class="pick-help-btn">What does this pick mean?</button>
+    </div>
+  </div>
+</div>
+</body></html>
