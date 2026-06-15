@@ -2090,6 +2090,31 @@ export default {
     else if (task === 'poll') result = await postPrematchPolls(env);
     else if (task === 'premat') result = await postPreMatchAlerts(env);
     else if (task === 'recap') result = await postDailyRecap(env);
+    else if (task === 'ft-dump') {
+      // Read-only diagnostic: dump the 3-day ft-queue window so we can see
+      // each entry's real state (posted flag, status note, attempts).
+      const now = Date.now();
+      const { dates, entries } = await loadFtQueueWindow(env);
+      result = {
+        now_iso: new Date(now).toISOString(),
+        dates,
+        count: entries.length,
+        entries: entries.map(e => ({
+          fixture_id: e.fixture_id,
+          match: `${e.home} vs ${e.away}`,
+          kickoff_iso: e.kickoff_iso,
+          due_in_min: Math.round((e.check_at_ms - now) / 60000),
+          posted: e.posted,
+          attempts: e.attempts,
+          is_wc: e.is_wc,
+          is_motd: e.is_motd,
+          correct: e.correct,
+          note: e.note || null,
+          message_id: e.message_id || null,
+          _qdate: e._qdate,
+        })),
+      };
+    }
     else if (task === 'push-test') {
       // Fire a one-shot test push to every subscriber. Useful for verifying
       // VAPID setup before a real event lands.
