@@ -1,0 +1,5 @@
+.wrangler/
+cron/.wrangler/
+_wccard*.html
+_wccard*.png
+downloads/
