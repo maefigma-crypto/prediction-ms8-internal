@@ -297,11 +297,11 @@ export function buildResultCaption({ fixture, pickCorrect = null, weekAcc = null
 // plus the schedule link and signup CTA.
 export function buildWcCardCaption({ date, siteUrl = 'https://scoreocs8.com' }) {
   const lines = [];
-  lines.push(`🏆 <b>2026 World Cup · Today's Group Snapshot</b> | 今日世界杯`);
+  lines.push(`🏆 <b>Today at the World Cup · 今日世界杯</b>`);
   if (date) lines.push(`📅 ${esc(fmtDate(date))}`);
   lines.push('');
-  lines.push(`Standings &amp; fixtures — live in Malaysia Time 🇲🇾`);
-  lines.push(`积分榜与赛程，马来西亚时间实时更新。`);
+  lines.push(`Every match today — scores &amp; kickoffs in Malaysia Time 🇲🇾`);
+  lines.push(`今日全部赛事，比分与开赛时间（马来西亚时间）。`);
   lines.push('');
   lines.push(`🔗 <b>Full schedule &amp; standings</b> | 完整赛程与积分榜:`);
   lines.push(`👉 ${siteUrl}/predictions/fifa-world-cup/`);
