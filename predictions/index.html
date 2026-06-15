@@ -168,5 +168,6 @@ document.querySelectorAll('.tab').forEach(btn => btn.addEventListener('click', (
 document.getElementById('reset').addEventListener('click', () => { document.getElementById('q').value=''; document.getElementById('league').value=''; document.getElementById('date').value=''; render(); });
 load().catch(() => { document.getElementById('grid').innerHTML = '<div class="empty">Could not load predictions right now.</div>'; });
 </script>
+<script src="/betting-tutorial.js" defer></script>
 </body>
 </html>

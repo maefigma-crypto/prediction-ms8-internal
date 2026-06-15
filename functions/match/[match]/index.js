@@ -701,11 +701,12 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
     <h3>Bet on this prediction</h3>
     <p>Open the official OCS8 money-site domain to register, login, and place this pick.</p>
     <a class="cta-btn" href="https://ocs8my.com/signup?ref=OCSFMZ6HVI" target="_blank" rel="noopener">Open OCS8</a>
+    <button type="button" onclick="window.BettingTutorial && window.BettingTutorial.open('1x2')" style="margin-top:12px;background:transparent;color:var(--accent);border:1px solid rgba(249,115,22,.4);border-radius:8px;padding:10px 18px;font-family:var(--ff,'Rajdhani',sans-serif);font-size:14px;font-weight:700;letter-spacing:.04em;cursor:pointer;">📘 See how betting markets settle →</button>
   </div>
 
   <p style="font-size:12px;color:var(--text3);text-align:center;margin-top:30px;">ScoreOcs8 predictions are informational only — not a guarantee. 18+ only.</p>
 </div>
-
+<script src="/betting-tutorial.js" defer></script>
 </body>
 </html>`;
 
