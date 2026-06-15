@@ -1182,6 +1182,56 @@ function todayMYT() {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' });
 }
 
+// MYT date string offset by N days from now (negative = past, positive = future).
+function mytDateOffset(days = 0) {
+  return new Date(Date.now() + days * 86400000)
+    .toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' });
+}
+
+// Load ft-queue entries across yesterday/today/tomorrow MYT buckets.
+//
+// Matches are filed under their KICKOFF MYT date, but the readers fire on a
+// clock that can land on an ADJACENT calendar day: the KO-30 alert and KO-12h
+// poll run the *evening before* a 00:00 MYT kickoff, and a KO+100 FT check can
+// spill past midnight. Reading only ft-queue:<today> therefore silently misses
+// any match sitting in a neighbouring bucket — most visibly the 12:00am MYT
+// fixtures. Scanning a 3-day window fixes that. Each entry is tagged with
+// _qdate so it can be written back to the exact bucket it came from.
+async function loadFtQueueWindow(env) {
+  const dates = [mytDateOffset(-1), mytDateOffset(0), mytDateOffset(1)];
+  const entries = [];
+  const seen = new Set();
+  for (const d of dates) {
+    let raw;
+    try { raw = await env.CACHE.get(`ft-queue:${d}`); } catch { continue; }
+    if (!raw) continue;
+    let arr;
+    try { arr = JSON.parse(raw); } catch { continue; }
+    for (const e of arr) {
+      if (e?.fixture_id == null || seen.has(e.fixture_id)) continue;
+      seen.add(e.fixture_id);
+      entries.push({ ...e, _qdate: d });
+    }
+  }
+  return { dates, entries };
+}
+
+// Persist window entries back to their origin bucket (_qdate), preserving the
+// one-bucket-per-match invariant. Loaded buckets that end up empty are written
+// as [] so removed fixtures don't linger.
+async function saveFtQueueWindow(env, loadedDates, entries, ttlSec) {
+  const byDate = {};
+  for (const d of loadedDates) byDate[d] = [];
+  for (const e of entries) {
+    const { _qdate, ...clean } = e;
+    const d = _qdate || mytDateOffset(0);
+    (byDate[d] = byDate[d] || []).push(clean);
+  }
+  for (const [d, list] of Object.entries(byDate)) {
+    await env.CACHE.put(`ft-queue:${d}`, JSON.stringify(list), { expirationTtl: ttlSec });
+  }
+}
+
 function isoWeekKey(d = new Date()) {
   const tgt = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
   const dayNum = tgt.getUTCDay() || 7;
@@ -1490,11 +1540,10 @@ async function postPreMatchAlerts(env) {
     return { status: 'skipped', reason: 'telegram not configured' };
   }
   const date = todayMYT();
-  const raw = await env.CACHE.get(`ft-queue:${date}`);
-  if (!raw) return { status: 'skipped', reason: 'no queue for today', date };
-
-  let queue;
-  try { queue = JSON.parse(raw); } catch { return { status: 'error', reason: 'bad queue json', date }; }
+  // Scan yesterday/today/tomorrow so 12:00am MYT kickoffs (whose KO-30 window
+  // falls the previous evening) are never missed.
+  const { entries: queue } = await loadFtQueueWindow(env);
+  if (!queue.length) return { status: 'skipped', reason: 'no queued fixtures', date };
 
   const now = Date.now();
   // Window: 15-35 min before kickoff. Wide enough for the */15 heartbeat
@@ -1582,11 +1631,11 @@ async function postPreMatchAlerts(env) {
 
 async function checkFinishedMatches(env) {
   const date = todayMYT();
-  const raw = await env.CACHE.get(`ft-queue:${date}`);
-  if (!raw) return { status: 'skipped', reason: 'no queue for today', date };
-
-  let queue;
-  try { queue = JSON.parse(raw); } catch { return { status: 'error', reason: 'bad queue json', date }; }
+  // Scan yesterday/today/tomorrow so a finished match sitting in an adjacent
+  // bucket (e.g. a 12:00am MYT kickoff, or an FT check that spills past
+  // midnight) is still picked up and posted.
+  const { dates: loadedDates, entries: queue } = await loadFtQueueWindow(env);
+  if (!queue.length) return { status: 'skipped', reason: 'no queued fixtures', date };
 
   const now = Date.now();
   const due = queue.filter(q => !q.posted && q.check_at_ms <= now);
@@ -1768,19 +1817,21 @@ async function checkFinishedMatches(env) {
     }
   }
 
-  // Persist queue with updated states
-  await env.CACHE.put(`ft-queue:${date}`, JSON.stringify(queue), { expirationTtl: 48 * 3600 });
+  // Persist queue with updated states — each entry back to its origin bucket.
+  await saveFtQueueWindow(env, loadedDates, queue, 48 * 3600);
 
   // Event-driven daily recap: when EVERY queued fixture is posted (either
   // FT'd, postponed, or gave-up) AND at least one had a real W/L verdict,
   // fire the recap. Means the recap always lands right after the last
   // match of the day, regardless of whether that's 22:00 or 06:00 MYT.
   // postDailyRecap has its own KV dedup so calling it on every tick after
-  // completion is safe.
+  // completion is safe. Scoped to TODAY's bucket so a 3-day window load
+  // doesn't hold the recap hostage to yesterday's/tomorrow's matches.
   let recap = null;
   let upcoming = null;
-  const allDone = queue.length > 0 && queue.every(q => q.posted === true);
-  const anyReconciled = queue.some(q => q.correct === true || q.correct === false);
+  const todayQueue = queue.filter(q => q._qdate === date);
+  const allDone = todayQueue.length > 0 && todayQueue.every(q => q.posted === true);
+  const anyReconciled = todayQueue.some(q => q.correct === true || q.correct === false);
   if (allDone) {
     // Post the next day's upcoming-matches card right after the day's last
     // final whistle. Independent of pick reconciliation (WC matches carry no
