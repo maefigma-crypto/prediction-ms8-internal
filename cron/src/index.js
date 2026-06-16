@@ -2055,11 +2055,14 @@ export default {
     //                  and event-driven recap triggered from inside
     //                  checkFinishedMatches when the day's queue is done).
     const cron = event.cron || '';
-    if (cron.startsWith('0 1 ')) {
+    if (cron.startsWith('30 16 ')) {
+      // 00:30 MYT — post the "Today at the World Cup" card before the
+      // early-morning kickoffs so it previews the day's matches.
+      ctx.waitUntil(postWorldCupCard(env));
+    } else if (cron.startsWith('0 1 ')) {
       ctx.waitUntil(runSportsbookDaily(env));
     } else if (cron.startsWith('0 2 ')) {
       ctx.waitUntil(postDailyToAll(env));
-      ctx.waitUntil(postWorldCupCard(env));
     } else if (cron.startsWith('*/15 ')) {
       // Heartbeat does three things:
       //   1. KO-30 pre-match alert for the MOTD fixture

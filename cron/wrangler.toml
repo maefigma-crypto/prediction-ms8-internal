@@ -3,6 +3,10 @@ main = "src/index.js"
 compatibility_date = "2025-09-01"
 
 # Cron schedule:
+#   16:30 UTC = 00:30 MYT → postWorldCupCard() — "Today at the World Cup"
+#                          digest, posted just after the MYT day rolls over
+#                          so it previews the day's matches before the
+#                          ~03:00 MYT first kickoff (WC plays 03:00-12:00 MYT).
 #   23:00 UTC = 07:00 MYT → generateDaily() writes content:YYYY-MM-DD
 #   01:00 UTC = 09:00 MYT → runSportsbookDaily() posts sportsbook batch
 #                          (only when panel Automation toggle is ON)
@@ -18,7 +22,7 @@ compatibility_date = "2025-09-01"
 #                  Each early-returns when nothing's due, so idle days
 #                  consume zero API-Football quota.
 [triggers]
-crons = ["0 23 * * *", "0 1 * * *", "0 2 * * *", "*/15 * * * *"]
+crons = ["30 16 * * *", "0 23 * * *", "0 1 * * *", "0 2 * * *", "*/15 * * * *"]
 
 # KV binding — MUST point to the SAME namespace the Pages project uses
 # so Pages can read what this Worker writes.
