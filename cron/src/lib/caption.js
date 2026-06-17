@@ -295,13 +295,21 @@ export function buildResultCaption({ fixture, pickCorrect = null, weekAcc = null
 // Caption for the daily /wc-card/ group digest screenshot. The card image
 // carries the fixtures + standings, so the caption is a short framing line
 // plus the schedule link and signup CTA.
-export function buildWcCardCaption({ date, siteUrl = 'https://scoreocs8.com' }) {
+export function buildWcCardCaption({ date, siteUrl = 'https://scoreocs8.com', recap = false }) {
   const lines = [];
-  lines.push(`🏆 <b>Today at the World Cup · 今日世界杯</b>`);
-  if (date) lines.push(`📅 ${esc(fmtDate(date))}`);
-  lines.push('');
-  lines.push(`Every match today — scores &amp; kickoffs in Malaysia Time 🇲🇾`);
-  lines.push(`今日全部赛事，比分与开赛时间（马来西亚时间）。`);
+  if (recap) {
+    lines.push(`📊 <b>World Cup Daily Recap · 今日回顾</b>`);
+    if (date) lines.push(`📅 ${esc(fmtDate(date))}`);
+    lines.push('');
+    lines.push(`Final scores from today's matches 🏁 (Malaysia Time 🇲🇾)`);
+    lines.push(`今日赛事全场比分（马来西亚时间）。`);
+  } else {
+    lines.push(`🏆 <b>Today at the World Cup · 今日世界杯</b>`);
+    if (date) lines.push(`📅 ${esc(fmtDate(date))}`);
+    lines.push('');
+    lines.push(`Every match today — scores &amp; kickoffs in Malaysia Time 🇲🇾`);
+    lines.push(`今日全部赛事，比分与开赛时间（马来西亚时间）。`);
+  }
   lines.push('');
   lines.push(`🔗 <b>Full schedule &amp; standings</b> | 完整赛程与积分榜:`);
   lines.push(`👉 ${siteUrl}/predictions/fifa-world-cup/`);

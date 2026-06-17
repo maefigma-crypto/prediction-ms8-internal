@@ -1981,14 +1981,18 @@ async function postDailyRecap(env) {
 // kickoff, so the card is always relevant. Dedup: posted:wc-card:<date>.
 //
 // Cost: one Browser Rendering screenshot + one sendPhoto per day.
-async function postWorldCupCard(env) {
+// slot: 'preview' (00:30 MYT, fixtures before kickoff) | 'recap' (15:00 MYT,
+// final scores after the day's matches finish). Same card URL — the page
+// auto-shows kickoff times or FT scores per match — only the dedup key and
+// caption differ, so both can post on the same day.
+async function postWorldCupCard(env, slot = 'preview') {
   if (!env.TG_BOT_TOKEN || !env.TG_CHANNEL_ID) {
     return { status: 'skipped', reason: 'telegram not configured' };
   }
   const date = todayMYT();
-  const dedupKey = `posted:wc-card:${date}`;
+  const dedupKey = (slot === 'recap' ? 'posted:wc-recap:' : 'posted:wc-card:') + date;
   if (await env.CACHE.get(dedupKey).catch(() => null)) {
-    return { status: 'skipped', reason: 'already posted today', date };
+    return { status: 'skipped', reason: 'already posted today', slot, date };
   }
   try {
     const png = await screenshot(env, {
@@ -1997,17 +2001,17 @@ async function postWorldCupCard(env) {
       waitUntil: 'networkidle0',
       timeoutMs: 30000,
     });
-    const caption = buildWcCardCaption({ date, siteUrl: SITE_URL });
+    const caption = buildWcCardCaption({ date, siteUrl: SITE_URL, recap: slot === 'recap' });
     const msg = await sendPhoto(env, { photoBytes: png, caption });
     // sendPhoto returns { disabled: true } when the kill-switch is on — don't
     // burn the dedup slot in that case so it posts once posting is re-enabled.
-    if (msg?.disabled) return { status: 'skipped', reason: 'posting disabled (tg:posting=off)', date };
+    if (msg?.disabled) return { status: 'skipped', reason: 'posting disabled (tg:posting=off)', slot, date };
     await env.CACHE.put(dedupKey, JSON.stringify({ message_id: msg.message_id, ts: Date.now() }), {
       expirationTtl: 36 * 3600,
     });
-    return { status: 'ok', date, message_id: msg.message_id };
+    return { status: 'ok', slot, date, message_id: msg.message_id };
   } catch (e) {
-    return { status: 'error', error: String(e.message || e), date };
+    return { status: 'error', error: String(e.message || e), slot, date };
   }
 }
 
@@ -2056,9 +2060,11 @@ export default {
     //                  checkFinishedMatches when the day's queue is done).
     const cron = event.cron || '';
     if (cron.startsWith('30 16 ')) {
-      // 00:30 MYT — post the "Today at the World Cup" card before the
-      // early-morning kickoffs so it previews the day's matches.
-      ctx.waitUntil(postWorldCupCard(env));
+      // 00:30 MYT — preview card before the early-morning kickoffs.
+      ctx.waitUntil(postWorldCupCard(env, 'preview'));
+    } else if (cron.startsWith('0 7 ')) {
+      // 15:00 MYT — results recap after the day's matches finish.
+      ctx.waitUntil(postWorldCupCard(env, 'recap'));
     } else if (cron.startsWith('0 1 ')) {
       ctx.waitUntil(runSportsbookDaily(env));
     } else if (cron.startsWith('0 2 ')) {
