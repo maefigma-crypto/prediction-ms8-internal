@@ -2087,12 +2087,13 @@ export default {
     if (url.searchParams.get('key') !== env.CRON_SECRET) {
       return new Response('unauthorized', { status: 401 });
     }
-    // Manual triggers: generate | wc-queue | wc-card | wc-upcoming | post | check | poll | premat | recap | push-test | sportsbook-test
+    // Manual triggers: generate | wc-queue | wc-card | wc-recap | wc-upcoming | post | check | poll | premat | recap | push-test | sportsbook-test
     const task = url.searchParams.get('task') || 'generate';
     let result;
     if (task === 'sportsbook-test') result = await postSportsbookTemplateTest(env);
     else if (task === 'wc-queue') result = await queueWorldCupFixtures(env);
-    else if (task === 'wc-card') result = await postWorldCupCard(env);
+    else if (task === 'wc-card') result = await postWorldCupCard(env, 'preview');
+    else if (task === 'wc-recap') result = await postWorldCupCard(env, 'recap');
     else if (task === 'wc-upcoming') result = await postWcUpcomingCard(env);
     else if (task === 'post') result = await postDailyToAll(env);
     else if (task === 'check') result = await checkFinishedMatches(env);
