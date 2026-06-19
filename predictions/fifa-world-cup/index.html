@@ -193,6 +193,9 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-co
 .ltn{font-family:var(--ff);font-size:13px;font-weight:600;}
 .ltv{text-align:center;color:var(--text2);}
 .ltpts{text-align:center;font-family:var(--ff);font-size:14px;font-weight:700;color:var(--accent);}
+.lt-group{font-family:var(--ff);font-weight:700;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin:16px 0 2px;padding-top:12px;border-top:1px solid var(--border);}
+.lt-group:first-child{margin-top:0;padding-top:0;border-top:none;}
+#standings-table{max-height:540px;overflow-y:auto;}
 
 /* TG CTA sidebar */
 .tg-cta{background:linear-gradient(135deg,#1a3a4a,#0d1e2a);border:1px solid rgba(34,158,217,.3);border-radius:8px;padding:1.25rem;text-align:center;}
@@ -556,12 +559,18 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeBurger();});
     if (!matches.length) empty(matchHost, 'No upcoming fixtures from the API right now. Check back later — the feed updates hourly.');
     else matchHost.innerHTML = matches.map(matchCard).join('');
 
-    // Standings — knockout comps (UCL, FIFA WC) will return empty.
+    // Standings — the World Cup returns ONE table per group (A-L), so render
+    // every group, each with its own label + header. (A pure-knockout comp or
+    // a tournament with no group tables yet falls back to the empty message.)
     const st = await getJSON(`/api/standings?league=${L.api_id}&season=${encodeURIComponent(L.api_season||'')}`);
-    const rows = st?.response?.[0]?.league?.standings?.[0];
-    if (!rows?.length) empty(stHost, `${L.short || L.name} is a knockout competition or has no league table available.`);
+    const groups = (st?.response?.[0]?.league?.standings || []).filter(g => Array.isArray(g) && g.length);
+    if (!groups.length) empty(stHost, `${L.short || L.name} has no group standings available yet — check back once the group stage kicks off.`);
     else {
-      stHost.innerHTML = `<div class="ltrow header"><div>#</div><div>Team</div><div>P</div><div>W</div><div>D</div><div>L</div><div>PTS</div></div>` + rows.slice(0, 10).map(tableRow).join('');
+      const header = `<div class="ltrow header"><div>#</div><div>Team</div><div>P</div><div>W</div><div>D</div><div>L</div><div>PTS</div></div>`;
+      stHost.innerHTML = groups.map(group => {
+        const label = group[0]?.group ? `<div class="lt-group">${esc(group[0].group)}</div>` : '';
+        return label + header + group.map(tableRow).join('');
+      }).join('');
     }
   }
 
