@@ -2005,13 +2005,13 @@ async function countWcMatchesForDay(env, dayKey) {
   }
 }
 
-async function postWorldCupCard(env, slot = 'preview') {
+async function postWorldCupCard(env, slot = 'preview', opts = {}) {
   if (!env.TG_BOT_TOKEN || !env.TG_CHANNEL_ID) {
     return { status: 'skipped', reason: 'telegram not configured' };
   }
   const date = todayMYT();
   const dedupKey = (slot === 'recap' ? 'posted:wc-recap:' : 'posted:wc-card:') + date;
-  if (await env.CACHE.get(dedupKey).catch(() => null)) {
+  if (!opts.force && await env.CACHE.get(dedupKey).catch(() => null)) {
     return { status: 'skipped', reason: 'already posted today', slot, date };
   }
   // Never post a blank "0 MATCHES" card. Skip (without burning the dedup slot)
@@ -2070,13 +2070,13 @@ async function countUpcomingWcMatches(env) {
   }
 }
 
-async function postWcUpcomingCard(env) {
+async function postWcUpcomingCard(env, opts = {}) {
   if (!env.TG_BOT_TOKEN || !env.TG_CHANNEL_ID) {
     return { status: 'skipped', reason: 'telegram not configured' };
   }
   const date = todayMYT();
   const dedupKey = `posted:wc-upcoming:${date}`;
-  if (await env.CACHE.get(dedupKey).catch(() => null)) {
+  if (!opts.force && await env.CACHE.get(dedupKey).catch(() => null)) {
     return { status: 'skipped', reason: 'already posted today', date };
   }
   // Never post a blank card. If there are no upcoming matches right now, skip
@@ -2144,12 +2144,15 @@ export default {
     }
     // Manual triggers: generate | wc-queue | wc-card | wc-recap | wc-upcoming | post | check | poll | premat | recap | push-test | sportsbook-test
     const task = url.searchParams.get('task') || 'generate';
+    // ?force=1 re-posts a card even if today's dedup flag is already set
+    // (e.g. an earlier blank card burned the slot).
+    const force = url.searchParams.get('force') === '1';
     let result;
     if (task === 'sportsbook-test') result = await postSportsbookTemplateTest(env);
     else if (task === 'wc-queue') result = await queueWorldCupFixtures(env);
-    else if (task === 'wc-card') result = await postWorldCupCard(env, 'preview');
-    else if (task === 'wc-recap') result = await postWorldCupCard(env, 'recap');
-    else if (task === 'wc-upcoming') result = await postWcUpcomingCard(env);
+    else if (task === 'wc-card') result = await postWorldCupCard(env, 'preview', { force });
+    else if (task === 'wc-recap') result = await postWorldCupCard(env, 'recap', { force });
+    else if (task === 'wc-upcoming') result = await postWcUpcomingCard(env, { force });
     else if (task === 'post') result = await postDailyToAll(env);
     else if (task === 'check') result = await checkFinishedMatches(env);
     else if (task === 'poll') result = await postPrematchPolls(env);
