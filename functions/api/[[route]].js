@@ -155,16 +155,35 @@ async function handleWcSchedule(env, url) {
   const season = seasonFor(1);
   return cached(env, `wc:schedule:${season}`, TTL.fixtures, async () => {
     const [fixturesData, standingsData] = await Promise.all([
-      afGet(env, '/fixtures', { league: 1, season }),
+      afGet(env, '/fixtures', { league: 1, season }).catch(() => ({ response: [] })),
       afGet(env, '/standings', { league: 1, season }).catch(() => ({ response: [] })),
     ]);
+    // The bare league+season /fixtures query occasionally comes back empty
+    // (API-Football hiccup / plan quirk) even though paginated queries return
+    // data. Fall back to next/last/date — the same calls /api/fixtures uses
+    // successfully — and merge+dedupe so the schedule is never empty when
+    // fixtures actually exist.
+    let fixturesResp = fixturesData.response || [];
+    if (!fixturesResp.length) {
+      const today = new Date().toISOString().slice(0, 10);
+      const [next, last, todayM] = await Promise.all([
+        afGet(env, '/fixtures', { league: 1, season, next: 40 }).catch(() => ({ response: [] })),
+        afGet(env, '/fixtures', { league: 1, season, last: 20 }).catch(() => ({ response: [] })),
+        afGet(env, '/fixtures', { league: 1, season, date: today }).catch(() => ({ response: [] })),
+      ]);
+      const byId = new Map();
+      for (const arr of [last.response, todayM.response, next.response]) {
+        for (const fx of (arr || [])) if (fx.fixture?.id != null) byId.set(fx.fixture.id, fx);
+      }
+      fixturesResp = [...byId.values()];
+    }
     const groupOf = {};
     for (const group of standingsData.response?.[0]?.league?.standings || []) {
       for (const row of group) {
         if (row.team?.id) groupOf[row.team.id] = row.group || '';
       }
     }
-    const matches = (fixturesData.response || []).map(fx => {
+    const matches = fixturesResp.map(fx => {
       const homeGroup = groupOf[fx.teams?.home?.id] || '';
       const awayGroup = groupOf[fx.teams?.away?.id] || '';
       return {

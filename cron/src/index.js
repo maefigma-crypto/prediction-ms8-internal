@@ -1985,6 +1985,26 @@ async function postDailyRecap(env) {
 // final scores after the day's matches finish). Same card URL — the page
 // auto-shows kickoff times or FT scores per match — only the dedup key and
 // caption differ, so both can post on the same day.
+// Count World Cup matches whose kickoff falls on the given MYT day. Used to
+// guard the daily digest card from posting "0 MATCHES". Reads wc-schedule,
+// falling back to /api/fixtures (the source the predictions page uses).
+async function countWcMatchesForDay(env, dayKey) {
+  const mytKey = iso => { try { return new Date(iso).toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' }); } catch { return ''; } };
+  try {
+    const sched = await fetch(`${SITE_URL}/api/wc-schedule`).then(r => r.ok ? r.json() : null).catch(() => null);
+    let dates = (sched?.matches || []).map(m => m.date);
+    if (!dates.length) {
+      const fx = await fetch(`${SITE_URL}/api/fixtures?league=1&season=2026`).then(r => r.ok ? r.json() : null).catch(() => null);
+      const lg = fx?.leagues?.[0];
+      const buckets = lg ? [...(lg.today || []), ...(lg.next || []), ...(lg.last || [])] : [];
+      dates = buckets.map(f => f.fixture?.date);
+    }
+    return dates.filter(d => mytKey(d) === dayKey).length;
+  } catch {
+    return 0;
+  }
+}
+
 async function postWorldCupCard(env, slot = 'preview') {
   if (!env.TG_BOT_TOKEN || !env.TG_CHANNEL_ID) {
     return { status: 'skipped', reason: 'telegram not configured' };
@@ -1993,6 +2013,12 @@ async function postWorldCupCard(env, slot = 'preview') {
   const dedupKey = (slot === 'recap' ? 'posted:wc-recap:' : 'posted:wc-card:') + date;
   if (await env.CACHE.get(dedupKey).catch(() => null)) {
     return { status: 'skipped', reason: 'already posted today', slot, date };
+  }
+  // Never post a blank "0 MATCHES" card. Skip (without burning the dedup slot)
+  // when nothing is scheduled for today so a later tick retries once data lands.
+  const todayCount = await countWcMatchesForDay(env, date);
+  if (todayCount === 0) {
+    return { status: 'skipped', reason: 'no WC matches today', slot, date };
   }
   try {
     const png = await screenshot(env, {
