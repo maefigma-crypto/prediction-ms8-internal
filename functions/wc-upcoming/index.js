@@ -59,7 +59,25 @@ export async function onRequestGet({ request }) {
     getJSON(`${SITE}/api/wc-schedule`),
     getJSON(`${SITE}/api/standings?league=1&season=2026`),
   ]);
-  const matches = sched?.matches || [];
+  let matches = sched?.matches || [];
+  // Fallback: if /api/wc-schedule is momentarily empty/unavailable, derive the
+  // fixtures from /api/fixtures — the same source the predictions page uses —
+  // so the card is never blank when data actually exists.
+  if (!matches.length) {
+    const fxData = await getJSON(`${SITE}/api/fixtures?league=1&season=2026`);
+    const lg = fxData?.leagues?.[0];
+    const buckets = lg ? [...(lg.today || []), ...(lg.next || []), ...(lg.last || [])] : [];
+    matches = buckets.map(f => ({
+      fixture_id: f.fixture?.id,
+      date: f.fixture?.date,
+      status: f.fixture?.status?.short || 'NS',
+      group: '',
+      venue: f.fixture?.venue?.name || '',
+      city: f.fixture?.venue?.city || '',
+      home: { id: f.teams?.home?.id, name: f.teams?.home?.name || 'TBD', logo: f.teams?.home?.logo || '' },
+      away: { id: f.teams?.away?.id, name: f.teams?.away?.name || 'TBD', logo: f.teams?.away?.logo || '' },
+    }));
+  }
   const groups = standings?.response?.[0]?.league?.standings || [];
 
   // team -> group letter, so we can label each match even when the schedule's

@@ -2021,6 +2021,29 @@ async function postWorldCupCard(env, slot = 'preview') {
 // to Telegram. Fired event-driven from checkFinishedMatches once every match
 // in the day's queue is done, so it lands right after the last final whistle.
 // Dedup: posted:wc-upcoming:<date>.
+// Count upcoming World Cup matches from the same sources the card uses, so we
+// never screenshot+post a blank "Upcoming Matches" card. Falls back to
+// /api/fixtures (the source the predictions page uses) if wc-schedule is empty.
+async function countUpcomingWcMatches(env) {
+  const now = Date.now();
+  const FIN = new Set(['FT', 'AET', 'PEN', 'AWD', 'WO']);
+  const upcoming = (date, status) =>
+    !FIN.has(status) && new Date(date).getTime() > now - 15 * 60 * 1000;
+  try {
+    const sched = await fetch(`${SITE_URL}/api/wc-schedule`).then(r => r.ok ? r.json() : null).catch(() => null);
+    let matches = (sched?.matches || []).map(m => ({ date: m.date, status: m.status }));
+    if (!matches.length) {
+      const fx = await fetch(`${SITE_URL}/api/fixtures?league=1&season=2026`).then(r => r.ok ? r.json() : null).catch(() => null);
+      const lg = fx?.leagues?.[0];
+      const buckets = lg ? [...(lg.today || []), ...(lg.next || [])] : [];
+      matches = buckets.map(f => ({ date: f.fixture?.date, status: f.fixture?.status?.short || 'NS' }));
+    }
+    return matches.filter(m => upcoming(m.date, m.status)).length;
+  } catch {
+    return 0; // on error, treat as "no data" and skip — better blank than wrong
+  }
+}
+
 async function postWcUpcomingCard(env) {
   if (!env.TG_BOT_TOKEN || !env.TG_CHANNEL_ID) {
     return { status: 'skipped', reason: 'telegram not configured' };
@@ -2029,6 +2052,12 @@ async function postWcUpcomingCard(env) {
   const dedupKey = `posted:wc-upcoming:${date}`;
   if (await env.CACHE.get(dedupKey).catch(() => null)) {
     return { status: 'skipped', reason: 'already posted today', date };
+  }
+  // Never post a blank card. If there are no upcoming matches right now, skip
+  // WITHOUT setting the dedup flag so a later heartbeat retries once data lands.
+  const upcomingCount = await countUpcomingWcMatches(env);
+  if (upcomingCount === 0) {
+    return { status: 'skipped', reason: 'no upcoming WC matches yet', date };
   }
   try {
     const png = await screenshot(env, {
