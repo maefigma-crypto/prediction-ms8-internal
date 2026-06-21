@@ -1182,6 +1182,15 @@ function todayMYT() {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' });
 }
 
+// Current hour/minute in MYT, for time-gating heartbeat-driven posts.
+function nowMytHM() {
+  const s = new Date().toLocaleTimeString('en-GB', {
+    timeZone: 'Asia/Kuala_Lumpur', hour12: false, hour: '2-digit', minute: '2-digit',
+  });
+  const [h, m] = s.split(':').map(n => parseInt(n, 10));
+  return { h, m };
+}
+
 // MYT date string offset by N days from now (negative = past, positive = future).
 function mytDateOffset(days = 0) {
   return new Date(Date.now() + days * 86400000)
@@ -2114,13 +2123,7 @@ export default {
     //                  and event-driven recap triggered from inside
     //                  checkFinishedMatches when the day's queue is done).
     const cron = event.cron || '';
-    if (cron.startsWith('30 16 ')) {
-      // 00:30 MYT — preview card before the early-morning kickoffs.
-      ctx.waitUntil(postWorldCupCard(env, 'preview'));
-    } else if (cron.startsWith('0 7 ')) {
-      // 15:00 MYT — results recap after the day's matches finish.
-      ctx.waitUntil(postWorldCupCard(env, 'recap'));
-    } else if (cron.startsWith('0 1 ')) {
+    if (cron.startsWith('0 1 ')) {
       ctx.waitUntil(runSportsbookDaily(env));
     } else if (cron.startsWith('0 2 ')) {
       ctx.waitUntil(postDailyToAll(env));
@@ -2133,6 +2136,18 @@ export default {
       ctx.waitUntil(postPreMatchAlerts(env));
       ctx.waitUntil(postPrematchPolls(env));
       ctx.waitUntil(checkFinishedMatches(env));
+      // 'Today at the World Cup' digest. This used to depend on dedicated
+      // 30-16 / 0-7 UTC cron triggers that were never registered in
+      // wrangler.toml, so it silently stopped posting. Drive it from the
+      // heartbeat instead, time-gated to a window (so a transient failure
+      // retries on the next tick) and protected by the same per-day dedup so
+      // each card still posts exactly once.
+      const { h, m } = nowMytHM();
+      if ((h === 0 && m >= 30) || (h >= 1 && h < 3)) {
+        ctx.waitUntil(postWorldCupCard(env, 'preview')); // ~00:30 MYT, before kickoffs
+      } else if (h >= 15 && h < 17) {
+        ctx.waitUntil(postWorldCupCard(env, 'recap'));    // ~15:00 MYT, after the slate
+      }
     } else {
       ctx.waitUntil(generateDaily(env));
     }
