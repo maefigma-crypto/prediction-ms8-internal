@@ -2179,6 +2179,22 @@ export default {
     else if (task === 'poll') result = await postPrematchPolls(env);
     else if (task === 'premat') result = await postPreMatchAlerts(env);
     else if (task === 'recap') result = await postDailyRecap(env);
+    else if (task === 'posting') {
+      // Read or flip the global Telegram kill-switch (KV tg:posting).
+      //   ?task=posting              → report current state
+      //   ?task=posting&set=on|off   → enable / silence channel posting
+      const set = url.searchParams.get('set');
+      if (set === 'on') {
+        await env.CACHE.put('tg:posting', 'on');
+        result = { posting: 'on', changed: true, note: 'channel posting ENABLED' };
+      } else if (set === 'off') {
+        await env.CACHE.put('tg:posting', 'off');
+        result = { posting: 'off', changed: true, note: 'channel posting SILENCED' };
+      } else {
+        const v = await env.CACHE.get('tg:posting');
+        result = { posting: v === 'off' ? 'off' : 'on', raw: v ?? null, silenced: v === 'off' };
+      }
+    }
     else if (task === 'ft-dump') {
       // Read-only diagnostic: dump the 3-day ft-queue window so we can see
       // each entry's real state (posted flag, status note, attempts).
