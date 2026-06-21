@@ -2084,19 +2084,23 @@ async function postWcUpcomingCard(env, opts = {}) {
     return { status: 'skipped', reason: 'telegram not configured' };
   }
   const date = todayMYT();
-  const dedupKey = `posted:wc-upcoming:${date}`;
+  // opts.date pins the card to a specific MYT day (e.g. force-post 2026-06-22);
+  // otherwise the card auto-selects the next upcoming match day.
+  const dedupKey = `posted:wc-upcoming:${opts.date || date}`;
   if (!opts.force && await env.CACHE.get(dedupKey).catch(() => null)) {
-    return { status: 'skipped', reason: 'already posted today', date };
+    return { status: 'skipped', reason: 'already posted', date: opts.date || date };
   }
-  // Never post a blank card. If there are no upcoming matches right now, skip
-  // WITHOUT setting the dedup flag so a later heartbeat retries once data lands.
-  const upcomingCount = await countUpcomingWcMatches(env);
-  if (upcomingCount === 0) {
-    return { status: 'skipped', reason: 'no upcoming WC matches yet', date };
+  // Never post a blank card. If there are no matches for the target window,
+  // skip WITHOUT setting the dedup flag so a later heartbeat retries.
+  const matchCount = opts.date
+    ? await countWcMatchesForDay(env, opts.date)
+    : await countUpcomingWcMatches(env);
+  if (matchCount === 0) {
+    return { status: 'skipped', reason: 'no matches for that day', date: opts.date || date };
   }
   try {
     const png = await screenshot(env, {
-      url: `${SITE_URL}/wc-upcoming/?v=${Date.now()}`,
+      url: `${SITE_URL}/wc-upcoming/?v=${Date.now()}${opts.date ? `&date=${encodeURIComponent(opts.date)}` : ''}`,
       viewport: { width: 1080, height: 1350 },
       waitUntil: 'networkidle0',
       timeoutMs: 30000,
@@ -2107,9 +2111,9 @@ async function postWcUpcomingCard(env, opts = {}) {
     await env.CACHE.put(dedupKey, JSON.stringify({ message_id: msg.message_id, ts: Date.now() }), {
       expirationTtl: 36 * 3600,
     });
-    return { status: 'ok', date, message_id: msg.message_id };
+    return { status: 'ok', date: opts.date || date, message_id: msg.message_id };
   } catch (e) {
-    return { status: 'error', error: String(e.message || e), date };
+    return { status: 'error', error: String(e.message || e), date: opts.date || date };
   }
 }
 
@@ -2162,12 +2166,14 @@ export default {
     // ?force=1 re-posts a card even if today's dedup flag is already set
     // (e.g. an earlier blank card burned the slot).
     const force = url.searchParams.get('force') === '1';
+    // ?date=YYYY-MM-DD pins the upcoming card to a specific MYT day.
+    const wantDate = url.searchParams.get('date') || '';
     let result;
     if (task === 'sportsbook-test') result = await postSportsbookTemplateTest(env);
     else if (task === 'wc-queue') result = await queueWorldCupFixtures(env);
     else if (task === 'wc-card') result = await postWorldCupCard(env, 'preview', { force });
     else if (task === 'wc-recap') result = await postWorldCupCard(env, 'recap', { force });
-    else if (task === 'wc-upcoming') result = await postWcUpcomingCard(env, { force });
+    else if (task === 'wc-upcoming') result = await postWcUpcomingCard(env, { force, date: wantDate || undefined });
     else if (task === 'post') result = await postDailyToAll(env);
     else if (task === 'check') result = await checkFinishedMatches(env);
     else if (task === 'poll') result = await postPrematchPolls(env);
