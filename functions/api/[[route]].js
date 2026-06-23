@@ -606,10 +606,11 @@ Respond with exactly this JSON shape:
   "pickLabel": "<team name or 'Draw'>",
   "confidence": <integer 0-100>,
   "probabilities": { "home": <int>, "draw": <int>, "away": <int> },
+  "correctScore": "<most likely final score as home-away, e.g. 2-1>",
   "risk": "LOW" | "MEDIUM" | "HIGH",
   "analysis": "<2-3 sentence reasoning>"
 }
-Probabilities must sum to 100. Risk is LOW if confidence>=70, MEDIUM if 50-69, HIGH if <50.`;
+Probabilities must sum to 100. correctScore must agree with the pick (the picked side scores more; equal for a Draw). Risk is LOW if confidence>=70, MEDIUM if 50-69, HIGH if <50.`;
 }
 
 // Data-driven "form & matchup" preview — built from the fixture and recent
@@ -662,7 +663,17 @@ function buildFormPreview(fx, h2h = []) {
   else if (edge === 'away') parts.push(`Recent meetings lean towards ${away} — a form-and-history guide, not a guaranteed result.`);
   else parts.push(`There's little between them on record; home advantage gives ${home} a slight edge in a tie that looks finely balanced.`);
 
-  return { pick, pickLabel, confidence, probabilities, risk, analysis: parts.join(' '), source: 'form' };
+  // Correct-score projection from the lean + how open the tie reads. The
+  // favourite's margin widens with confidence; total goals nudge off recent
+  // H2H scoring (or a sensible default when there's no record).
+  const avgTotal = n > 0 ? (gf + ga) / n : 2.4 + (seed % 3) * 0.3;
+  const favGoals = confidence >= 62 ? (avgTotal >= 3.2 ? 3 : 2) : 2;
+  const dogGoals = confidence >= 62 ? (avgTotal >= 3.5 ? 1 : 0) : 1;
+  const scoreHome = pick === 'AWAY' ? dogGoals : favGoals;
+  const scoreAway = pick === 'AWAY' ? favGoals : dogGoals;
+  const correctScore = `${scoreHome}-${scoreAway}`;
+
+  return { pick, pickLabel, confidence, probabilities, risk, correctScore, analysis: parts.join(' '), source: 'form' };
 }
 
 const HIGHLIGHT_FINISHED = new Set(['FT', 'AET', 'PEN']);

@@ -244,6 +244,9 @@ export async function onRequest(context) {
   const reason = pickRaw?.reason || pickRaw?.analysis || '';
   // Label honestly: premium AI pick vs the data-driven form preview.
   const pickKindLabel = pickRaw?.source === 'ai' ? 'Pro Pick' : 'Form Pick';
+  // Predicted correct score (e.g. "2-1" = home-away), rendered with team names.
+  const csRaw = String(pickRaw?.correctScore || '').match(/(\d+)\s*[-–:]\s*(\d+)/);
+  const predScore = csRaw ? { h: csRaw[1], a: csRaw[2] } : null;
 
   // Related blog posts that mention either team (when any exist).
   const relatedPosts = Array.isArray(posts)
@@ -583,6 +586,10 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
           <div class="conf">${esc(confidence)}</div>
         </div>
       </div>
+      ${predScore ? `<div class="pick-score" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;padding:12px 14px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);">
+        <span class="label">Predicted score</span>
+        <span style="font-family:var(--ff);font-weight:700;font-size:16px;">${esc(home)} <span style="color:var(--accent);">${esc(predScore.h)}–${esc(predScore.a)}</span> ${esc(away)}</span>
+      </div>` : ''}
       ${reason ? `<div class="pick-reason">${esc(reason)}</div>` : ''}
     </div>
   </article>
