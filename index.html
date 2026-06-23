@@ -3330,8 +3330,9 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     if (!live) return;
     const liveSet = new Set((live.response || []).map(fx => fx.fixture.id));
     // If any live match appears, re-render with fresh fixtures
-    const fresh = await getJSON(API + '/fixtures');
-    const all = wcFirst(flattenFixtures(fresh));
+    const fresh = await getJSON(API + '/fixtures?league=1&season=2026');
+    const wcFresh = flattenFixtures(fresh);
+    const all = wcFresh.length ? wcFresh : state.all;
     state.all = all;
     renderPreds(all, state.aiMap, state.slipMap);
     renderLiveCenter(all, state.aiMap, state.slipMap);
@@ -3339,13 +3340,18 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
   }
 
   async function main() {
-    const [fixtures, standings, topScorers, slipBundle] = await Promise.all([
+    const [wcFixtures, fixtures, standings, topScorers, slipBundle] = await Promise.all([
+      getJSON(API + '/fixtures?league=1&season=2026'),
       getJSON(API + '/fixtures'),
       getJSON(API + '/standings?league=39&season=2025'),
       getJSON(API + '/topscorers?league=39&season=2025'),
       loadSlipMap(),
     ]);
-    const all = wcFirst(flattenFixtures(fixtures));
+    // World Cup section: source WC fixtures DIRECTLY (league 1) so it shows
+    // every World Cup match and never falls back to stale domestic-league
+    // (e.g. May Champions League) results. Mixed feed is only a last resort.
+    const wcList = flattenFixtures(wcFixtures);
+    const all = wcList.length ? wcList : wcFirst(flattenFixtures(fixtures));
     const aiMap = await loadAIMap(all);
     const state = { all, aiMap, slipMap: slipBundle.map };
     window.predictionState = state;
