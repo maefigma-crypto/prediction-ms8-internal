@@ -245,7 +245,7 @@ body > nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-it
 .sptabs{display:flex;gap:4px;margin-bottom:1.5rem;background:var(--card);padding:4px;border-radius:6px;border:1px solid var(--border);width:fit-content;}
 .sptab{font-family:var(--ff);font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:7px 18px;border-radius:4px;border:none;background:transparent;color:var(--text3);cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;}
 .sptab.active{background:var(--accent);color:#fff;}.sptab:hover:not(.active){color:var(--text);}
-.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:16px;}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(440px,1fr));gap:18px;}
 .pc{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color .2s,transform .2s;cursor:pointer;}
 .pc:hover{border-color:rgba(249,115,22,.35);transform:translateY(-2px);}
 .pch{background:var(--card2);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
@@ -300,6 +300,13 @@ body > nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-it
 .vote-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--accent));border-radius:99px;transition:width .35s ease;}
 .vote-row{display:flex;justify-content:space-between;gap:12px;font-family:var(--fm);font-size:15px;color:var(--text2);}
 .vote-row strong{font-family:var(--ff);font-size:21px;color:var(--text);}
+.pred-results{margin-top:12px;background:rgba(8,11,16,.35);border:1px solid rgba(249,115,22,.22);border-radius:8px;padding:11px 13px;}
+.pred-score-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.pred-score-row span{font-family:var(--fm);font-size:11px;color:var(--text2);letter-spacing:.08em;text-transform:uppercase;}
+.pred-score-row strong{font-family:var(--ff);font-size:18px;font-weight:700;color:var(--text);}
+.pred-score-row em{font-style:normal;color:var(--accent);font-size:21px;padding:0 4px;}
+.pred-1x2{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:9px;font-family:var(--fm);font-size:11px;color:var(--text2);}
+.pred-1x2 .p-h{color:#00e5a0;}.pred-1x2 .p-a{color:var(--accent);}.pred-1x2 .p-d{color:var(--text3);}
 .easy-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px;}
 .easy-stat{background:rgba(8,11,16,.35);border:1px solid rgba(255,255,255,.07);border-radius:5px;padding:7px 8px;}
 .easy-stat span{display:block;font-family:var(--fm);font-size:11px;color:var(--text2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px;}
@@ -373,7 +380,7 @@ a.live-teams:hover,a.live-teams:focus{background:rgba(249,115,22,.06);outline:no
 .live-mini:first-of-type{border-top:none;padding-top:0;}
 .live-mini-match{font-family:var(--ff);font-size:15px;font-weight:700;line-height:1.25;}
 .live-mini-time{font-family:var(--fm);font-size:10px;color:var(--amber);white-space:nowrap;}
-#predictions .stitle{font-size:44px;}
+#predictions .stitle{font-size:52px;}
 #predictions .ssub{font-size:17px;line-height:1.6;max-width:760px;}
 #predictions .mtab{font-size:17px;padding:12px 28px;}
 #predictions .sptab{font-size:16px;padding:10px 24px;}
@@ -1764,26 +1771,8 @@ footer{
       <button class="mtab" data-mode="today" onclick="switchMTab(this)">📅 Today</button>
       <button class="mtab" data-mode="completed" onclick="switchMTab(this)">✅ Completed</button>
     </div>
-    <div class="live-center fu v" id="live-center">
-      <div class="live-head">
-        <div>
-          <div class="live-title">Live Matches &amp; Today's Games</div>
-          <div class="live-sub">Live games first, then today's kickoffs</div>
-        </div>
-        <span class="bpred">AUTO UPDATED</span>
-      </div>
-      <div class="live-grid">
-        <div class="live-main" id="live-main">
-          <div style="padding:28px;text-align:center;color:var(--text3);font-family:var(--fm);font-size:12px;">Loading live matches...</div>
-        </div>
-        <div class="live-side">
-          <div class="live-side-title">Next matches</div>
-          <div id="live-side-list">
-            <div style="color:var(--text3);font-family:var(--fm);font-size:11px;">Loading schedule...</div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- 'Live Matches & Today's Games' center removed — the same matches are
+         already listed at the top, so this section was redundant. -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px;">
       <div style="display:flex;align-items:center;gap:10px;">
         <span style="font-family:var(--fm);font-size:10px;color:var(--accent);background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.24);padding:3px 9px;border-radius:3px;letter-spacing:.08em;">EASY-READ SOCCER PICKS</span>
@@ -3136,6 +3125,9 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     const confValue = slip?.confidence ?? confidenceOf(ai, homeName, awayName);
     const confText = confValue == null ? '--' : `${confValue}%`;
     const riskText = riskOf(confValue);
+    // Extra prediction results: correct-score pick + 1X2 win probabilities.
+    const predScore = (ai?.correctScore && /\d+\s*[-–:]\s*\d+/.test(ai.correctScore)) ? ai.correctScore.replace(/\s/g,'') : '';
+    const probs = ai?.probabilities && ai.probabilities.home != null ? ai.probabilities : null;
     const votes = voteState(fx.fixture.id, pickLabel, homeName, awayName, confValue);
     const voteHome = Math.max(0, Math.min(100, Number(votes.home) || 0));
     const voteAway = Math.max(0, Math.min(100, Number(votes.away) || 0));
@@ -3174,10 +3166,14 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
             <div class="vote-bar"><div class="vote-fill" style="width:${voteHome}%"></div></div>
             <div class="vote-row"><span><strong data-vote-home>${voteHome}%</strong> ${esc(homeName)}</span><span>${esc(awayName)} <strong data-vote-away>${voteAway}%</strong></span></div>
           </div>
+          ${(predScore || probs) ? `<div class="pred-results">
+            ${predScore ? `<div class="pred-score-row"><span>Predicted score</span><strong>${esc(homeName)} <em>${esc(predScore)}</em> ${esc(awayName)}</strong></div>` : ''}
+            ${probs ? `<div class="pred-1x2"><span class="p-h">${esc(homeName)} ${probs.home}%</span><span class="p-d">Draw ${probs.draw}%</span><span class="p-a">${probs.away}% ${esc(awayName)}</span></div>` : ''}
+          </div>` : ''}
           <div class="easy-meta">
             <div class="easy-stat"><span>Risk</span><strong>${esc(riskText)}</strong></div>
             <div class="easy-stat"><span>Kickoff</span><strong>${esc(kickoff)}</strong></div>
-            <div class="easy-stat"><span>Market</span><strong>1X2 result</strong></div>
+            <div class="easy-stat"><span>Score pick</span><strong>${predScore ? esc(predScore) : '1X2'}</strong></div>
           </div>
           <a class="detail-btn" href="/match/${fx.fixture.id}-${slugify(`${homeName}-vs-${awayName}`)}/" onclick="event.stopPropagation();event.preventDefault();openMatchDetail(${fx.fixture.id})" aria-label="View ${esc(homeName)} vs ${esc(awayName)} prediction" title="View ${esc(homeName)} vs ${esc(awayName)} prediction">See full prediction →</a>
         </div>
