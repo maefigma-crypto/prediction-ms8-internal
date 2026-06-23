@@ -2827,13 +2827,16 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
       }
     }
     const now = Date.now();
+    // Fetch a real prediction for every fixture the grid can show (upcoming or
+    // live), not just the soonest 6 — otherwise later cards fall back to the
+    // "Pro analysis pending" placeholder with no pick/confidence.
     const candidates = fixtures
       .filter(fx => {
         const id = fx?.fixture?.id;
         const kickoff = new Date(fx?.fixture?.date || 0).getTime();
-        return id && !map[id] && kickoff > now;
+        return id && !map[id] && (kickoff > now || isLive(fx));
       })
-      .slice(0, 6);
+      .slice(0, 12);
     await Promise.all(candidates.map(async fx => {
       const id = fx.fixture.id;
       const data = await getJSON(`${API}/predictions?fixture_id=${encodeURIComponent(id)}`);
