@@ -1600,10 +1600,16 @@ async function postPreMatchAlerts(env) {
         continue;
       }
 
-      // World Cup posts are kept clean of any AI-pick framing — always a
-      // plain match update. Non-WC MOTD keeps its pick-led bet-slip caption.
+      // World Cup match update now carries a compact prediction (pick +
+      // confidence + one line). Use the warmed KV pick if present, else fetch
+      // /api/predictions so even un-warmed WC fixtures get a form preview.
+      let wcPick = (pick && (pick.pickLabel || pick.pick)) ? pick : null;
+      if (item.is_wc && !wcPick) {
+        wcPick = await fetch(`${SITE_URL}/api/predictions?fixture_id=${item.fixture_id}`)
+          .then(r => r.ok ? r.json() : null).catch(() => null);
+      }
       const caption = item.is_wc
-        ? buildMatchUpdateCaption({ fixture: fx, siteUrl: SITE_URL })
+        ? buildMatchUpdateCaption({ fixture: fx, pick: wcPick, siteUrl: SITE_URL })
         : buildPreMatchMotdCaption({ fixture: fx, pick, siteUrl: SITE_URL });
 
       const msg = await sendMessage(env, { text: caption });

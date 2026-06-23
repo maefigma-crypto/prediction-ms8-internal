@@ -222,11 +222,19 @@ export function buildPreMatchMotdCaption({
   return lines.join('\n');
 }
 
-// Lightweight pre-match update used for full World Cup coverage. Unlike
-// buildPreMatchMotdCaption (which frames a virtual bet slip around a pro
-// pick), this posts a clean "kicking off soon" card — teams, kickoff in MYT,
-// venue — with no AI-pick framing, so every WC match gets a neutral alert.
-export function buildMatchUpdateCaption({ fixture, siteUrl = 'https://scoreocs8.com' }) {
+// First sentence of a block of text — used to keep the prediction line short.
+function firstSentence(text) {
+  const s = String(text || '').trim();
+  if (!s) return '';
+  const m = s.match(/^.*?[.!?](\s|$)/);
+  return (m ? m[0] : s).trim();
+}
+
+// Lightweight pre-match update used for full World Cup coverage. Posts a
+// "kicking off soon" card — teams, kickoff in MYT, venue — and, when a
+// prediction is available, a compact pick line: the pick, its confidence and
+// one short form/H2H sentence (the content the user asked for).
+export function buildMatchUpdateCaption({ fixture, pick = null, siteUrl = 'https://scoreocs8.com' }) {
   const home = fixture?.teams?.home?.name || 'Home';
   const away = fixture?.teams?.away?.name || 'Away';
   const leagueId = fixture?.league?.id;
@@ -242,6 +250,11 @@ export function buildMatchUpdateCaption({ fixture, siteUrl = 'https://scoreocs8.
     });
   } catch {}
 
+  // Compact prediction: pick label + confidence + one short reasoning line.
+  const pickLabel = pick?.pickLabel || pick?.pick || '';
+  const conf = pick?.confidence != null ? ` (${pick.confidence}%)` : '';
+  const reason = firstSentence(pick?.analysis || pick?.reason);
+
   const lines = [];
   lines.push(`⏰ <b>Kicking off soon · 即将开赛</b>`);
   lines.push(`${flag} <b>${esc(league)}</b>`);
@@ -249,6 +262,11 @@ export function buildMatchUpdateCaption({ fixture, siteUrl = 'https://scoreocs8.
   lines.push(`⚽ <b>${esc(home)} vs ${esc(away)}</b>`);
   lines.push(`🕐 Kickoff · 开赛: ${esc(kickoff)} MYT`);
   if (venue) lines.push(`🏟️ ${esc(venue)}${city ? ', ' + esc(city) : ''}`);
+  if (pickLabel) {
+    lines.push('');
+    lines.push(`⚡ <b>Prediction · 预测</b>: ${esc(pickLabel)}${conf}`);
+    if (reason) lines.push(`📊 ${esc(reason)}`);
+  }
   lines.push('');
   lines.push(`🔗 Live tracking · 实时追踪: ${siteUrl}/`);
   lines.push('');
