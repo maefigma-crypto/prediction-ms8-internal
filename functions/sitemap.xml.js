@@ -17,6 +17,7 @@ export async function onRequestGet({ env, request }) {
   const today = new Date().toISOString().slice(0, 10);
   const urls = [
     { loc: `${SITE_URL}/`,                                priority: '1.0', changefreq: 'daily',  lastmod: today },
+    { loc: `${SITE_URL}/about.html`,                      priority: '0.6', changefreq: 'monthly', lastmod: today },
     { loc: `${SITE_URL}/blog/`,                           priority: '0.9', changefreq: 'daily',  lastmod: today },
     { loc: `${SITE_URL}/predictions/`,                    priority: '0.9', changefreq: 'daily',  lastmod: today },
     { loc: `${SITE_URL}/predictions/premier-league/`,     priority: '0.9', changefreq: 'daily',  lastmod: today },

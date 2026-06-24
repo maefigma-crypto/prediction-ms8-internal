@@ -301,10 +301,42 @@ export async function onRequest(context) {
   const description = `${home} vs ${away} ${leagueName} prediction, head-to-head record, pro pick (${pickLabel}) and live stats from ScoreOcs8 — Malaysia online casino soccer prediction site. Kickoff ${kickoff || 'TBD'}.`;
   const ogImage = `${SITE}/og/match?home=${encodeURIComponent(home)}&away=${encodeURIComponent(away)}&league=${encodeURIComponent(leagueName)}&date=${encodeURIComponent(fx?.fixture?.date || '')}`;
 
+  // FAQ entries (drive both FAQ schema and a visible Q&A block) — these target
+  // the long-tail "who will win X vs Y" / "X vs Y predicted score" queries.
+  const faqReason = reason || `${home} face ${away} in ${leagueName}.`;
+  const faqEntries = [];
+  if (pickLabel && pickLabel !== 'Preview coming up') {
+    faqEntries.push({
+      q: `Who will win ${home} vs ${away}?`,
+      a: `ScoreOcs8's prediction favours ${pickLabel}${pickRaw?.confidence != null ? ` with ${pickRaw.confidence}% confidence` : ''}. ${faqReason}`,
+    });
+  }
+  if (predScore) {
+    faqEntries.push({
+      q: `What is the predicted score for ${home} vs ${away}?`,
+      a: `ScoreOcs8 projects a final score of ${home} ${predScore.h}–${predScore.a} ${away}. This is a form-and-data projection, not a guaranteed result.`,
+    });
+  }
+  if (kickoff) {
+    faqEntries.push({
+      q: `When do ${home} and ${away} kick off?`,
+      a: `${home} vs ${away} kicks off on ${kickoff} Malaysia time (MYT)${venue ? `, at ${venue}` : ''}. Follow the live score and full prediction on ScoreOcs8.`,
+    });
+  }
+
   // Schema.org SportsEvent JSON-LD with all the structured fields Google likes.
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
+      ...(faqEntries.length ? [{
+        "@type": "FAQPage",
+        "@id": canonical + "#faq",
+        "mainEntity": faqEntries.map(f => ({
+          "@type": "Question",
+          "name": f.q,
+          "acceptedAnswer": { "@type": "Answer", "text": f.a },
+        })),
+      }] : []),
       {
         "@type": "SportsEvent",
         "@id": canonical + "#event",
@@ -513,6 +545,12 @@ h1 .vs{color:var(--text3);margin:0 14px;font-weight:500;}
 .pick-card .conf{font-family:var(--ff);font-size:18px;font-weight:700;color:var(--green);}
 .pick-row{display:flex;justify-content:space-between;align-items:center;gap:16px;}
 .pick-reason{margin-top:14px;font-size:14px;color:var(--text2);line-height:1.7;border-top:1px solid rgba(249,115,22,0.20);padding-top:12px;}
+.faq-list{display:flex;flex-direction:column;gap:8px;}
+.faq-item{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:13px 16px;}
+.faq-item summary{font-family:var(--ff);font-size:16px;font-weight:700;color:var(--text);cursor:pointer;list-style:none;}
+.faq-item summary::-webkit-details-marker{display:none;}
+.faq-item[open] summary{margin-bottom:8px;color:var(--accent);}
+.faq-item p{font-size:14px;color:var(--text2);line-height:1.7;}
 .pick-verdict{margin-top:14px;padding:11px 14px;border-radius:10px;font-family:var(--ff);font-size:15px;font-weight:700;letter-spacing:.02em;}
 .pick-verdict.won{background:rgba(0,229,160,.12);border:1px solid rgba(0,229,160,.35);color:#00e5a0;}
 .pick-verdict.lost{background:rgba(255,71,87,.10);border:1px solid rgba(255,71,87,.30);color:#ff6b78;}
@@ -655,6 +693,17 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
       </details>` : ''}
     </div>
   </article>
+
+  ${faqEntries.length ? `
+  <section class="section">
+    <h2>${esc(home)} vs ${esc(away)} — prediction FAQ</h2>
+    <div class="faq-list">
+      ${faqEntries.map(f => `<details class="faq-item">
+        <summary>${esc(f.q)}</summary>
+        <p>${esc(f.a)}</p>
+      </details>`).join('')}
+    </div>
+  </section>` : ''}
 
   ${relatedPosts.length ? `
   <section class="section">
