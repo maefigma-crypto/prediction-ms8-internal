@@ -267,6 +267,21 @@ export async function onRequest(context) {
     : '';
   const hasMore = !!(predScore || probs);
 
+  // Result outcome: once the match is final, show whether the pick landed.
+  let verdict = null;
+  if (FINISHED.has(statusShort) && hasScore) {
+    const actual = homeScore > awayScore ? 'HOME' : homeScore < awayScore ? 'AWAY' : 'DRAW';
+    let pk = String(pickRaw?.pick || '').toUpperCase();
+    if (!['HOME', 'AWAY', 'DRAW'].includes(pk)) {
+      const pl = String(pickRaw?.pickLabel || '').toLowerCase();
+      pk = pl === home.toLowerCase() ? 'HOME' : pl === away.toLowerCase() ? 'AWAY' : pl.includes('draw') ? 'DRAW' : '';
+    }
+    if (pk) {
+      const exact = predScore && Number(predScore.h) === homeScore && Number(predScore.a) === awayScore;
+      verdict = { correct: pk === actual, exact, scoreline: `${homeScore}-${awayScore}` };
+    }
+  }
+
   // Related blog posts that mention either team (when any exist).
   const relatedPosts = Array.isArray(posts)
     ? posts.filter(p => {
@@ -498,6 +513,9 @@ h1 .vs{color:var(--text3);margin:0 14px;font-weight:500;}
 .pick-card .conf{font-family:var(--ff);font-size:18px;font-weight:700;color:var(--green);}
 .pick-row{display:flex;justify-content:space-between;align-items:center;gap:16px;}
 .pick-reason{margin-top:14px;font-size:14px;color:var(--text2);line-height:1.7;border-top:1px solid rgba(249,115,22,0.20);padding-top:12px;}
+.pick-verdict{margin-top:14px;padding:11px 14px;border-radius:10px;font-family:var(--ff);font-size:15px;font-weight:700;letter-spacing:.02em;}
+.pick-verdict.won{background:rgba(0,229,160,.12);border:1px solid rgba(0,229,160,.35);color:#00e5a0;}
+.pick-verdict.lost{background:rgba(255,71,87,.10);border:1px solid rgba(255,71,87,.30);color:#ff6b78;}
 .pred-more{margin-top:14px;border-top:1px solid rgba(249,115,22,0.20);padding-top:12px;}
 .pred-more summary{font-family:var(--ff);font-size:14px;font-weight:700;color:var(--accent);cursor:pointer;letter-spacing:.03em;list-style:none;}
 .pred-more summary::-webkit-details-marker{display:none;}
@@ -615,6 +633,9 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
           <div class="conf">${esc(confidence)}</div>
         </div>
       </div>
+      ${verdict ? `<div class="pick-verdict ${verdict.correct ? 'won' : 'lost'}">
+        ${verdict.correct ? '✅ Prediction correct' : '❌ Prediction missed'} · Final ${esc(verdict.scoreline)}${verdict.exact ? ' · exact score 🎯' : ''}
+      </div>` : ''}
       ${predScore ? `<div class="pick-score" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;padding:12px 14px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);">
         <span class="label">Predicted score</span>
         <span style="font-family:var(--ff);font-weight:700;font-size:16px;">${esc(home)} <span style="color:var(--accent);">${esc(predScore.h)}–${esc(predScore.a)}</span> ${esc(away)}</span>
