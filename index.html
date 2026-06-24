@@ -304,6 +304,12 @@ body > nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-it
 .vote-row{display:flex;justify-content:space-between;gap:12px;font-family:var(--fm);font-size:15px;color:var(--text2);}
 .vote-row strong{font-family:var(--ff);font-size:21px;color:var(--text);}
 .odds-wrap{margin-top:13px;}
+.easy-min{padding:14px;}
+.mini-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;flex-wrap:wrap;}
+.mini-pick{font-family:var(--ff);font-size:16px;font-weight:600;color:var(--text2);}
+.mini-pick strong{color:var(--accent);font-weight:700;}
+.mini-link{font-family:var(--ff);font-size:14px;font-weight:700;color:var(--accent);text-decoration:none;letter-spacing:.02em;white-space:nowrap;}
+.mini-link:hover{text-decoration:underline;}
 .odds-cap{font-family:var(--fm);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;}
 .odds-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
 .odds-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 6px;border-radius:8px;background:rgba(8,11,16,.45);border:1px solid var(--border2);transition:all .15s;}
@@ -3224,25 +3230,12 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
           <div class="vs-mid">${kickoffOrScore}</div>
           <div class="team-side"><div class="tlogo"><img src="${esc(fx.teams.away.logo||'')}" onerror="this.style.display='none';this.parentElement.textContent='⚽'"></div><div class="tname">${esc(fx.teams.away.name)}</div></div>
         </div>
-        <div class="easy-read">
-          <div class="easy-top">
-            <div>
-              <div class="easy-label">Quick pick</div>
-              <div class="easy-pick">${esc(pickLabel)}</div>
-            </div>
-            <div class="easy-conf"><strong>${esc(confText)}</strong><span>Confidence</span></div>
-          </div>
-          <div class="easy-why">${esc(shortReason)}</div>
+        <div class="easy-read easy-min">
           ${oddsRow}
-          ${predScore ? `<div class="pred-results">
-            <div class="pred-score-row"><span>Predicted score</span><strong>${esc(homeName)} <em>${esc(predScore)}</em> ${esc(awayName)}</strong></div>
-          </div>` : ''}
-          <div class="easy-meta">
-            <div class="easy-stat"><span>Risk</span><strong>${esc(riskText)}</strong></div>
-            <div class="easy-stat"><span>Kickoff</span><strong>${esc(kickoff)}</strong></div>
-            <div class="easy-stat"><span>Score pick</span><strong>${predScore ? esc(predScore) : '1X2'}</strong></div>
+          <div class="mini-foot">
+            <span class="mini-pick">⚡ <strong>${esc(pickLabel)}</strong>${confText !== '--' ? ` · ${esc(confText)}` : ''}${predScore ? ` · ${esc(predScore)}` : ''}</span>
+            <a class="mini-link" href="/match/${fx.fixture.id}-${slugify(`${homeName}-vs-${awayName}`)}/" onclick="event.stopPropagation();event.preventDefault();openMatchDetail(${fx.fixture.id})" aria-label="View ${esc(homeName)} vs ${esc(awayName)} prediction" title="View ${esc(homeName)} vs ${esc(awayName)} prediction">More info »</a>
           </div>
-          <a class="detail-btn" href="/match/${fx.fixture.id}-${slugify(`${homeName}-vs-${awayName}`)}/" onclick="event.stopPropagation();event.preventDefault();openMatchDetail(${fx.fixture.id})" aria-label="View ${esc(homeName)} vs ${esc(awayName)} prediction" title="View ${esc(homeName)} vs ${esc(awayName)} prediction">See full prediction →</a>
         </div>
       </div>
     </div>`;
