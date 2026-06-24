@@ -1349,6 +1349,7 @@ function tgPredictionCardUrl(fx, pick) {
   if (fx?.teams?.away?.logo) params.set('away_logo', fx.teams.away.logo);
   const tag = pick?.pickLabel || pick?.pick;
   if (tag) params.set('tag', String(tag));
+  if (pick?.pick) params.set('pick', String(pick.pick));
   if (pick?.confidence != null) params.set('confidence', String(pick.confidence));
   if (pick?.correctScore) params.set('score', String(pick.correctScore));
   if (pick?.risk) params.set('risk', String(pick.risk));
