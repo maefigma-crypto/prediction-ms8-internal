@@ -251,19 +251,12 @@ export async function onRequest(context) {
   // Extra prediction markets derived from the projected score + 1X2
   // probabilities, so "See more" reveals more than a single line.
   const probs = (pickRaw?.probabilities && pickRaw.probabilities.home != null) ? pickRaw.probabilities : null;
-  // AI model-implied 1X2 odds (from the probabilities) for the betting-style row.
-  const oddOf = p => (p && p > 0) ? Math.max(1.05, +(100 / p).toFixed(2)) : null;
-  const moH = probs ? oddOf(probs.home) : null, moD = probs ? oddOf(probs.draw) : null, moA = probs ? oddOf(probs.away) : null;
-  const moList = [moH, moD, moA].filter(x => x != null);
-  const moMin = moList.length ? Math.min(...moList) : null;
-  const oddsRow = (moH && moA) ? `<div class="mp-odds">
-    <div class="mp-odds-cap">AI model odds</div>
-    <div class="mp-odds-row">
-      <div class="mp-odd${moH === moMin ? ' fav' : ''}"><span>Home</span><strong>${moH.toFixed(2)}</strong></div>
-      <div class="mp-odd${moD === moMin ? ' fav' : ''}"><span>Draw</span><strong>${moD ? moD.toFixed(2) : '—'}</strong></div>
-      <div class="mp-odd${moA === moMin ? ' fav' : ''}"><span>Away</span><strong>${moA.toFixed(2)}</strong></div>
-    </div>
-  </div>` : '';
+  // Risk badge from the prediction (or derived from confidence).
+  const confNum = pickRaw?.confidence;
+  const riskLabel = (pickRaw?.risk === 'LOW' || (confNum != null && confNum >= 75)) ? 'Lower risk'
+    : (pickRaw?.risk === 'HIGH' || (confNum != null && confNum < 60)) ? 'High risk'
+    : 'Medium risk';
+  const riskCls = riskLabel === 'Lower risk' ? 'low' : riskLabel === 'High risk' ? 'high' : 'med';
   const pH = predScore ? Number(predScore.h) : null;
   const pA = predScore ? Number(predScore.a) : null;
   const totalGoals = (pH != null && pA != null) ? pH + pA : null;
@@ -564,14 +557,10 @@ h1 .vs{color:var(--text3);margin:0 14px;font-weight:500;}
 .faq-item summary::-webkit-details-marker{display:none;}
 .faq-item[open] summary{margin-bottom:8px;color:var(--accent);}
 .faq-item p{font-size:14px;color:var(--text2);line-height:1.7;}
-.mp-odds{margin-top:14px;}
-.mp-odds-cap{font-family:var(--fm);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:7px;}
-.mp-odds-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
-.mp-odd{display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 6px;border-radius:9px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.10);}
-.mp-odd span{font-family:var(--fm);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--text2);}
-.mp-odd strong{font-family:var(--ff);font-size:22px;font-weight:700;color:var(--text);line-height:1;}
-.mp-odd.fav{background:linear-gradient(180deg,rgba(249,115,22,.22),rgba(249,115,22,.06));border-color:rgba(249,115,22,.5);}
-.mp-odd.fav span,.mp-odd.fav strong{color:var(--accent);}
+.mp-risk{display:inline-block;margin-top:6px;font-family:var(--fm);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 10px;border-radius:999px;border:1px solid var(--border2);}
+.mp-risk-low{color:#00e5a0;border-color:rgba(0,229,160,.4);background:rgba(0,229,160,.08);}
+.mp-risk-med{color:#f5a623;border-color:rgba(245,166,35,.4);background:rgba(245,166,35,.08);}
+.mp-risk-high{color:#ff6b78;border-color:rgba(255,71,87,.4);background:rgba(255,71,87,.08);}
 .pick-verdict{margin-top:14px;padding:11px 14px;border-radius:10px;font-family:var(--ff);font-size:15px;font-weight:700;letter-spacing:.02em;}
 .pick-verdict.won{background:rgba(0,229,160,.12);border:1px solid rgba(0,229,160,.35);color:#00e5a0;}
 .pick-verdict.lost{background:rgba(255,71,87,.10);border:1px solid rgba(255,71,87,.30);color:#ff6b78;}
@@ -690,16 +679,16 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
         <div style="text-align:right;">
           <div class="label">Confidence</div>
           <div class="conf">${esc(confidence)}</div>
+          <span class="mp-risk mp-risk-${riskCls}">${esc(riskLabel)}</span>
         </div>
       </div>
       ${verdict ? `<div class="pick-verdict ${verdict.correct ? 'won' : 'lost'}">
-        ${verdict.correct ? '✅ Prediction correct' : '❌ Prediction missed'} · Final ${esc(verdict.scoreline)}${verdict.exact ? ' · exact score 🎯' : ''}
+        ${verdict.correct ? '✅ Prediction WON' : '❌ Prediction LOST'}${predScore ? ` · predicted ${esc(predScore.h)}–${esc(predScore.a)}` : ''} · final ${esc(verdict.scoreline)}${verdict.exact ? ' · exact score 🎯' : ''}
       </div>` : ''}
       ${predScore ? `<div class="pick-score" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;padding:12px 14px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);">
-        <span class="label">Predicted score</span>
+        <span class="label">Predicted correct score</span>
         <span style="font-family:var(--ff);font-weight:700;font-size:16px;">${esc(home)} <span style="color:var(--accent);">${esc(predScore.h)}–${esc(predScore.a)}</span> ${esc(away)}</span>
       </div>` : ''}
-      ${oddsRow}
       ${reason ? `<div class="pick-reason">${esc(reason)}</div>` : ''}
       ${hasMore ? `<details class="pred-more">
         <summary>See more prediction &amp; why →</summary>

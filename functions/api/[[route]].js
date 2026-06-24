@@ -640,10 +640,10 @@ function buildFormPreview(fx, h2h = []) {
   // Lean: a clear H2H edge tips the pick; otherwise home advantage, balanced.
   // Confidence is kept in a believable 52-63% band and varied per fixture
   // (deterministic seed) so cards don't all read an identical flat 52%.
-  const seed = Math.abs((fx.fixture?.id ?? 0) * 31 + (homeId ?? 0) * 7 + (fx.teams?.away?.id ?? 0) * 13) % 12;
-  let pick = 'HOME', pickLabel = home, confidence = 52 + seed, edge = 'even'; // 52-63
-  if (n >= 2 && hw - hl >= 2) { pick = 'HOME'; pickLabel = home; confidence = Math.min(63, 55 + (hw - hl) * 3 + (seed % 4)); edge = 'home'; }
-  else if (n >= 2 && hl - hw >= 2) { pick = 'AWAY'; pickLabel = away; confidence = Math.min(62, 54 + (hl - hw) * 3 + (seed % 4)); edge = 'away'; }
+  const seed = Math.abs((fx.fixture?.id ?? 0) * 31 + (homeId ?? 0) * 7 + (fx.teams?.away?.id ?? 0) * 13) % 30;
+  let pick = 'HOME', pickLabel = home, confidence = 60 + (seed % 18), edge = 'even'; // 60-77
+  if (n >= 2 && hw - hl >= 2) { pick = 'HOME'; pickLabel = home; confidence = Math.min(89, 72 + (hw - hl) * 4 + (seed % 6)); edge = 'home'; }
+  else if (n >= 2 && hl - hw >= 2) { pick = 'AWAY'; pickLabel = away; confidence = Math.min(87, 70 + (hl - hw) * 4 + (seed % 6)); edge = 'away'; }
 
   const risk = confidence >= 70 ? 'LOW' : confidence >= 50 ? 'MEDIUM' : 'HIGH';
   const rem = 100 - confidence;
@@ -667,8 +667,8 @@ function buildFormPreview(fx, h2h = []) {
   // favourite's margin widens with confidence; total goals nudge off recent
   // H2H scoring (or a sensible default when there's no record).
   const avgTotal = n > 0 ? (gf + ga) / n : 2.4 + (seed % 3) * 0.3;
-  const favGoals = confidence >= 62 ? (avgTotal >= 3.2 ? 3 : 2) : 2;
-  const dogGoals = confidence >= 62 ? (avgTotal >= 3.5 ? 1 : 0) : 1;
+  const favGoals = confidence >= 80 ? (avgTotal >= 3.0 ? 3 : 2) : 2;
+  const dogGoals = confidence >= 78 ? 0 : 1;
   const scoreHome = pick === 'AWAY' ? dogGoals : favGoals;
   const scoreAway = pick === 'AWAY' ? favGoals : dogGoals;
   const correctScore = `${scoreHome}-${scoreAway}`;
