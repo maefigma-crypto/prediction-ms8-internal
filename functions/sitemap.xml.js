@@ -4,11 +4,12 @@ const slugify = s => String(s||'').toLowerCase().normalize('NFKD').replace(/[̀-
 
 export async function onRequestGet({ env, request }) {
   const origin = new URL(request.url).origin;
-  const [githubPosts, kvPosts, settings, fixtures, highlights] = await Promise.all([
+  const [githubPosts, kvPosts, settings, fixtures, wcSchedule, highlights] = await Promise.all([
     listPosts(env),
     listKvContent(env, 30),
     getSettings(env),
     fetch(origin + '/api/fixtures').then(r => r.ok ? r.json() : null).catch(() => null),
+    fetch(origin + '/api/wc-schedule').then(r => r.ok ? r.json() : null).catch(() => null),
     fetch(origin + '/api/highlights?limit=12').then(r => r.ok ? r.json() : null).catch(() => null),
   ]);
   const posts = [...kvPosts, ...githubPosts];
@@ -46,6 +47,23 @@ export async function onRequestGet({ env, request }) {
         lastmod: (fx?.fixture?.date || new Date().toISOString()).slice(0, 10),
       });
     }
+  }
+
+  // All World Cup fixtures (the /api/fixtures buckets above only cover the
+  // next/last ~30; wc-schedule has every match), so every WC match page is
+  // discoverable — the bulk of the long-tail during the tournament.
+  for (const m of (wcSchedule?.matches || [])) {
+    const id = m?.fixture_id;
+    if (!id || seenMatchIds.has(id)) continue;
+    seenMatchIds.add(id);
+    const slug = slugify(`${m.home?.name || ''}-vs-${m.away?.name || ''}`);
+    const path = slug ? `/match/${id}-${slug}/` : `/match/${id}/`;
+    urls.push({
+      loc: SITE_URL + path,
+      priority: '0.7',
+      changefreq: 'daily',
+      lastmod: (m.date || new Date().toISOString()).slice(0, 10),
+    });
   }
 
   // Dynamic highlight pages: /highlights/<id>-<home>-vs-<away>/
