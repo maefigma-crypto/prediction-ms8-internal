@@ -13,6 +13,7 @@ import {
   buildWcUpcomingCaption,
 } from './lib/caption.js';
 import { saveSnap } from './lib/snap.js';
+import { googleIndexUrls } from './lib/google-indexing.js';
 import * as X from './lib/x.js';
 import * as IG from './lib/instagram.js';
 import * as Threads from './lib/threads.js';
@@ -220,7 +221,7 @@ async function generateDaily(env) {
 
   // Ping IndexNow (Bing/Yandex) so fresh posts get crawled fast. Google
   // removed their sitemap ping in 2023; IndexNow is the modern equivalent.
-  const indexNowResult = await pingIndexNow(output, date).catch(e => ({ error: String(e.message || e) }));
+  const indexNowResult = await pingIndexNow(env, output, date).catch(e => ({ error: String(e.message || e) }));
 
   return {
     status: 'ok',
@@ -237,27 +238,37 @@ async function generateDaily(env) {
 const SITE_HOST = 'scoreocs8.com';
 const INDEXNOW_KEY = '8c4e6d9f2b7a1e3f5c8d0a9b2e4f7c1d';
 
-async function pingIndexNow(bundle, date) {
-  const urls = [];
-  if (bundle.top) urls.push(`https://${SITE_HOST}/blog/daily-${date}-top/`);
+async function pingIndexNow(env, bundle, date) {
+  const pageUrls = [];
+  if (bundle.top) pageUrls.push(`https://${SITE_HOST}/blog/daily-${date}-top/`);
   for (let i = 0; i < (bundle.previews || []).length; i++) {
-    urls.push(`https://${SITE_HOST}/blog/daily-${date}-p${i + 1}/`);
+    pageUrls.push(`https://${SITE_HOST}/blog/daily-${date}-p${i + 1}/`);
   }
-  // Also ping the listing pages that changed
-  urls.push(`https://${SITE_HOST}/blog/`, `https://${SITE_HOST}/sitemap.xml`);
-  if (!urls.length) return { submitted: 0 };
+  // IndexNow (Bing/Yandex) also gets the listing + sitemap.
+  const urls = [...pageUrls, `https://${SITE_HOST}/blog/`, `https://${SITE_HOST}/sitemap.xml`];
 
-  const res = await fetch('https://api.indexnow.org/indexnow', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json; charset=utf-8' },
-    body: JSON.stringify({
-      host: SITE_HOST,
-      key: INDEXNOW_KEY,
-      keyLocation: `https://${SITE_HOST}/${INDEXNOW_KEY}.txt`,
-      urlList: urls,
-    }),
-  });
-  return { submitted: urls.length, status: res.status };
+  let indexnow;
+  try {
+    const res = await fetch('https://api.indexnow.org/indexnow', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json; charset=utf-8' },
+      body: JSON.stringify({
+        host: SITE_HOST,
+        key: INDEXNOW_KEY,
+        keyLocation: `https://${SITE_HOST}/${INDEXNOW_KEY}.txt`,
+        urlList: urls,
+      }),
+    });
+    indexnow = { submitted: urls.length, status: res.status };
+  } catch (e) {
+    indexnow = { error: String(e.message || e) };
+  }
+
+  // Google Indexing API — submit the actual page URLs (skip the listing/sitemap;
+  // Google wants real page URLs). No-op when GOOGLE_SA_* secrets aren't set.
+  const google = await googleIndexUrls(env, pageUrls).catch(e => ({ status: 'error', error: String(e.message || e) }));
+
+  return { indexnow, google };
 }
 
 // --- Prediction cache warmer ------------------------------------------------
@@ -2176,6 +2187,12 @@ export default {
     const wantDate = url.searchParams.get('date') || '';
     let result;
     if (task === 'sportsbook-test') result = await postSportsbookTemplateTest(env);
+    else if (task === 'gindex') {
+      // Test Google Indexing: ?task=gindex&url=https://scoreocs8.com/...
+      // (defaults to the homepage). Returns token + per-URL status.
+      const u = url.searchParams.get('url');
+      result = await googleIndexUrls(env, u ? [u] : [`https://${SITE_HOST}/`]);
+    }
     else if (task === 'wc-queue') result = await queueWorldCupFixtures(env);
     else if (task === 'wc-card') result = await postWorldCupCard(env, 'preview', { force });
     else if (task === 'wc-recap') result = await postWorldCupCard(env, 'recap', { force });
