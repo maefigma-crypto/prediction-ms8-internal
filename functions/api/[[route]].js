@@ -29,8 +29,8 @@ const ODDS_SPORT = 'soccer_epl';
 const TTL = {
   live: 60,
   fixtures: 5 * 60,
-  standings: 24 * 3600,
-  topscorers: 24 * 3600,
+  standings: 30 * 60,
+  topscorers: 30 * 60,
   odds: 5 * 60,
   predictions: 12 * 3600,
   matchDetail: 24 * 3600,
