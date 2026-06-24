@@ -257,6 +257,9 @@ export async function onRequest(context) {
     : (pickRaw?.risk === 'HIGH' || (confNum != null && confNum < 60)) ? 'High risk'
     : 'Medium risk';
   const riskCls = riskLabel === 'Lower risk' ? 'low' : riskLabel === 'High risk' ? 'high' : 'med';
+  // Correct-score chance tier (how likely the exact scoreline is).
+  const scoreChance = confNum != null ? (confNum >= 78 ? 'High chance' : confNum >= 66 ? 'Mid tier' : 'Low chance') : null;
+  const scoreChanceCls = scoreChance === 'High chance' ? 'sc-high' : scoreChance === 'Mid tier' ? 'sc-mid' : 'sc-low';
   const pH = predScore ? Number(predScore.h) : null;
   const pA = predScore ? Number(predScore.a) : null;
   const totalGoals = (pH != null && pA != null) ? pH + pA : null;
@@ -581,6 +584,8 @@ h1 .vs{color:var(--text3);margin:0 14px;font-weight:500;}
 .pick-card .conf{font-family:var(--ff);font-size:18px;font-weight:700;color:var(--green);}
 .pick-row{display:flex;justify-content:space-between;align-items:center;gap:16px;}
 .pick-reason{margin-top:14px;font-size:14px;color:var(--text2);line-height:1.7;border-top:1px solid rgba(249,115,22,0.20);padding-top:12px;}
+.label em{font-style:normal;font-weight:700;}
+.sc-high{color:#00e5a0;}.sc-mid{color:#f5a623;}.sc-low{color:#ff8a93;}
 .faq-list{display:flex;flex-direction:column;gap:8px;}
 .faq-item{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:13px 16px;}
 .faq-item summary{font-family:var(--ff);font-size:16px;font-weight:700;color:var(--text);cursor:pointer;list-style:none;}
@@ -735,7 +740,7 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
         ${verdict.correct ? '✅ Prediction WON' : '❌ Prediction LOST'}${predScore ? ` · predicted ${esc(predScore.h)}–${esc(predScore.a)}` : ''} · final ${esc(verdict.scoreline)}${verdict.exact ? ' · exact score 🎯' : ''}
       </div>` : ''}
       ${predScore ? `<div class="pick-score" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;padding:12px 14px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);">
-        <span class="label">Predicted correct score</span>
+        <span class="label">Predicted correct score${scoreChance ? ` · <em class="${scoreChanceCls}">${esc(scoreChance)}</em>` : ''}</span>
         <span style="font-family:var(--ff);font-weight:700;font-size:16px;">${esc(home)} <span style="color:var(--accent);">${esc(predScore.h)}–${esc(predScore.a)}</span> ${esc(away)}</span>
       </div>` : ''}
       ${reason ? `<div class="pick-reason">${esc(reason)}</div>` : ''}

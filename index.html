@@ -488,6 +488,8 @@ a.live-teams:hover,a.live-teams:focus{background:rgba(249,115,22,.06);outline:no
 .detail-verdict{margin-bottom:12px;padding:10px 13px;border-radius:9px;font-family:var(--ff);font-size:14px;font-weight:700;}
 .detail-verdict.won{color:#00e5a0;background:rgba(0,229,160,.10);border:1px solid rgba(0,229,160,.30);}
 .detail-verdict.lost{color:#ff6b78;background:rgba(255,71,87,.10);border:1px solid rgba(255,71,87,.28);}
+.detail-mkt em{font-style:normal;font-weight:700;}
+.sc-high{color:#00e5a0;}.sc-mid{color:#f5a623;}.sc-low{color:#ff8a93;}
 .detail-pick-k{font-family:var(--fm);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:3px;}
 .detail-pick-v{font-family:var(--ff);font-size:24px;font-weight:700;color:var(--accent);}
 .detail-pick-c{font-family:var(--ff);font-size:22px;font-weight:700;color:var(--green);}
@@ -2233,6 +2235,8 @@ async function openMatchDetail(fixtureId){
       const slug=(home+'-vs-'+away).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
       const cell=(label,val)=>val?`<div class="detail-mkt"><span>${esc(label)}</span><strong>${esc(val)}</strong></div>`:'';
       const riskTxt=(pred.risk==='LOW'||(pred.confidence!=null&&pred.confidence>=75))?'Lower risk':(pred.risk==='HIGH'||(pred.confidence!=null&&pred.confidence<60))?'High risk':'Medium risk';
+      const scoreChance=pred.confidence!=null?(pred.confidence>=78?'High chance':pred.confidence>=66?'Mid tier':'Low chance'):null;
+      const scoreChanceCls=scoreChance==='High chance'?'sc-high':scoreChance==='Mid tier'?'sc-mid':'sc-low';
       const riskC=riskTxt==='Lower risk'?'low':riskTxt==='High risk'?'high':'med';
       const FIN=['FT','AET','PEN'];
       let verdictHtml='';
@@ -2250,7 +2254,7 @@ async function openMatchDetail(fixtureId){
         </div>
         ${verdictHtml}
         <div class="detail-mkts">
-          ${cs?`<div class="detail-mkt"><span>Predicted score</span><strong>${esc(home)} ${esc(cs[1])}–${esc(cs[2])} ${esc(away)}</strong></div>`:''}
+          ${cs?`<div class="detail-mkt"><span>Predicted score${scoreChance?` · <em class="${scoreChanceCls}">${scoreChance}</em>`:''}</span><strong>${esc(home)} ${esc(cs[1])}–${esc(cs[2])} ${esc(away)}</strong></div>`:''}
           ${cell('Total goals',ou)}
           ${cell('Both teams to score',btts)}
           ${cell('Double chance',dc)}
@@ -3267,7 +3271,6 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
             </div>
             <div class="easy-conf"><strong>${esc(confText)}</strong><span>Confidence</span></div>
           </div>
-          ${predScore ? `<div class="pred-results"><div class="pred-score-row"><span>Correct score</span><strong>${esc(homeName)} <em>${esc(predScore)}</em> ${esc(awayName)}</strong></div></div>` : ''}
           <div class="mini-foot">
             <span class="mini-risk risk-${(riskText||'').toLowerCase().replace(/\W+/g,'')}">${esc(riskText)}</span>
             <a class="mini-link" href="/match/${fx.fixture.id}-${slugify(`${homeName}-vs-${awayName}`)}/" onclick="event.stopPropagation();event.preventDefault();openMatchDetail(${fx.fixture.id})" aria-label="View ${esc(homeName)} vs ${esc(awayName)} prediction" title="View ${esc(homeName)} vs ${esc(awayName)} prediction">More info »</a>
