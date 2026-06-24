@@ -273,6 +273,36 @@ export async function onRequest(context) {
     : '';
   const hasMore = !!(predScore || probs);
 
+  // Light "Statistical breakdown" — win-probability bars, recent form badges
+  // and headline stats. Probs/goals from the prediction; form from match-detail.
+  const bttsChance = bttsPick ? (bttsPick === 'Yes' ? 'High' : 'Low') : null;
+  const matchType = confNum != null ? (confNum >= 78 ? 'Clear edge' : confNum >= 66 ? 'Leaning' : 'Closely contested') : null;
+  const homeForm = Array.isArray(detail?.homeForm) ? detail.homeForm : [];
+  const awayForm = Array.isArray(detail?.awayForm) ? detail.awayForm : [];
+  const formBadges = arr => arr.length
+    ? arr.map(r => `<span class="form-b form-${String(r).toLowerCase()}">${esc(r)}</span>`).join('')
+    : '<span class="form-none">No recent results</span>';
+  const hasForm = homeForm.length || awayForm.length;
+  const statBreakdown = (probs || hasForm) ? `
+  <section class="section">
+    <h2>Statistical breakdown <small>· AI model</small></h2>
+    ${probs ? `<div class="sb-probs">
+      ${[[home + ' win', probs.home], ['Draw', probs.draw], [away + ' win', probs.away]].map(([lbl, pct]) => `
+      <div class="sb-prow"><span>${esc(lbl)}</span><b>${esc(pct)}%</b></div>
+      <div class="sb-track"><div class="sb-fill" style="width:${Math.max(0, Math.min(100, Number(pct) || 0))}%"></div></div>`).join('')}
+    </div>` : ''}
+    ${hasForm ? `<div class="sb-forms">
+      <div class="sb-form"><div class="sb-form-t">${esc(home)} — recent form</div><div class="sb-form-b">${formBadges(homeForm)}</div></div>
+      <div class="sb-form"><div class="sb-form-t">${esc(away)} — recent form</div><div class="sb-form-b">${formBadges(awayForm)}</div></div>
+    </div>` : ''}
+    ${probs ? `<div class="sb-cards">
+      ${totalGoals != null ? `<div class="sb-c"><span>Est. goals</span><strong>⚡ ${esc(totalGoals)}</strong></div>` : ''}
+      ${bttsChance ? `<div class="sb-c"><span>BTTS chance</span><strong>${esc(bttsChance)}</strong></div>` : ''}
+      ${ouPick ? `<div class="sb-c"><span>Goals line</span><strong>${esc(ouPick)}</strong></div>` : ''}
+      ${matchType ? `<div class="sb-c"><span>Match type</span><strong>${esc(matchType)}</strong></div>` : ''}
+    </div>` : ''}
+  </section>` : '';
+
   // Result outcome: once the match is final, show whether the pick landed.
   let verdict = null;
   if (FINISHED.has(statusShort) && hasScore) {
@@ -557,6 +587,25 @@ h1 .vs{color:var(--text3);margin:0 14px;font-weight:500;}
 .faq-item summary::-webkit-details-marker{display:none;}
 .faq-item[open] summary{margin-bottom:8px;color:var(--accent);}
 .faq-item p{font-size:14px;color:var(--text2);line-height:1.7;}
+.sb-probs{display:flex;flex-direction:column;gap:4px;margin-bottom:16px;}
+.sb-prow{display:flex;align-items:center;justify-content:space-between;font-size:14px;color:var(--text2);margin-top:8px;}
+.sb-prow b{font-family:var(--ff);font-size:15px;color:var(--text);}
+.sb-track{height:9px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden;}
+.sb-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#f97316,#ffb068);}
+.sb-forms{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:6px 0 16px;}
+.sb-form-t{font-family:var(--fm);font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;}
+.sb-form-b{display:flex;gap:6px;flex-wrap:wrap;}
+.form-b{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;font-family:var(--ff);font-size:13px;font-weight:700;color:#fff;}
+.form-w{background:#00b87a;}
+.form-d{background:#e0a526;}
+.form-l{background:#e0463f;}
+.form-none{font-size:13px;color:var(--text3);}
+@media(max-width:560px){.sb-forms{grid-template-columns:1fr;}}
+.sb-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.sb-c{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:13px;text-align:center;}
+.sb-c span{display:block;font-family:var(--fm);font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:5px;}
+.sb-c strong{font-family:var(--ff);font-size:18px;font-weight:700;color:var(--text);}
+@media(max-width:560px){.sb-cards{grid-template-columns:1fr 1fr;}}
 .mp-risk{display:inline-block;margin-top:6px;font-family:var(--fm);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 10px;border-radius:999px;border:1px solid var(--border2);}
 .mp-risk-low{color:#00e5a0;border-color:rgba(0,229,160,.4);background:rgba(0,229,160,.08);}
 .mp-risk-med{color:#f5a623;border-color:rgba(245,166,35,.4);background:rgba(245,166,35,.08);}
@@ -704,6 +753,8 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
       </details>` : ''}
     </div>
   </article>
+
+  ${statBreakdown}
 
   ${faqEntries.length ? `
   <section class="section">

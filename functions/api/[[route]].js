@@ -450,13 +450,29 @@ async function handleMatchDetail(env, url) {
 
     const home = fx.teams.home.id;
     const away = fx.teams.away.id;
-    const [h2hData, statsData, eventsData, playersData, lineupsData] = await Promise.all([
+    const [h2hData, statsData, eventsData, playersData, lineupsData, homeFormData, awayFormData] = await Promise.all([
       afGet(env, '/fixtures/headtohead', { h2h: `${home}-${away}`, last: 8 }),
       afGet(env, '/fixtures/statistics', { fixture: fixtureId }).catch(() => ({ response: [] })),
       afGet(env, '/fixtures/events', { fixture: fixtureId }).catch(() => ({ response: [] })),
       afGet(env, '/fixtures/players', { fixture: fixtureId }).catch(() => ({ response: [] })),
       afGet(env, '/fixtures/lineups', { fixture: fixtureId }).catch(() => ({ response: [] })),
+      afGet(env, '/fixtures', { team: home, last: 6 }).catch(() => ({ response: [] })),
+      afGet(env, '/fixtures', { team: away, last: 6 }).catch(() => ({ response: [] })),
     ]);
+
+    // Recent form (last finished results, oldest→newest) as W/D/L from the
+    // team's own perspective — drives the form badges on the match page.
+    const formOf = (resp, teamId) => (resp || [])
+      .filter(m => FINISHED_STATUS.has(m.fixture?.status?.short))
+      .sort((a, b) => new Date(a.fixture?.date) - new Date(b.fixture?.date))
+      .slice(-5)
+      .map(m => {
+        const isHome = m.teams?.home?.id === teamId;
+        const gf = isHome ? m.goals?.home : m.goals?.away;
+        const ga = isHome ? m.goals?.away : m.goals?.home;
+        if (gf == null || ga == null) return null;
+        return gf > ga ? 'W' : gf < ga ? 'L' : 'D';
+      }).filter(Boolean);
 
     const h2h = h2hData.response || [];
     const summary = { homeWins: 0, awayWins: 0, draws: 0, matches: h2h.length };
@@ -473,6 +489,8 @@ async function handleMatchDetail(env, url) {
       updated: Date.now(),
       fixture: fx,
       summary,
+      homeForm: formOf(homeFormData.response, home),
+      awayForm: formOf(awayFormData.response, away),
       h2h: h2h.map(m => ({
         fixture_id: m.fixture?.id,
         date: m.fixture?.date,
