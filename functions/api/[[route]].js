@@ -409,7 +409,7 @@ async function handlePredictions(env, url) {
     return { data: { updated: Date.now(), fixtureId, ...buildFormPreview(fx, []) }, source: 'preview' };
   }
 
-  return cached(env, `prediction:${fixtureId}`, TTL.predictions, async () => {
+  return cached(env, `prediction:v2:${fixtureId}`, TTL.predictions, async () => {
     const home = fx.teams.home.id;
     const away = fx.teams.away.id;
     let h2hResp = [], homeForm = [], awayForm = [];
