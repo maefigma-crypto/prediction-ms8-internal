@@ -308,6 +308,16 @@ body > nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-it
 .vote-row{display:flex;justify-content:space-between;gap:12px;font-family:var(--fm);font-size:15px;color:var(--text2);}
 .vote-row strong{font-family:var(--ff);font-size:21px;color:var(--text);}
 .odds-wrap{margin-top:13px;}
+.cs-block{margin-top:12px;background:rgba(8,11,16,.4);border:1px solid var(--border2);border-radius:10px;padding:11px 13px;}
+.cs-head{font-family:var(--fm);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:9px;}
+.cs-scores{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.cs-s{text-align:center;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:8px 4px;}
+.cs-s span{display:block;font-family:var(--fm);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--text3);margin-bottom:3px;}
+.cs-s b{font-family:var(--ff);font-size:21px;font-weight:700;color:var(--text);}
+.cs-s.main{background:linear-gradient(180deg,rgba(249,115,22,.18),rgba(249,115,22,.05));border-color:rgba(249,115,22,.45);}
+.cs-s.main b{color:var(--accent);}
+.cs-goals{margin-top:9px;font-family:var(--fm);font-size:12px;color:var(--text2);}
+.cs-goals b{color:var(--text);font-family:var(--ff);font-weight:700;}
 .mini-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:13px;flex-wrap:wrap;}
 .mini-link{font-family:var(--ff);font-size:14px;font-weight:700;color:var(--accent);text-decoration:none;letter-spacing:.02em;white-space:nowrap;}
 .mini-link:hover{text-decoration:underline;}
@@ -3183,6 +3193,19 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
   }
 
   /* ───── Prediction cards (#pred-grid) ───── */
+  // From a "h-a" correct score + pick side, derive 3 scoreline options + a
+  // goals (over/under) line + a likely total range. Numbers only, no team names.
+  function scorePack(cs, pickSide) {
+    const m = String(cs || '').match(/(\d+)\s*[-–:]\s*(\d+)/);
+    if (!m) return null;
+    const h = +m[1], a = +m[2], total = h + a, pk = String(pickSide || '').toUpperCase();
+    const set = []; const push = s => { if (s && !set.includes(s)) set.push(s); };
+    push(`${h}-${a}`);
+    if (pk === 'AWAY') { push(`${Math.max(h - 1, 0)}-${a}`); push('1-1'); push(`${h}-${a + 1}`); }
+    else if (pk === 'DRAW') { push('1-1'); push('2-2'); push('0-0'); }
+    else { push(`${h}-${Math.max(a - 1, 0)}`); push('1-1'); push(`${h + 1}-${a}`); }
+    return { scores: set.slice(0, 3), goalsLine: total <= 3 ? 'Under 3.5' : 'Over 3.5', totalRange: `${Math.max(1, total - 1)}-${total}` };
+  }
   function predCard(fx, idx, aiMap, slipMap = {}) {
     const m = metaOf(fx);
     const live_ = isLive(fx);
@@ -3271,6 +3294,11 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
             </div>
             <div class="easy-conf"><strong>${esc(confText)}</strong><span>Confidence</span></div>
           </div>
+          ${(() => { const sp = scorePack(ai?.correctScore, ai?.pick); if (!sp) return ''; const lbls = ['Main', '2nd', 'Alt']; return `<div class="cs-block">
+            <div class="cs-head">Correct Score</div>
+            <div class="cs-scores">${sp.scores.map((s, i) => `<div class="cs-s${i === 0 ? ' main' : ''}"><span>${lbls[i] || 'Alt'}</span><b>${esc(s)}</b></div>`).join('')}</div>
+            <div class="cs-goals">Goals O/U <b>${esc(sp.goalsLine)}</b> · likely total <b>${esc(sp.totalRange)}</b></div>
+          </div>`; })()}
           <div class="mini-foot">
             <span class="mini-risk risk-${(riskText||'').toLowerCase().replace(/\W+/g,'')}">${esc(riskText)}</span>
             <a class="mini-link" href="/match/${fx.fixture.id}-${slugify(`${homeName}-vs-${awayName}`)}/" onclick="event.stopPropagation();event.preventDefault();openMatchDetail(${fx.fixture.id})" aria-label="View ${esc(homeName)} vs ${esc(awayName)} prediction" title="View ${esc(homeName)} vs ${esc(awayName)} prediction">More info »</a>
