@@ -670,17 +670,6 @@ function buildFormPreview(fx, h2h = []) {
     : { home: confidence, draw: 0, away: Math.round(rem * 0.55) };
   probabilities.draw = 100 - probabilities.home - probabilities.away;
 
-  const parts = [];
-  if (n > 0) {
-    parts.push(`${home} and ${away} have met ${n} time${n > 1 ? 's' : ''} recently — ${hw}W-${hd}D-${hl}L for ${home} (${((gf + ga) / n).toFixed(1)} goals per game).`);
-  } else {
-    parts.push(`${home} and ${away} have no recent head-to-head on record${round ? ` ahead of this ${round}` : ''}.`);
-  }
-  if (venue) parts.push(`${home} take the home side at ${venue}.`);
-  if (edge === 'home') parts.push(`Recent meetings lean towards ${home} — a form-and-history guide, not a guaranteed result.`);
-  else if (edge === 'away') parts.push(`Recent meetings lean towards ${away} — a form-and-history guide, not a guaranteed result.`);
-  else parts.push(`There's little between them on record; home advantage gives ${home} a slight edge in a tie that looks finely balanced.`);
-
   // Correct-score projection from the lean + how open the tie reads. The
   // favourite's margin widens with confidence; total goals nudge off recent
   // H2H scoring (or a sensible default when there's no record).
@@ -690,6 +679,26 @@ function buildFormPreview(fx, h2h = []) {
   const scoreHome = pick === 'AWAY' ? dogGoals : favGoals;
   const scoreAway = pick === 'AWAY' ? favGoals : dogGoals;
   const correctScore = `${scoreHome}-${scoreAway}`;
+  const totalGoals = scoreHome + scoreAway;
+  const overUnder = totalGoals >= 3 ? 'over 2.5 goals' : 'under 2.5 goals';
+  const bttsPhrase = (scoreHome > 0 && scoreAway > 0) ? 'both teams to score' : 'a clean sheet on the cards';
+  const riskWord = risk === 'LOW' ? 'lower-risk' : risk === 'HIGH' ? 'higher-risk' : 'medium-risk';
+  const dcSafe = pick === 'HOME' ? `${home} or the draw` : pick === 'AWAY' ? `${away} or the draw` : 'the draw covered';
+
+  // Multi-angle analysis (form, projected scoreline, goals markets, the call) —
+  // more than just a single line.
+  const parts = [];
+  if (n > 0) {
+    parts.push(`${home} and ${away} have met ${n} time${n > 1 ? 's' : ''} recently — ${hw}W-${hd}D-${hl}L from ${home}'s side at ${((gf + ga) / n).toFixed(1)} goals a game, so there's a form line to read.`);
+  } else {
+    parts.push(`${home} and ${away} have no recent head-to-head on record${round ? ` ahead of this ${round}` : ''}, so this leans on home advantage and general form rather than past meetings.`);
+  }
+  if (edge === 'home') parts.push(`The recent record favours ${home}, and hosting${venue ? ` at ${venue}` : ''} adds to that edge.`);
+  else if (edge === 'away') parts.push(`The recent record points to ${away}, enough to offset ${home}'s home advantage${venue ? ` at ${venue}` : ''}.`);
+  else parts.push(`There's little between them on paper; home advantage${venue ? ` at ${venue}` : ''} nudges ${home} marginally ahead in a tie that reads finely balanced.`);
+  parts.push(`The model projects a ${scoreHome}–${scoreAway} scoreline, which points to ${overUnder} and ${bttsPhrase}.`);
+  parts.push(`At ${confidence}% this is a ${riskWord} call — ${pickLabel} is the pick${edge === 'even' ? `, with ${dcSafe} the safer double-chance angle` : ''}.`);
+  parts.push(`Treat it as a data-and-form projection, not a guaranteed result.`);
 
   return { pick, pickLabel, confidence, probabilities, risk, correctScore, analysis: parts.join(' '), source: 'form' };
 }

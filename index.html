@@ -3222,8 +3222,22 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     const details = fullAnalysis
       ? `<details class="easy-details"><summary>Read full pro note</summary><p>${esc(fullAnalysis.slice(0, 520))}${fullAnalysis.length > 520 ? '...' : ''}</p></details>`
       : '';
+    // Prediction verdict on finished matches: did our pick land?
+    let predVerdict = null;
+    if (completed && homeScore !== '–' && awayScore !== '–') {
+      const actual = homeScore > awayScore ? 'HOME' : homeScore < awayScore ? 'AWAY' : 'DRAW';
+      let pk = String(ai?.pick || '').toUpperCase();
+      if (!['HOME','AWAY','DRAW'].includes(pk)) {
+        const pl = String(pickLabel || '').toLowerCase();
+        pk = pl === homeName.toLowerCase() ? 'HOME' : pl === awayName.toLowerCase() ? 'AWAY' : pl.includes('draw') ? 'DRAW' : '';
+      }
+      if (pk) predVerdict = pk === actual ? 'won' : 'lost';
+    }
+    const stripCls = predVerdict || slip?.status || 'final';
+    const stripText = predVerdict === 'won' ? 'PREDICTION WON' : predVerdict === 'lost' ? 'PREDICTION LOST'
+      : slip?.status === 'won' ? 'WIN' : slip?.status === 'lost' ? 'LOSS' : 'FINAL';
     const resultStrip = completed
-      ? `<div class="result-strip ${slip?.status === 'won' ? 'won' : slip?.status === 'lost' ? 'lost' : 'final'}">${slip?.status === 'won' ? 'WIN' : slip?.status === 'lost' ? 'LOSS' : 'FINAL'} · FT ${esc(homeScore)}-${esc(awayScore)}</div>`
+      ? `<div class="result-strip ${stripCls}">${stripText} · FT ${esc(homeScore)}-${esc(awayScore)}</div>`
       : '';
 
     return `<div class="pc fu v" data-league="${m.code}" data-fixture-id="${fx.fixture.id}" onclick="openMatchDetail(${fx.fixture.id})"${members?' style="position:relative;"':''}>
@@ -3286,7 +3300,10 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     const recentCompleted = all
       .filter(fx => fx.fixture?.status?.short === 'FT')
       .sort((a,b) => new Date(b.fixture.date) - new Date(a.fixture.date));
-    let list = [...nearUpcoming, ...recentCompleted, ...upcoming.filter(fx => !nearUpcoming.includes(fx))];
+    // Upcoming tab: live first, then soonest upcoming — NOT completed matches
+    // (Completed has its own tab). Keeps the three tabs cleanly diversified.
+    let list = upcoming.slice().sort((a, b) =>
+      (isLive(b) ? 1 : 0) - (isLive(a) ? 1 : 0) || new Date(a.fixture.date) - new Date(b.fixture.date));
     if (mode === 'today') {
       list = all.filter(fx => klDateKey(fx.fixture.date) === klToday())
         .sort((a,b) => new Date(a.fixture.date) - new Date(b.fixture.date));
