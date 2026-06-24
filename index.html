@@ -303,6 +303,13 @@ body > nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-it
 .vote-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--accent));border-radius:99px;transition:width .35s ease;}
 .vote-row{display:flex;justify-content:space-between;gap:12px;font-family:var(--fm);font-size:15px;color:var(--text2);}
 .vote-row strong{font-family:var(--ff);font-size:21px;color:var(--text);}
+.odds-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;}
+.odds-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 6px;border-radius:8px;background:rgba(8,11,16,.45);border:1px solid var(--border2);transition:all .15s;}
+.odds-btn span{font-family:var(--fm);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--text2);}
+.odds-btn strong{font-family:var(--ff);font-size:21px;font-weight:700;color:var(--text);line-height:1;}
+.odds-btn.fav{background:linear-gradient(180deg,rgba(249,115,22,.22),rgba(249,115,22,.08));border-color:rgba(249,115,22,.5);}
+.odds-btn.fav span{color:var(--accent);}
+.odds-btn.fav strong{color:var(--accent);}
 .pred-results{margin-top:12px;background:rgba(8,11,16,.35);border:1px solid rgba(249,115,22,.22);border-radius:8px;padding:11px 13px;}
 .pred-score-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
 .pred-score-row span{font-family:var(--fm);font-size:12px;color:var(--text2);letter-spacing:.08em;text-transform:uppercase;}
@@ -3182,6 +3189,16 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     // Extra prediction results: correct-score pick + 1X2 win probabilities.
     const predScore = (ai?.correctScore && /\d+\s*[-–:]\s*\d+/.test(ai.correctScore)) ? ai.correctScore.replace(/\s/g,'') : '';
     const probs = ai?.probabilities && ai.probabilities.home != null ? ai.probabilities : null;
+    // 1X2 odds row (betting-card style) — model-implied decimal odds from the
+    // prediction probabilities. Lowest number = our favourite (highlighted).
+    const oddOf = p => (p && p > 0) ? Math.max(1.05, +(100 / p).toFixed(2)) : null;
+    const oH = probs ? oddOf(probs.home) : null, oD = probs ? oddOf(probs.draw) : null, oA = probs ? oddOf(probs.away) : null;
+    const oMin = [oH, oD, oA].filter(x => x != null).length ? Math.min(...[oH, oD, oA].filter(x => x != null)) : null;
+    const oddsRow = (oH && oA) ? `<div class="odds-row">
+      <div class="odds-btn${oH === oMin ? ' fav' : ''}"><span>Home</span><strong>${oH.toFixed(2)}</strong></div>
+      <div class="odds-btn${oD === oMin ? ' fav' : ''}"><span>Draw</span><strong>${oD ? oD.toFixed(2) : '—'}</strong></div>
+      <div class="odds-btn${oA === oMin ? ' fav' : ''}"><span>Away</span><strong>${oA.toFixed(2)}</strong></div>
+    </div>` : '';
     const votes = voteState(fx.fixture.id, pickLabel, homeName, awayName, confValue);
     const voteHome = Math.max(0, Math.min(100, Number(votes.home) || 0));
     const voteAway = Math.max(0, Math.min(100, Number(votes.away) || 0));
@@ -3211,6 +3228,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
             <div class="easy-conf"><strong>${esc(confText)}</strong><span>Confidence</span></div>
           </div>
           <div class="easy-why">${esc(shortReason)}</div>
+          ${oddsRow}
           <div class="quick-vote" data-fixture-id="${fx.fixture.id}" data-home-votes="${voteHome}" data-away-votes="${voteAway}">
             <div class="quick-vote-title">Who will win?</div>
             <div class="vote-actions">
