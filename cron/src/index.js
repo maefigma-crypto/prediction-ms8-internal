@@ -1336,6 +1336,25 @@ function tgResultCardUrl(fx, correct) {
   return `${PUBLIC_SITE_URL}/og/tg-result?${params.toString()}`;
 }
 
+// Branded pre-match PREDICTION card image (pick, confidence, predicted score,
+// risk) — screenshotted and posted with the pre-match alert.
+function tgPredictionCardUrl(fx, pick) {
+  const params = new URLSearchParams({
+    home:   fx?.teams?.home?.name || 'Home',
+    away:   fx?.teams?.away?.name || 'Away',
+    league: fx?.league?.name || 'FIFA World Cup',
+    date:   fx?.fixture?.date || '',
+  });
+  if (fx?.teams?.home?.logo) params.set('home_logo', fx.teams.home.logo);
+  if (fx?.teams?.away?.logo) params.set('away_logo', fx.teams.away.logo);
+  const tag = pick?.pickLabel || pick?.pick;
+  if (tag) params.set('tag', String(tag));
+  if (pick?.confidence != null) params.set('confidence', String(pick.confidence));
+  if (pick?.correctScore) params.set('score', String(pick.correctScore));
+  if (pick?.risk) params.set('risk', String(pick.risk));
+  return `${PUBLIC_SITE_URL}/og/tg-prediction?${params.toString()}`;
+}
+
 function youtubeSearchUrl(fx) {
   const home = fx?.teams?.home?.name || '';
   const away = fx?.teams?.away?.name || '';
@@ -1623,7 +1642,27 @@ async function postPreMatchAlerts(env) {
         ? buildMatchUpdateCaption({ fixture: fx, pick: wcPick, siteUrl: SITE_URL })
         : buildPreMatchMotdCaption({ fixture: fx, pick, siteUrl: SITE_URL });
 
-      const msg = await sendMessage(env, { text: caption });
+      // World Cup: post a branded prediction CARD IMAGE (screenshot of
+      // /og/tg-prediction) with the caption; fall back to text if the render
+      // fails. Non-WC MOTD stays a plain text alert.
+      let msg;
+      if (item.is_wc) {
+        try {
+          const png = await screenshot(env, {
+            url: tgPredictionCardUrl(fx, wcPick),
+            viewport: { width: 1280, height: 720 },
+            waitUntil: 'networkidle0',
+            timeoutMs: 25000,
+          });
+          msg = await sendPhoto(env, { photoBytes: png, caption });
+        } catch (e) {
+          msg = await sendMessage(env, { text: caption });
+          report.errors.push({ fixture_id: item.fixture_id, error: 'tg-prediction render failed, sent text: ' + (e.message || String(e)) });
+        }
+      } else {
+        msg = await sendMessage(env, { text: caption });
+      }
+      if (msg?.disabled) { report.skipped += 1; continue; }
       // 6h TTL — past kickoff the flag self-expires so KV stays clean.
       await env.CACHE.put(dedupKey, JSON.stringify({ message_id: msg.message_id, ts: now }), {
         expirationTtl: 6 * 3600,

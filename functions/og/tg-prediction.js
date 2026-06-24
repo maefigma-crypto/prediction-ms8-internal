@@ -69,6 +69,9 @@ export async function onRequestGet({ request }) {
   const confStr = Number.isFinite(conf) && conf > 0 ? `${conf}%` : '';
   const homeLogo = url.searchParams.get('home_logo') || '';
   const awayLogo = url.searchParams.get('away_logo') || '';
+  const score = (url.searchParams.get('score') || '').trim();
+  const risk = (url.searchParams.get('risk') || '').trim().toUpperCase();
+  const riskWord = risk === 'LOW' ? 'LOWER RISK' : risk === 'HIGH' ? 'HIGHER RISK' : risk === 'MEDIUM' ? 'MEDIUM RISK' : '';
 
   const homeSize = fitSize(home, 14, 38, 22);
   const awaySize = fitSize(away, 14, 38, 22);
@@ -167,9 +170,12 @@ export async function onRequestGet({ request }) {
     <text x="640" y="635" font-family="system-ui,-apple-system,'Segoe UI',sans-serif" font-size="22" font-weight="700" fill="#ff8a3c" text-anchor="middle" letter-spacing="3">${escXml(pickLabelFull)}</text>
   </g>
 
+  <!-- predicted score + risk -->
+  ${score ? `<text x="640" y="688" font-family="system-ui,-apple-system,'Segoe UI',sans-serif" font-size="20" font-weight="700" fill="#ffffff" text-anchor="middle" letter-spacing="1">PREDICTED SCORE ${escXml(score)}${riskWord ? `  ·  ${escXml(riskWord)}` : ''}</text>` : ''}
+
   <!-- footer brand -->
-  <text x="60" y="694" font-family="Menlo,monospace" font-size="12" fill="rgba(255,255,255,.4)" letter-spacing="2">18+ · NOT BETTING ADVICE · VIRTUAL CURRENCY</text>
-  <text x="1220" y="694" font-family="Menlo,monospace" font-size="13" fill="rgba(255,122,26,.65)" text-anchor="end" letter-spacing="3">SCOREOCS8.COM</text>
+  <text x="60" y="710" font-family="Menlo,monospace" font-size="12" fill="rgba(255,255,255,.4)" letter-spacing="2">18+ · VIRTUAL CURRENCY · FOR ENTERTAINMENT</text>
+  <text x="1220" y="710" font-family="Menlo,monospace" font-size="13" fill="rgba(255,122,26,.65)" text-anchor="end" letter-spacing="3">SCOREOCS8.COM</text>
 </svg>`;
 
   return new Response(svg, {
