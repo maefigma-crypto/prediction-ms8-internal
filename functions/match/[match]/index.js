@@ -248,6 +248,25 @@ export async function onRequest(context) {
   const csRaw = String(pickRaw?.correctScore || '').match(/(\d+)\s*[-–:]\s*(\d+)/);
   const predScore = csRaw ? { h: csRaw[1], a: csRaw[2] } : null;
 
+  // Extra prediction markets derived from the projected score + 1X2
+  // probabilities, so "See more" reveals more than a single line.
+  const probs = (pickRaw?.probabilities && pickRaw.probabilities.home != null) ? pickRaw.probabilities : null;
+  const pH = predScore ? Number(predScore.h) : null;
+  const pA = predScore ? Number(predScore.a) : null;
+  const totalGoals = (pH != null && pA != null) ? pH + pA : null;
+  const ouPick = totalGoals != null ? (totalGoals >= 3 ? 'Over 2.5' : 'Under 2.5') : null;
+  const bttsPick = (pH != null && pA != null) ? (pH > 0 && pA > 0 ? 'Yes' : 'No') : null;
+  let dcPick = null;
+  if (probs) {
+    const least = [['home', probs.home], ['draw', probs.draw], ['away', probs.away]].sort((a, b) => a[1] - b[1])[0][0];
+    dcPick = least === 'away' ? `${home} or Draw` : least === 'home' ? `Draw or ${away}` : `${home} or ${away}`;
+  }
+  // One-line "why", weaving the markets into the form reasoning.
+  const whyExtra = totalGoals != null
+    ? ` The projected ${pH}–${pA} scoreline points to ${ouPick} total goals and both teams to score: ${bttsPick}.`
+    : '';
+  const hasMore = !!(predScore || probs);
+
   // Related blog posts that mention either team (when any exist).
   const relatedPosts = Array.isArray(posts)
     ? posts.filter(p => {
@@ -479,6 +498,16 @@ h1 .vs{color:var(--text3);margin:0 14px;font-weight:500;}
 .pick-card .conf{font-family:var(--ff);font-size:18px;font-weight:700;color:var(--green);}
 .pick-row{display:flex;justify-content:space-between;align-items:center;gap:16px;}
 .pick-reason{margin-top:14px;font-size:14px;color:var(--text2);line-height:1.7;border-top:1px solid rgba(249,115,22,0.20);padding-top:12px;}
+.pred-more{margin-top:14px;border-top:1px solid rgba(249,115,22,0.20);padding-top:12px;}
+.pred-more summary{font-family:var(--ff);font-size:14px;font-weight:700;color:var(--accent);cursor:pointer;letter-spacing:.03em;list-style:none;}
+.pred-more summary::-webkit-details-marker{display:none;}
+.pred-more[open] summary{margin-bottom:12px;}
+.pred-more-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.pred-more-grid div{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:9px 12px;}
+.pred-more-grid span{display:block;font-family:var(--fm);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:3px;}
+.pred-more-grid strong{font-family:var(--ff);font-size:15px;font-weight:700;color:var(--text);}
+.pred-more-why{margin-top:12px;font-size:13.5px;color:var(--text2);line-height:1.7;}
+@media(max-width:560px){.pred-more-grid{grid-template-columns:1fr;}}
 .section{padding:24px;border-radius:18px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);backdrop-filter:blur(18px);box-shadow:0 14px 40px rgba(0,0,0,0.32),inset 0 1px 0 rgba(255,255,255,0.08);margin-bottom:18px;position:relative;}
 .section h2{font-family:var(--ff);font-size:22px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin-bottom:14px;}
 .section h2 small{font-family:var(--fm);font-size:11px;font-weight:400;letter-spacing:.10em;color:var(--text3);text-transform:uppercase;margin-left:8px;}
@@ -591,6 +620,18 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
         <span style="font-family:var(--ff);font-weight:700;font-size:16px;">${esc(home)} <span style="color:var(--accent);">${esc(predScore.h)}–${esc(predScore.a)}</span> ${esc(away)}</span>
       </div>` : ''}
       ${reason ? `<div class="pick-reason">${esc(reason)}</div>` : ''}
+      ${hasMore ? `<details class="pred-more">
+        <summary>See more prediction &amp; why →</summary>
+        <div class="pred-more-grid">
+          <div><span>Match result</span><strong>${esc(pickLabel)}</strong></div>
+          ${predScore ? `<div><span>Predicted score</span><strong>${esc(home)} ${esc(predScore.h)}–${esc(predScore.a)} ${esc(away)}</strong></div>` : ''}
+          ${ouPick ? `<div><span>Total goals</span><strong>${esc(ouPick)}</strong></div>` : ''}
+          ${bttsPick ? `<div><span>Both teams to score</span><strong>${esc(bttsPick)}</strong></div>` : ''}
+          ${dcPick ? `<div><span>Double chance</span><strong>${esc(dcPick)}</strong></div>` : ''}
+          ${probs ? `<div><span>Win probability</span><strong>${esc(home)} ${probs.home}% · Draw ${probs.draw}% · ${esc(away)} ${probs.away}%</strong></div>` : ''}
+        </div>
+        <p class="pred-more-why"><b>Why:</b> ${esc(reason)}${esc(whyExtra)} This is a form-and-data projection, not a guaranteed result.</p>
+      </details>` : ''}
     </div>
   </article>
 
