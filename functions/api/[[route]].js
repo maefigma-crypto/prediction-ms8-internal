@@ -412,11 +412,17 @@ async function handlePredictions(env, url) {
   return cached(env, `prediction:${fixtureId}`, TTL.predictions, async () => {
     const home = fx.teams.home.id;
     const away = fx.teams.away.id;
-    let h2hResp = [];
+    let h2hResp = [], homeForm = [], awayForm = [];
     try {
-      const h2hData = await afGet(env, '/fixtures/headtohead', { h2h: `${home}-${away}`, last: 5 });
+      const [h2hData, hf, af] = await Promise.all([
+        afGet(env, '/fixtures/headtohead', { h2h: `${home}-${away}`, last: 5 }),
+        afGet(env, '/fixtures', { team: home, last: 6 }).catch(() => ({ response: [] })),
+        afGet(env, '/fixtures', { team: away, last: 6 }).catch(() => ({ response: [] })),
+      ]);
       h2hResp = h2hData.response || [];
-    } catch (_) { /* H2H is optional context */ }
+      homeForm = teamRecentForm(hf.response, home);
+      awayForm = teamRecentForm(af.response, away);
+    } catch (_) { /* H2H / form are optional context */ }
 
     // Premium AI analysis when an Anthropic key is configured; otherwise (or if
     // the call fails — e.g. no balance) fall back to a data-driven form preview
@@ -424,10 +430,10 @@ async function handlePredictions(env, url) {
     if (env.ANTHROPIC_API_KEY) {
       try {
         const prediction = await callClaude(env, buildPredictionPrompt(fx, h2hResp));
-        return { updated: Date.now(), fixtureId, source: 'ai', ...prediction };
+        return { updated: Date.now(), fixtureId, source: 'ai', homeForm, awayForm, ...prediction };
       } catch (_) { /* fall through to form preview */ }
     }
-    return { updated: Date.now(), fixtureId, ...buildFormPreview(fx, h2hResp) };
+    return { updated: Date.now(), fixtureId, homeForm, awayForm, ...buildFormPreview(fx, h2hResp) };
   });
 }
 
@@ -701,6 +707,22 @@ function buildFormPreview(fx, h2h = []) {
   parts.push(`Treat it as a data-and-form projection, not a guaranteed result.`);
 
   return { pick, pickLabel, confidence, probabilities, risk, correctScore, analysis: parts.join(' '), source: 'form' };
+}
+
+// Recent W/D/L form (oldest→newest, max 5) from a team's last fixtures, from
+// that team's own perspective. Used for the form badges on cards/popup/match.
+function teamRecentForm(resp, teamId) {
+  return (resp || [])
+    .filter(m => FINISHED_STATUS.has(m.fixture?.status?.short))
+    .sort((a, b) => new Date(a.fixture?.date) - new Date(b.fixture?.date))
+    .slice(-5)
+    .map(m => {
+      const isHome = m.teams?.home?.id === teamId;
+      const gf = isHome ? m.goals?.home : m.goals?.away;
+      const ga = isHome ? m.goals?.away : m.goals?.home;
+      if (gf == null || ga == null) return null;
+      return gf > ga ? 'W' : gf < ga ? 'L' : 'D';
+    }).filter(Boolean);
 }
 
 const HIGHLIGHT_FINISHED = new Set(['FT', 'AET', 'PEN']);
