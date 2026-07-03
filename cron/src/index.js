@@ -1903,6 +1903,8 @@ async function checkFinishedMatches(env) {
     // final whistle. Independent of pick reconciliation (WC matches carry no
     // pick), KV-deduped so it fires once per day.
     upcoming = await postWcUpcomingCard(env);
+    // Updated group standings after the day's slate completes (KV-deduped).
+    await postGroupStandings(env).catch(() => null);
   }
   if (allDone && anyReconciled) {
     recap = await postDailyRecap(env);
@@ -2174,6 +2176,126 @@ async function postWcUpcomingCard(env, opts = {}) {
   }
 }
 
+// --- Golden Boot race post ---------------------------------------------------
+// Top-5 WC scorers, posted roughly every 2 days (13:00 MYT window, 44h dedup).
+async function postScorersRace(env, opts = {}) {
+  if (!env.TG_BOT_TOKEN || !env.TG_CHANNEL_ID) return { status: 'skipped', reason: 'telegram not configured' };
+  if (!opts.force) {
+    const { h } = nowMytHM();
+    if (h !== 13) return { status: 'skipped', reason: 'outside 13:00 MYT window' };
+    if (await env.CACHE.get('posted:scorers').catch(() => null)) return { status: 'skipped', reason: 'posted within 44h' };
+  }
+  const data = await fetch(`${SITE_URL}/api/topscorers?league=1&season=2026`).then(r => r.ok ? r.json() : null).catch(() => null);
+  const list = (data?.response || []).slice(0, 5);
+  if (!list.length) return { status: 'skipped', reason: 'no scorer data' };
+  const medals = ['🥇', '🥈', '🥉', '4.', '5.'];
+  const lines = [`👑 <b>Golden Boot Race · 金靴榜</b>`, `🏆 2026 FIFA World Cup`, ''];
+  list.forEach((p, i) => {
+    const s = p.statistics?.[0] || {};
+    lines.push(`${medals[i]} <b>${p.player?.name || '?'}</b> (${s.team?.name || ''}) — ${s.goals?.total ?? 0} ⚽`);
+  });
+  lines.push('', `Who takes the Golden Boot? 谁能穿金靴?`, '', `🔗 Live table: ${SITE_URL}/predictions/fifa-world-cup/`, '', `#GoldenBoot #WorldCup2026 #ScoreOcs8 #足球预测`);
+  const msg = await sendMessage(env, { text: lines.join('\n') });
+  if (msg?.disabled) return { status: 'skipped', reason: 'posting disabled' };
+  await env.CACHE.put('posted:scorers', '1', { expirationTtl: 44 * 3600 });
+  return { status: 'ok', message_id: msg.message_id };
+}
+
+// --- Group standings digest ---------------------------------------------------
+// Compact per-group points table, fired after the day's last match (allDone)
+// or manually. One per day.
+async function postGroupStandings(env, opts = {}) {
+  if (!env.TG_BOT_TOKEN || !env.TG_CHANNEL_ID) return { status: 'skipped', reason: 'telegram not configured' };
+  const date = todayMYT();
+  const dedupKey = `posted:grouptable:${date}`;
+  if (!opts.force && await env.CACHE.get(dedupKey).catch(() => null)) return { status: 'skipped', reason: 'already posted today' };
+  const data = await fetch(`${SITE_URL}/api/standings?league=1&season=2026`).then(r => r.ok ? r.json() : null).catch(() => null);
+  const groups = data?.response?.[0]?.league?.standings || [];
+  if (!groups.length) return { status: 'skipped', reason: 'no standings data' };
+  const lines = [`📊 <b>Group Standings · 小组积分榜</b>`, `🏆 2026 FIFA World Cup`, ''];
+  for (const g of groups) {
+    const label = (g?.[0]?.group || '').replace(/^Group\s*/i, '');
+    const row = g.map(t => `${t.team?.name} ${t.points}`).join(' · ');
+    lines.push(`<b>${label ? 'Group ' + label : 'Group'}</b>: ${row}`);
+  }
+  lines.push('', `🔗 Full tables: ${SITE_URL}/predictions/fifa-world-cup/`, '', `#WorldCup2026 #ScoreOcs8 #足球预测`);
+  const text = lines.join('\n');
+  const msg = await sendMessage(env, { text: text.length > 4000 ? text.slice(0, 3997) + '...' : text });
+  if (msg?.disabled) return { status: 'skipped', reason: 'posting disabled' };
+  await env.CACHE.put(dedupKey, '1', { expirationTtl: 36 * 3600 });
+  return { status: 'ok', message_id: msg.message_id };
+}
+
+// --- Fan market of the day ------------------------------------------------
+// One open fan-prediction market daily (11:00 MYT window), soonest-closing
+// first, never the same market twice.
+async function postFanMarket(env, opts = {}) {
+  if (!env.TG_BOT_TOKEN || !env.TG_CHANNEL_ID) return { status: 'skipped', reason: 'telegram not configured' };
+  if (!opts.force) {
+    const { h } = nowMytHM();
+    if (h !== 11) return { status: 'skipped', reason: 'outside 11:00 MYT window' };
+  }
+  const date = todayMYT();
+  const dedupKey = `posted:market:${date}`;
+  if (!opts.force && await env.CACHE.get(dedupKey).catch(() => null)) return { status: 'skipped', reason: 'already posted today' };
+  const data = await fetch(`${SITE_URL}/api/markets`).then(r => r.ok ? r.json() : null).catch(() => null);
+  const open = (data?.markets || []).filter(m => m.status === 'open').sort((a, b) => Date.parse(a.closes) - Date.parse(b.closes));
+  let pickMkt = null;
+  for (const m of open) {
+    if (!(await env.CACHE.get(`posted:mkt:${m.id}`).catch(() => null))) { pickMkt = m; break; }
+  }
+  if (!pickMkt) return { status: 'skipped', reason: 'no unposted open market' };
+  const lines = [
+    `🔮 <b>Fan Prediction · 球迷预测</b>`, '',
+    `❓ ${pickMkt.q}`, '',
+    `✅ YES ${pickMkt.yesPct}%  ·  ❌ NO ${pickMkt.noPct}%`,
+    `🗳 ${pickMkt.votes} fan votes so far`, '',
+    `Cast your vote 👉 ${SITE_URL}/worldcup-markets/`, '',
+    `#FanVote #WorldCup2026 #ScoreOcs8 #足球预测`,
+  ];
+  const msg = await sendMessage(env, { text: lines.join('\n') });
+  if (msg?.disabled) return { status: 'skipped', reason: 'posting disabled' };
+  await env.CACHE.put(dedupKey, '1', { expirationTtl: 36 * 3600 });
+  await env.CACHE.put(`posted:mkt:${pickMkt.id}`, '1', { expirationTtl: 21 * 86400 });
+  return { status: 'ok', market: pickMkt.id, message_id: msg.message_id };
+}
+
+// --- Live goal alerts -------------------------------------------------------
+// Each heartbeat: compare live WC scores to the last posted score (KV) and
+// announce changes. First sighting of a match records the score silently so
+// we never replay goals that happened before the worker started watching.
+async function postGoalAlerts(env) {
+  if (!env.TG_BOT_TOKEN || !env.TG_CHANNEL_ID) return { status: 'skipped', reason: 'telegram not configured' };
+  const live = await fetch(`${SITE_URL}/api/live`).then(r => r.ok ? r.json() : null).catch(() => null);
+  const wcLive = (live?.response || []).filter(fx => fx.league?.id === 1);
+  if (!wcLive.length) return { status: 'ok', live: 0 };
+  const report = { status: 'ok', live: wcLive.length, posted: 0 };
+  for (const fx of wcLive) {
+    const id = fx.fixture?.id;
+    const gh = fx.goals?.home, ga = fx.goals?.away;
+    if (id == null || gh == null || ga == null) continue;
+    const cur = `${gh}-${ga}`;
+    const key = `goal:${id}`;
+    const last = await env.CACHE.get(key).catch(() => null);
+    if (last === null) { await env.CACHE.put(key, cur, { expirationTtl: 6 * 3600 }); continue; }
+    if (last === cur) continue;
+    const [lh, la] = last.split('-').map(Number);
+    const scorerSide = gh > lh ? fx.teams?.home?.name : ga > la ? fx.teams?.away?.name : null;
+    const min = fx.fixture?.status?.elapsed;
+    const lines = [
+      `⚽ <b>GOAL · 进球!</b>${scorerSide ? ` — <b>${scorerSide}</b>` : ''}`, '',
+      `<b>${fx.teams?.home?.name} ${gh} — ${ga} ${fx.teams?.away?.name}</b>${min != null ? ` (${min}')` : ''}`, '',
+      `🔗 Live: ${SITE_URL}/`, '',
+      `#WorldCup2026 #ScoreOcs8`,
+    ];
+    const msg = await sendMessage(env, { text: lines.join('\n') });
+    if (msg?.disabled) return { ...report, reason: 'posting disabled' };
+    await env.CACHE.put(key, cur, { expirationTtl: 6 * 3600 });
+    report.posted += 1;
+  }
+  return report;
+}
+
 export default {
   async scheduled(event, env, ctx) {
     // Dispatch by cron pattern:
@@ -2197,6 +2319,13 @@ export default {
       ctx.waitUntil(postPreMatchAlerts(env));
       ctx.waitUntil(postPrematchPolls(env));
       ctx.waitUntil(checkFinishedMatches(env));
+      // Engagement posts, all KV-deduped: goal alerts every tick while WC
+      // matches are live; Golden Boot race ~every 2 days (13:00 MYT); fan
+      // market daily (11:00 MYT). Group standings fire from checkFinished-
+      // Matches when the day's slate completes.
+      ctx.waitUntil(postGoalAlerts(env));
+      ctx.waitUntil(postScorersRace(env));
+      ctx.waitUntil(postFanMarket(env));
       // 'Today at the World Cup' digest. This used to depend on dedicated
       // 30-16 / 0-7 UTC cron triggers that were never registered in
       // wrangler.toml, so it silently stopped posting. Drive it from the
@@ -2242,6 +2371,10 @@ export default {
     else if (task === 'poll') result = await postPrematchPolls(env);
     else if (task === 'premat') result = await postPreMatchAlerts(env);
     else if (task === 'recap') result = await postDailyRecap(env);
+    else if (task === 'scorers') result = await postScorersRace(env, { force });
+    else if (task === 'group-table') result = await postGroupStandings(env, { force });
+    else if (task === 'market') result = await postFanMarket(env, { force });
+    else if (task === 'goals') result = await postGoalAlerts(env);
     else if (task === 'posting') {
       // Read or flip the global Telegram kill-switch (KV tg:posting).
       //   ?task=posting              → report current state
