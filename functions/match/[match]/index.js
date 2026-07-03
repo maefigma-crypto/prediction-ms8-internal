@@ -337,7 +337,7 @@ export async function onRequest(context) {
   const aStat = stats.find(x => x.team?.id === fx?.teams?.away?.id) || stats[1];
 
   const title = `${home} vs ${away} Prediction — ${leagueName} | ScoreOcs8`;
-  const description = `${home} vs ${away} ${leagueName} prediction, head-to-head record, pro pick (${pickLabel}) and live stats from ScoreOcs8 — Malaysia online casino soccer prediction site. Kickoff ${kickoff || 'TBD'}.`;
+  const description = `${home} vs ${away} ${leagueName} prediction, head-to-head record, pro pick (${pickLabel}) and live stats from ScoreOcs8 — free soccer predictions for Malaysia. Kickoff ${kickoff || 'TBD'}.`;
   const ogImage = `${SITE}/og/match?home=${encodeURIComponent(home)}&away=${encodeURIComponent(away)}&league=${encodeURIComponent(leagueName)}&date=${encodeURIComponent(fx?.fixture?.date || '')}`;
 
   // FAQ entries (drive both FAQ schema and a visible Q&A block) — these target

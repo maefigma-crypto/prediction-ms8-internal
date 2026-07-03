@@ -2,13 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ScoreOcs8 — FIFA World Cup 2026 Predictions &amp; Daily Football Pro Picks (Malaysia)</title>
-<meta name="description" content="ScoreOcs8 is Malaysia's best online casino soccer prediction site — pro picks for EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup 2026. Free Telegram tips, daily updates in MYT.">
-<meta name="keywords" content="Malaysia online casino soccer prediction, soccer prediction Malaysia, online casino Malaysia, online casino football, football prediction Malaysia, EPL prediction Malaysia, UCL prediction Malaysia, La Liga prediction Malaysia, Bundesliga prediction Malaysia, Serie A prediction Malaysia, Ligue 1 prediction, FIFA World Cup 2026 Malaysia, Asian handicap Malaysia, ScoreOcs8, soccer betting tips Malaysia, free soccer prediction Malaysia, online betting Malaysia, soccer pick Malaysia">
+<meta name="description" content="ScoreOcs8 is Malaysia's dedicated soccer prediction site — pro picks for EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup 2026. Free Telegram tips, daily updates in MYT.">
 
 <!-- Canonical & language -->
 <link rel="canonical" href="https://scoreocs8.com/">
@@ -27,20 +23,20 @@
 
 <!-- Open Graph -->
 <meta property="og:site_name" content="ScoreOcs8">
-<meta property="og:title" content="ScoreOcs8 — Best Malaysia Online Casino Soccer Prediction">
-<meta property="og:description" content="Malaysia's best online casino soccer prediction site — pro picks for EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup 2026. Free Telegram tips, daily updates in MYT.">
+<meta property="og:title" content="ScoreOcs8 — Daily Soccer Predictions Malaysia">
+<meta property="og:description" content="Malaysia's dedicated soccer prediction site — pro picks for EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup 2026. Free Telegram tips, daily updates in MYT.">
 <meta property="og:url" content="https://scoreocs8.com/">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="en_MY">
 <meta property="og:image" content="https://scoreocs8.com/og/default">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="ScoreOcs8 — Best Malaysia Online Casino Soccer Prediction">
+<meta property="og:image:alt" content="ScoreOcs8 — Daily Soccer Predictions Malaysia">
 
 <!-- Twitter / X -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@scoreocs8">
-<meta name="twitter:title" content="ScoreOcs8 — Best Malaysia Online Casino Soccer Prediction">
+<meta name="twitter:title" content="ScoreOcs8 — Daily Soccer Predictions Malaysia">
 <meta name="twitter:description" content="Pro soccer predictions for EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup. Free daily picks on Telegram, MYT timing.">
 <meta name="twitter:image" content="https://scoreocs8.com/og/default">
 
@@ -57,7 +53,7 @@
       "url": "https://scoreocs8.com/",
       "logo": "https://scoreocs8.com/logo.png",
       "slogan": "Malaysia's best online soccer prediction site",
-      "description": "Malaysia's best online casino soccer prediction site — pro picks for EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup 2026.",
+      "description": "Malaysia's dedicated soccer prediction site — pro picks for EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup 2026.",
       "areaServed": "MY",
       "sameAs": [
         "https://t.me/scoreocs8",
@@ -95,7 +91,7 @@
           "name": "How accurate are ScoreOcs8 predictions?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Our pro analysis record shows 87% overall accuracy. All predictions are logged and results published publicly. We only cover major soccer leagues — English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup."
+            "text": "Every prediction is logged and its result is published publicly in our track record, so you can verify our accuracy yourself. We only cover major soccer leagues — English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup."
           }
         },
         {
@@ -120,6 +116,7 @@
 }
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
@@ -1756,7 +1753,7 @@ footer{
         const gh = m.goals?.home, ga = m.goals?.away;
         const homeWin = done && gh != null && ga != null && (gh > ga || (m.penalty?.home ?? 0) > (m.penalty?.away ?? 0));
         const awayWin = done && gh != null && ga != null && (ga > gh || (m.penalty?.away ?? 0) > (m.penalty?.home ?? 0));
-        const teamRow = (t, goal, win) => `<div class="wcs-team${win ? ' winner' : ''}">${t.logo ? `<img src="${esc(t.logo)}" alt="" loading="lazy" onerror="this.style.display='none'">` : '<span style="width:24px;text-align:center;flex:none;">⚽</span>'}<span>${esc(t.name)}</span>${(live || done) && goal != null ? `<span class="wcs-goal">${esc(goal)}</span>` : ''}</div>`;
+        const teamRow = (t, goal, win) => `<div class="wcs-team${win ? ' winner' : ''}">${t.logo ? `<img src="${esc(t.logo)}" alt="${esc(t.name)} logo" loading="lazy" onerror="this.style.display='none'">` : '<span style="width:24px;text-align:center;flex:none;">⚽</span>'}<span>${esc(t.name)}</span>${(live || done) && goal != null ? `<span class="wcs-goal">${esc(goal)}</span>` : ''}</div>`;
         let right;
         if (live) right = `<div class="wcs-right"><div class="wcs-live">● LIVE ${esc(m.elapsed ?? '')}'</div></div>`;
         else if (done) right = `<div class="wcs-right"><div class="wcs-ft">${m.status === 'PEN' ? `PEN ${esc(m.penalty?.home ?? '')}-${esc(m.penalty?.away ?? '')}` : m.status === 'AET' ? 'AET' : 'FT'}</div></div>`;
@@ -2073,7 +2070,7 @@ footer{
     <h2 class="stitle">Frequently Asked Questions</h2>
     <p class="ssub">Everything you need to know about ScoreOcs8</p>
     <div class="faqlist fu">
-      <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">How accurate are ScoreOcs8 predictions? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">Our pro analysis record shows 87% overall accuracy. All predictions are logged and results published publicly. We only cover major soccer leagues — English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup.</div></div></div>
+      <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">How accurate are ScoreOcs8 predictions? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">Every prediction is logged and its result is published publicly in our track record, so you can verify our accuracy yourself. We only cover major soccer leagues — English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup.</div></div></div>
       <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">What leagues does ScoreOcs8 cover? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup qualifying and finals. We do not cover small or lower-league competitions.</div></div></div>
       <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">Where do I register or login? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">Registration and login happen on the official OCS8 money-site domain. ScoreOcs8 is the prediction and alert site, so use our Register buttons to open OCS8 when you want to create an account or place a bet.</div></div></div>
       <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">What timezone are all match times shown in? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">All times on ScoreOcs8 are displayed in Asia/Kuala Lumpur time (MYT, UTC+8). The live clock in the nav bar always shows current MYT time so you never miss a kick-off.</div></div></div>
@@ -2111,7 +2108,7 @@ footer{
 <footer>
   <div class="fi">
     <div class="ftop">
-      <div><div class="fbn"><img src="/logo.png" alt="ScoreOcs8" style="height:40px;width:auto;display:block;margin-bottom:4px;"></div><div class="fbd">Malaysia's best online casino soccer prediction platform — pro picks for EPL, UCL and Europe's top leagues.</div><div class="fsocial">
+      <div><div class="fbn"><img src="/logo.png" alt="ScoreOcs8" style="height:40px;width:auto;display:block;margin-bottom:4px;"></div><div class="fbd">Malaysia's dedicated soccer prediction platform — pro picks for EPL, UCL and Europe's top leagues.</div><div class="fsocial">
 <a href="https://t.me/scoreocs8" target="_blank" rel="noopener" class="fsi" aria-label="Telegram @scoreocs8" title="Telegram @scoreocs8"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg></a>
 <a href="https://instagram.com/scoreocs8" target="_blank" rel="noopener" class="fsi" aria-label="Instagram" title="Instagram @scoreocs8"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>
 <a href="https://x.com/scoreocs8" target="_blank" rel="noopener" class="fsi" aria-label="X" title="X / Twitter @scoreocs8"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
@@ -2125,7 +2122,7 @@ footer{
     </div>
     <div class="seob">
       <h3>Best Malaysia Online Casino Soccer Prediction — Major Leagues Only</h3>
-      <p>ScoreOcs8 delivers pro match predictions for the English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup 2026 qualifying and finals — all displayed in MYT (Asia/Kuala Lumpur, UTC+8) timezone. Our analysis team reviews head-to-head records, team form, injury data and live betting odds to generate daily soccer predictions with confidence percentages. Built for Malaysia's online casino punters who want disciplined picks instead of small-league noise. ScoreOcs8 predictions are also auto-broadcast daily to our free Telegram channel @scoreocs8 before every match kick-off. Register and login on the official OCS8 money-site domain to bet on the picks.</p>
+      <p>ScoreOcs8 delivers pro match predictions for the English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup 2026 qualifying and finals — all displayed in MYT (Asia/Kuala Lumpur, UTC+8) timezone. Our analysis team reviews head-to-head records, team form, injury data and live betting odds to generate daily soccer predictions with confidence percentages. Built for Malaysian punters who want disciplined picks instead of small-league noise. ScoreOcs8 predictions are also auto-broadcast daily to our free Telegram channel @scoreocs8 before every match kick-off. Register and login on the official OCS8 money-site domain to bet on the picks.</p>
     </div>
     <div class="fbot"><div class="fcp">© 2026 ScoreOcs8 · Football predictions &amp; analysis — not betting advice. 18+ only · Play responsibly · <a href="https://www.gamblingtherapy.org" rel="noopener nofollow" style="color:var(--text2);text-decoration:underline;">Get help</a>.</div><div class="fpl"><a href="/about.html">About</a><a href="/privacy.html">Privacy Policy</a><a href="/terms.html">Terms of Service</a><a href="/privacy.html#cookies">Cookie Policy</a></div></div>
   </div>
@@ -2446,7 +2443,7 @@ const SCOREOCS8_I18N = {
       faqTitle: 'Frequently Asked Questions',
       faqSub: 'Everything you need to know about ScoreOcs8',
       faq1q: 'How accurate are ScoreOcs8 predictions? ▼',
-      faq1a: 'Our pro analysis record shows 87% overall accuracy. All predictions are logged and results published publicly. We only cover major soccer leagues — English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup.',
+      faq1a: 'Every prediction is logged and its result is published publicly in our track record, so you can verify our accuracy yourself. We only cover major soccer leagues — English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup.',
       faq2q: 'What leagues does ScoreOcs8 cover? ▼',
       faq2a: 'English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup qualifying and finals. We do not cover small or lower-league competitions.',
       faq3q: 'Where do I register or login? ▼',
@@ -2460,12 +2457,12 @@ const SCOREOCS8_I18N = {
       tgTag: '📲 Free · Daily · Auto-Broadcast',
       tgTitle: 'Get Picks on Telegram',
       tgSub: 'Join @scoreocs8 — predictions auto-posted before every match. Free forever.',
-      footerDesc: "Malaysia's best online casino soccer prediction platform — pro picks for EPL, UCL and Europe's top leagues.",
+      footerDesc: "Malaysia's dedicated soccer prediction platform — pro picks for EPL, UCL and Europe's top leagues.",
       quickLinks: 'Quick Links',
       resources: 'Resources',
       connect: 'Connect',
       seoTitle: 'Best Malaysia Online Casino Soccer Prediction — Major Leagues Only',
-      seoText: "ScoreOcs8 delivers pro match predictions for the English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup 2026 qualifying and finals — all displayed in MYT (Asia/Kuala Lumpur, UTC+8) timezone. Our analysis team reviews head-to-head records, team form, injury data and live betting odds to generate daily soccer predictions with confidence percentages. Built for Malaysia's online casino punters who want disciplined picks instead of small-league noise. ScoreOcs8 predictions are also auto-broadcast daily to our free Telegram channel @scoreocs8 before every match kick-off. Register and login on the official OCS8 money-site domain to bet on the picks."
+      seoText: "ScoreOcs8 delivers pro match predictions for the English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup 2026 qualifying and finals — all displayed in MYT (Asia/Kuala Lumpur, UTC+8) timezone. Our analysis team reviews head-to-head records, team form, injury data and live betting odds to generate daily soccer predictions with confidence percentages. Built for Malaysian punters who want disciplined picks instead of small-league noise. ScoreOcs8 predictions are also auto-broadcast daily to our free Telegram channel @scoreocs8 before every match kick-off. Register and login on the official OCS8 money-site domain to bet on the picks."
     }
   },
   BM: {
@@ -2559,7 +2556,7 @@ const SCOREOCS8_I18N = {
       faqTitle: 'Soalan Lazim',
       faqSub: 'Semua yang anda perlu tahu tentang ScoreOcs8',
       faq1q: 'Sejauh mana tepat ramalan ScoreOcs8? ▼',
-      faq1a: 'Rekod analisis pro kami menunjukkan 87% ketepatan keseluruhan. Semua ramalan direkod dan keputusan dipaparkan secara publik. Kami hanya meliputi liga bola sepak utama — English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 dan FIFA World Cup.',
+      faq1a: 'Semua ramalan kami direkod dan keputusannya dipaparkan secara publik dalam track record, jadi anda boleh menyemak ketepatan kami sendiri. Kami hanya meliputi liga bola sepak utama — English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 dan FIFA World Cup.',
       faq2q: 'Liga apa yang ScoreOcs8 cover? ▼',
       faq2a: 'English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 serta kelayakan dan final FIFA World Cup. Kami tidak cover liga kecil atau divisyen rendah.',
       faq3q: 'Di mana saya daftar atau login? ▼',
@@ -2573,12 +2570,12 @@ const SCOREOCS8_I18N = {
       tgTag: '📲 Percuma · Harian · Auto-Broadcast',
       tgTitle: 'Dapatkan Pilihan Di Telegram',
       tgSub: 'Sertai @scoreocs8 — ramalan dipos automatik sebelum setiap perlawanan. Percuma selamanya.',
-      footerDesc: 'Platform ramalan bola sepak online casino terbaik Malaysia — pilihan pro untuk EPL, UCL dan liga utama Eropah.',
+      footerDesc: 'Platform ramalan bola sepak terbaik Malaysia — pilihan pro untuk EPL, UCL dan liga utama Eropah.',
       quickLinks: 'Pautan Pantas',
       resources: 'Sumber',
       connect: 'Hubungi',
       seoTitle: 'Ramalan Bola Sepak Online Casino Malaysia Terbaik — Liga Utama Sahaja',
-      seoText: 'ScoreOcs8 menyediakan ramalan pro untuk English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 serta kelayakan dan final FIFA World Cup 2026 — semua dipaparkan dalam waktu MYT (Asia/Kuala Lumpur, UTC+8). Pasukan analisis kami menyemak rekod H2H, form pasukan, data kecederaan dan odds live untuk menghasilkan ramalan bola harian dengan peratus keyakinan. Dibina untuk pemain online casino Malaysia yang mahukan pilihan berdisiplin, bukan gangguan liga kecil. Ramalan ScoreOcs8 juga diauto-broadcast setiap hari ke channel Telegram percuma @scoreocs8 sebelum sepak mula. Daftar dan login di domain rasmi money-site OCS8 untuk bet pada pilihan.'
+      seoText: 'ScoreOcs8 menyediakan ramalan pro untuk English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 serta kelayakan dan final FIFA World Cup 2026 — semua dipaparkan dalam waktu MYT (Asia/Kuala Lumpur, UTC+8). Pasukan analisis kami menyemak rekod H2H, form pasukan, data kecederaan dan odds live untuk menghasilkan ramalan bola harian dengan peratus keyakinan. Dibina untuk pemain Malaysia yang mahukan pilihan berdisiplin, bukan gangguan liga kecil. Ramalan ScoreOcs8 juga diauto-broadcast setiap hari ke channel Telegram percuma @scoreocs8 sebelum sepak mula. Daftar dan login di domain rasmi money-site OCS8 untuk bet pada pilihan.'
     }
   },
   ZH: {
@@ -2672,7 +2669,7 @@ const SCOREOCS8_I18N = {
       faqTitle: '常见问题',
       faqSub: '你需要了解 ScoreOcs8 的所有重点',
       faq1q: 'ScoreOcs8 预测有多准确？ ▼',
-      faq1a: '我们的专业分析记录显示整体准确率为 87%。所有预测都会记录，结果也会公开。我们只覆盖主要足球联赛 — English Premier League、UEFA Champions League、La Liga、Serie A、Bundesliga、Ligue 1 和 FIFA World Cup。',
+      faq1a: '我们的每一个预测都会记录，结果公开发布，您可以自行验证我们的准确率。我们只覆盖主要足球联赛 — English Premier League、UEFA Champions League、La Liga、Serie A、Bundesliga、Ligue 1 和 FIFA World Cup。',
       faq2q: 'ScoreOcs8 覆盖哪些联赛？ ▼',
       faq2a: 'English Premier League、UEFA Champions League、La Liga、Serie A、Bundesliga、Ligue 1 以及 FIFA World Cup 资格赛和决赛。我们不覆盖小联赛或低级别赛事。',
       faq3q: '我要在哪里注册或登录？ ▼',
