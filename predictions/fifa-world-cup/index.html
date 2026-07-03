@@ -553,10 +553,26 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeBurger();});
       return;
     }
 
-    // Fixtures for this league
-    const fx = await getJSON(`/api/fixtures?league=${L.api_id}&season=${encodeURIComponent(L.api_season||'')}`);
-    const lg = fx?.leagues?.[0];
-    const matches = lg ? [...(lg.today||[]), ...(lg.next||[])].slice(0, 8) : [];
+    // Fixtures: for the World Cup use /api/wc-schedule (reliable full
+    // schedule — /api/fixtures next/last can come back empty for league 1);
+    // other leagues keep the fixtures buckets.
+    let matches = [];
+    if (String(L.api_id) === '1') {
+      const sched = await getJSON('/api/wc-schedule');
+      const now = Date.now();
+      const FIN = new Set(['FT','AET','PEN']);
+      matches = (sched?.matches || []).map(m => ({
+        fixture: { id: m.fixture_id, date: m.date, status: { short: m.status, elapsed: m.elapsed ?? null } },
+        league: { id: 1, name: 'FIFA World Cup' },
+        teams: { home: { id: m.home?.id, name: m.home?.name, logo: m.home?.logo }, away: { id: m.away?.id, name: m.away?.name, logo: m.away?.logo } },
+        goals: { home: m.goals?.home ?? null, away: m.goals?.away ?? null },
+      })).filter(x => LIVE.has(x.fixture.status.short) || (!FIN.has(x.fixture.status.short) && new Date(x.fixture.date).getTime() > now - 30 * 60 * 1000))
+        .sort((a,b) => new Date(a.fixture.date) - new Date(b.fixture.date)).slice(0, 8);
+    } else {
+      const fx = await getJSON(`/api/fixtures?league=${L.api_id}&season=${encodeURIComponent(L.api_season||'')}`);
+      const lg = fx?.leagues?.[0];
+      matches = lg ? [...(lg.today||[]), ...(lg.next||[])].slice(0, 8) : [];
+    }
     if (!matches.length) empty(matchHost, 'No upcoming fixtures from the API right now. Check back later — the feed updates hourly.');
     else matchHost.innerHTML = matches.map(matchCard).join('');
 

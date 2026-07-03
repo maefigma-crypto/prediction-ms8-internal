@@ -148,11 +148,26 @@ function render(){
   list.sort((a,b) => mode === 'completed' ? new Date(b.fixture.date) - new Date(a.fixture.date) : new Date(a.fixture.date) - new Date(b.fixture.date));
   grid.innerHTML = list.length ? list.slice(0, 24).map(card).join('') : '<div class="empty">No matches found for this filter.</div>';
 }
+// The World Cup's /api/fixtures next/last buckets are unreliable — merge the
+// full schedule from /api/wc-schedule so Completed/Today always populate.
+function wcFromSchedule(sched){
+  return (sched?.matches || []).map(m => ({
+    fixture: { id: m.fixture_id, date: m.date, status: { short: m.status, elapsed: m.elapsed ?? null } },
+    league: { id: 1, name: 'FIFA World Cup', round: m.round || '' },
+    teams: { home: { id: m.home?.id, name: m.home?.name, logo: m.home?.logo }, away: { id: m.away?.id, name: m.away?.name, logo: m.away?.logo } },
+    goals: { home: m.goals?.home ?? null, away: m.goals?.away ?? null },
+    _leagueName: 'FIFA World Cup',
+  }));
+}
 async function load(){
   document.getElementById('league').innerHTML += LEAGUES.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
-  const batches = await Promise.allSettled(LEAGUES.map(l => fetch(`/api/fixtures?league=${l.id}`).then(r => r.ok ? r.json() : null).then(d => flatten(d || {}, l))));
+  const [wcSched, ...batches] = await Promise.allSettled([
+    fetch('/api/wc-schedule').then(r => r.ok ? r.json() : null),
+    ...LEAGUES.map(l => fetch(`/api/fixtures?league=${l.id}`).then(r => r.ok ? r.json() : null).then(d => flatten(d || {}, l))),
+  ]);
   const seen = new Set();
-  all = batches.flatMap(b => b.status === 'fulfilled' ? b.value : []).filter(fx => {
+  const wcAll = wcSched.status === 'fulfilled' ? wcFromSchedule(wcSched.value) : [];
+  all = [...wcAll, ...batches.flatMap(b => b.status === 'fulfilled' ? b.value : [])].filter(fx => {
     const id = fx.fixture?.id;
     if (!id || seen.has(id)) return false;
     seen.add(id);
