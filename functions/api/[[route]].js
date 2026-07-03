@@ -296,7 +296,7 @@ async function handleStandings(env, url) {
       // Knockout comps (UCL, FIFA WC) don't have a league table — return empty.
       return { updated: Date.now(), leagueId, season, response: [], error: String(err.message || err) };
     }
-  }, { refresh, validate: d => (d.response || []).length > 0, emptyTtl: 600 });
+  }, { refresh, validate: d => (d.response || []).length > 0, emptyTtl: 120 });
 }
 
 async function handleTopScorers(env, url) {
@@ -310,7 +310,7 @@ async function handleTopScorers(env, url) {
     } catch (err) {
       return { updated: Date.now(), leagueId, season, response: [], error: String(err.message || err) };
     }
-  }, { refresh, validate: d => (d.response || []).length > 0, emptyTtl: 600 });
+  }, { refresh, validate: d => (d.response || []).length > 0, emptyTtl: 120 });
 }
 
 async function handleOdds(env, url) {

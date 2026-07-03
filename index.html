@@ -1695,11 +1695,24 @@ footer{
         elResults.innerHTML = '<div class="msc-loading">Loading results…</div>';
 
         const season = seasonOf(leagueId);
-        const [std, scor, fx] = await Promise.all([
+        const isWC = String(leagueId) === '1';
+        const [std, scor, fxRaw] = await Promise.all([
           fetch(`/api/standings?league=${leagueId}&season=${season}`).then(r => r.ok ? r.json() : null).catch(() => null),
           fetch(`/api/topscorers?league=${leagueId}&season=${season}`).then(r => r.ok ? r.json() : null).catch(() => null),
-          fetch(`/api/fixtures?league=${leagueId}&season=${season}`).then(r => r.ok ? r.json() : null).catch(() => null),
+          isWC
+            ? fetch('/api/wc-schedule').then(r => r.ok ? r.json() : null).catch(() => null)
+            : fetch(`/api/fixtures?league=${leagueId}&season=${season}`).then(r => r.ok ? r.json() : null).catch(() => null),
         ]);
+        // World Cup fixtures come from wc-schedule (reliable full schedule);
+        // reshape into the {leagues:[{next,last}]} form the renderers expect.
+        let fx = fxRaw;
+        if (isWC && fxRaw?.matches) {
+          const now = Date.now(); const FIN = new Set(['FT', 'AET', 'PEN']);
+          const arr = (fxRaw.matches || []).map(m => ({ fixture: { id: m.fixture_id, date: m.date, status: { short: m.status, elapsed: m.elapsed ?? null } }, teams: { home: m.home, away: m.away }, goals: m.goals || {} }));
+          const next = arr.filter(f => new Date(f.fixture.date).getTime() > now && !FIN.has(f.fixture.status.short)).sort((a, b) => new Date(a.fixture.date) - new Date(b.fixture.date));
+          const last = arr.filter(f => FIN.has(f.fixture.status.short)).sort((a, b) => new Date(b.fixture.date) - new Date(a.fixture.date));
+          fx = { leagues: [{ leagueId: 1, next, last, today: [] }] };
+        }
         cache[leagueId] = { std, scor, fx };
         renderTable(std); renderScorers(scor); renderUpcoming(fx); renderResults(fx);
       }
@@ -3323,6 +3336,21 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     return out;
   }
 
+  // Map /api/wc-schedule matches into the fixture shape the renderers expect.
+  // wc-schedule is the reliable full-schedule source (finished + upcoming),
+  // unlike /api/fixtures next/last which can come back empty for the World Cup.
+  function wcMatchesToFixtures(sched) {
+    return (sched?.matches || []).map(m => ({
+      fixture: { id: m.fixture_id, date: m.date, status: { short: m.status, elapsed: m.elapsed ?? null } },
+      league: { id: 1, name: 'FIFA World Cup', round: m.round || '' },
+      teams: {
+        home: { id: m.home?.id, name: m.home?.name, logo: m.home?.logo },
+        away: { id: m.away?.id, name: m.away?.name, logo: m.away?.logo },
+      },
+      goals: { home: m.goals?.home ?? null, away: m.goals?.away ?? null },
+    })).sort((a, b) => new Date(a.fixture.date) - new Date(b.fixture.date));
+  }
+
   // During the World Cup the homepage "FIFA World Cup Predictions" section
   // should show WC fixtures (league id 1) only. Fall back to all leagues on
   // rest days so the section is never empty.
@@ -3349,7 +3377,8 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
         .sort((a,b) => new Date(a.fixture.date) - new Date(b.fixture.date));
     }
     if (mode === 'completed') {
-      list = all.filter(fx => fx.fixture?.status?.short === 'FT')
+      const FIN = new Set(['FT','AET','PEN']);
+      list = all.filter(fx => FIN.has(fx.fixture?.status?.short))
         .sort((a,b) => new Date(b.fixture.date) - new Date(a.fixture.date));
     }
     // FIFA World Cup first while tournament fixtures are in the feed
@@ -3456,8 +3485,8 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     if (!live) return;
     const liveSet = new Set((live.response || []).map(fx => fx.fixture.id));
     // If any live match appears, re-render with fresh fixtures
-    const fresh = await getJSON(API + '/fixtures?league=1&season=2026');
-    const wcFresh = flattenFixtures(fresh);
+    const fresh = await getJSON(API + '/wc-schedule');
+    const wcFresh = wcMatchesToFixtures(fresh);
     const all = wcFresh.length ? wcFresh : state.all;
     state.all = all;
     renderPreds(all, state.aiMap, state.slipMap);
@@ -3466,18 +3495,18 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
   }
 
   async function main() {
-    const [wcFixtures, fixtures, standings, topScorers, slipBundle] = await Promise.all([
-      getJSON(API + '/fixtures?league=1&season=2026'),
+    const [wcSched, fixtures, standings, topScorers, slipBundle] = await Promise.all([
+      getJSON(API + '/wc-schedule'),
       getJSON(API + '/fixtures'),
       getJSON(API + '/standings?league=39&season=2025'),
       getJSON(API + '/topscorers?league=39&season=2025'),
       loadSlipMap(),
     ]);
-    // World Cup section: source WC fixtures DIRECTLY (league 1) so it shows
-    // every World Cup match and never falls back to stale domestic-league
-    // (e.g. May Champions League) results. Mixed feed is only a last resort.
-    const wcList = flattenFixtures(wcFixtures);
-    const all = wcList.length ? wcList : wcFirst(flattenFixtures(fixtures));
+    // World Cup section: source from /api/wc-schedule (the reliable full
+    // schedule — finished + upcoming). Falls back to the mixed feed only if
+    // wc-schedule is empty, so Completed/Today/Upcoming always populate.
+    const wcAll = wcMatchesToFixtures(wcSched);
+    const all = wcAll.length ? wcAll : wcFirst(flattenFixtures(fixtures));
     const aiMap = await loadAIMap(all);
     const state = { all, aiMap, slipMap: slipBundle.map };
     window.predictionState = state;
