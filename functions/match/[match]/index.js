@@ -892,6 +892,30 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
   <p style="font-size:12px;color:var(--text3);text-align:center;margin-top:30px;">ScoreOcs8 predictions are informational only — not a guarantee. 18+ only.</p>
 </div>
 <script src="/betting-tutorial.js" defer></script>
+<script>
+// Live auto-refresh: while the match is live (or near kickoff), poll the
+// match-detail API and reload when the score/status changes — so the page
+// works as a keep-open live tracker (with the OCS8 promo in view).
+(() => {
+  const FIXTURE_ID = ${JSON.stringify(fixtureId)};
+  const LIVE = new Set(['1H','2H','HT','ET','BT','P','LIVE']);
+  const initStatus = ${JSON.stringify(statusShort)};
+  const initScore = ${JSON.stringify(`${homeScore ?? ''}-${awayScore ?? ''}`)};
+  const kickoffMs = ${JSON.stringify(new Date(fx?.fixture?.date || 0).getTime() || 0)};
+  const nearKickoff = Number.isFinite(kickoffMs) && Math.abs(Date.now() - kickoffMs) < 3 * 3600 * 1000;
+  if (!LIVE.has(initStatus) && !(initStatus === 'NS' && nearKickoff)) return;
+  setInterval(async () => {
+    try {
+      const r = await fetch('/api/match-detail?fixture_id=' + FIXTURE_ID);
+      if (!r.ok) return;
+      const d = await r.json();
+      const s = d?.fixture?.fixture?.status?.short || '';
+      const sc = (d?.fixture?.goals?.home ?? '') + '-' + (d?.fixture?.goals?.away ?? '');
+      if (s !== initStatus || sc !== initScore) location.reload();
+    } catch {}
+  }, 60000);
+})();
+</script>
 </body>
 </html>`;
 

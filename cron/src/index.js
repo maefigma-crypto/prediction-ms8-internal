@@ -2282,10 +2282,15 @@ async function postGoalAlerts(env) {
     const [lh, la] = last.split('-').map(Number);
     const scorerSide = gh > lh ? fx.teams?.home?.name : ga > la ? fx.teams?.away?.name : null;
     const min = fx.fixture?.status?.elapsed;
+    // Deep-link to the live match page (peak click intent) + signup promo.
+    const matchPath = `/match/${id}-${slugify(`${fx.teams?.home?.name}-vs-${fx.teams?.away?.name}`)}/`;
     const lines = [
       `⚽ <b>GOAL · 进球!</b>${scorerSide ? ` — <b>${scorerSide}</b>` : ''}`, '',
       `<b>${fx.teams?.home?.name} ${gh} — ${ga} ${fx.teams?.away?.name}</b>${min != null ? ` (${min}')` : ''}`, '',
-      `🔗 Live: ${SITE_URL}/`, '',
+      `📊 Live stats &amp; timeline · 实时追踪:`,
+      `👉 ${SITE_URL}${matchPath}`, '',
+      `🆕 <b>Bet live · OCS8 Sports</b> | 立即投注:`,
+      `👉 https://ocs8my.com/signup?ref=OCSFMZ6HVI`, '',
       `#WorldCup2026 #ScoreOcs8`,
     ];
     const msg = await sendMessage(env, { text: lines.join('\n') });

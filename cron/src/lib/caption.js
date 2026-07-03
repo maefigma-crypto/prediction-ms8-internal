@@ -267,8 +267,13 @@ export function buildMatchUpdateCaption({ fixture, pick = null, siteUrl = 'https
     lines.push(`⚡ <b>Prediction · 预测</b>: ${esc(pickLabel)}${conf}`);
     if (reason) lines.push(`📊 ${esc(reason)}`);
   }
+  // Deep-link straight to the live match page so followers track the game on
+  // our site (with the promo in view), not a generic homepage.
+  const fxId = fixture?.fixture?.id;
+  const slug = `${home}-vs-${away}`.toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 64);
+  const trackUrl = fxId ? `${siteUrl}/match/${fxId}-${slug}/` : `${siteUrl}/`;
   lines.push('');
-  lines.push(`🔗 Live tracking · 实时追踪: ${siteUrl}/`);
+  lines.push(`🔗 Live tracking · 实时追踪: ${trackUrl}`);
   lines.push('');
   lines.push(`🆕 <b>Sign up · OCS8 Sports</b> | 立即注册:`);
   lines.push(`👉 https://ocs8my.com/signup?ref=OCSFMZ6HVI`);
