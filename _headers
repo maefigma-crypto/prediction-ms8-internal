@@ -1,17 +1,30 @@
 # Cloudflare Pages _headers file
-# Force HTML revalidation on every request so nav/layout changes
-# appear immediately — never serve stale HTML from edge or browser.
+# HTML: max-age=0 + must-revalidate lets the browser/edge keep a copy but
+# check freshness on every request (ETag → 304 when unchanged). Nav/layout
+# changes still appear immediately, without re-downloading unchanged pages
+# — no-store forced a full re-download every visit and hurt Core Web Vitals.
 
 /
-  Cache-Control: no-cache, no-store, must-revalidate
-  Pragma: no-cache
-  Expires: 0
+  Cache-Control: public, max-age=0, must-revalidate
 
 /index.html
-  Cache-Control: no-cache, no-store, must-revalidate
+  Cache-Control: public, max-age=0, must-revalidate
 
 /predictions/*
-  Cache-Control: no-cache, no-store, must-revalidate
+  Cache-Control: public, max-age=0, must-revalidate
 
 /blog/*
-  Cache-Control: no-cache, no-store, must-revalidate
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Static assets change rarely — let browsers keep them for a day.
+/logo.png
+  Cache-Control: public, max-age=86400
+
+/images/*
+  Cache-Control: public, max-age=86400
+
+/icons/*
+  Cache-Control: public, max-age=86400
+
+/glass.css
+  Cache-Control: public, max-age=3600

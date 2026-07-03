@@ -14,20 +14,22 @@ export async function onRequestGet({ env, request }) {
   ]);
   const posts = [...kvPosts, ...githubPosts];
 
-  const today = new Date().toISOString().slice(0, 10);
+  // Static pages carry no lastmod — stamping "today" on every page every day
+  // teaches crawlers to ignore lastmod entirely. Dynamic URLs below use real
+  // fixture/post dates, which stay trustworthy this way.
   const urls = [
-    { loc: `${SITE_URL}/`,                                priority: '1.0', changefreq: 'daily',  lastmod: today },
-    { loc: `${SITE_URL}/about.html`,                      priority: '0.6', changefreq: 'monthly', lastmod: today },
-    { loc: `${SITE_URL}/blog/`,                           priority: '0.9', changefreq: 'daily',  lastmod: today },
-    { loc: `${SITE_URL}/predictions/`,                    priority: '0.9', changefreq: 'daily',  lastmod: today },
-    { loc: `${SITE_URL}/predictions/premier-league/`,     priority: '0.9', changefreq: 'daily',  lastmod: today },
-    { loc: `${SITE_URL}/predictions/champions-league/`,   priority: '0.9', changefreq: 'daily',  lastmod: today },
-    { loc: `${SITE_URL}/predictions/la-liga/`,            priority: '0.9', changefreq: 'daily',  lastmod: today },
-    { loc: `${SITE_URL}/predictions/serie-a/`,            priority: '0.9', changefreq: 'daily',  lastmod: today },
-    { loc: `${SITE_URL}/predictions/bundesliga/`,         priority: '0.9', changefreq: 'daily',  lastmod: today },
-    { loc: `${SITE_URL}/predictions/ligue-1/`,            priority: '0.9', changefreq: 'daily',  lastmod: today },
-    { loc: `${SITE_URL}/predictions/fifa-world-cup/`,     priority: '0.9', changefreq: 'weekly', lastmod: today },
-    { loc: `${SITE_URL}/worldcup-markets/`,               priority: '0.9', changefreq: 'daily',  lastmod: today },
+    { loc: `${SITE_URL}/`,                                priority: '1.0', changefreq: 'daily' },
+    { loc: `${SITE_URL}/about.html`,                      priority: '0.6', changefreq: 'monthly' },
+    { loc: `${SITE_URL}/blog/`,                           priority: '0.9', changefreq: 'daily' },
+    { loc: `${SITE_URL}/predictions/`,                    priority: '0.9', changefreq: 'daily' },
+    { loc: `${SITE_URL}/predictions/premier-league/`,     priority: '0.9', changefreq: 'daily' },
+    { loc: `${SITE_URL}/predictions/champions-league/`,   priority: '0.9', changefreq: 'daily' },
+    { loc: `${SITE_URL}/predictions/la-liga/`,            priority: '0.9', changefreq: 'daily' },
+    { loc: `${SITE_URL}/predictions/serie-a/`,            priority: '0.9', changefreq: 'daily' },
+    { loc: `${SITE_URL}/predictions/bundesliga/`,         priority: '0.9', changefreq: 'daily' },
+    { loc: `${SITE_URL}/predictions/ligue-1/`,            priority: '0.9', changefreq: 'daily' },
+    { loc: `${SITE_URL}/predictions/fifa-world-cup/`,     priority: '0.9', changefreq: 'weekly' },
+    { loc: `${SITE_URL}/worldcup-markets/`,               priority: '0.9', changefreq: 'daily' },
   ];
 
   // Dynamic per-match pages: /match/<id>-<home>-vs-<away>/
