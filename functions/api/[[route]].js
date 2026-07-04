@@ -288,7 +288,11 @@ async function handleStandings(env, url) {
   const refresh = url.searchParams.get('refresh') === '1';
   const leagueId = parseInt(url.searchParams.get('league') || String(LEAGUES.EPL), 10);
   const season = seasonFor(leagueId, url.searchParams.get('season'));
-  return cached(env, `standings:${leagueId}:${season}`, TTL.standings, async () => {
+  // v2 key: the old validate only checked response.length, so a payload with
+  // a response entry but EMPTY standings inside ([{league:{standings:[]}}])
+  // was cached as "good" for 30 min — poisoning every standings reader with
+  // "not available". Deep-validate actual rows and bust the old key.
+  return cached(env, `standings:v2:${leagueId}:${season}`, TTL.standings, async () => {
     try {
       const data = await afGet(env, '/standings', { league: leagueId, season });
       return { updated: Date.now(), leagueId, season, response: data.response || [] };
@@ -296,7 +300,11 @@ async function handleStandings(env, url) {
       // Knockout comps (UCL, FIFA WC) don't have a league table — return empty.
       return { updated: Date.now(), leagueId, season, response: [], error: String(err.message || err) };
     }
-  }, { refresh, validate: d => (d.response || []).length > 0, emptyTtl: 120 });
+  }, {
+    refresh,
+    validate: d => (d.response || []).some(r => (r.league?.standings || []).some(g => (g || []).length > 0)),
+    emptyTtl: 120,
+  });
 }
 
 async function handleTopScorers(env, url) {
