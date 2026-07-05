@@ -336,31 +336,53 @@ export async function onRequest(context) {
   const hStat = stats.find(x => x.team?.id === fx?.teams?.home?.id) || stats[0];
   const aStat = stats.find(x => x.team?.id === fx?.teams?.away?.id) || stats[1];
 
-  const title = `${home} vs ${away} Prediction — ${leagueName} | ScoreOcs8`;
-  const description = `${home} vs ${away} ${leagueName} prediction, head-to-head record, pro pick (${pickLabel}) and live stats from ScoreOcs8 — free soccer predictions for Malaysia. Kickoff ${kickoff || 'TBD'}.`;
+  // Post-match the page is a RESULT page — title, description and copy all
+  // switch tense so it doesn't read like the game hasn't happened yet.
+  const isDone = FINISHED.has(statusShort) && hasScore;
+  const title = isDone
+    ? `${home} ${homeScore}–${awayScore} ${away} Result — ${leagueName} | ScoreOcs8`
+    : `${home} vs ${away} Prediction — ${leagueName} | ScoreOcs8`;
+  const description = isDone
+    ? `Full-time: ${home} ${homeScore}–${awayScore} ${away} in ${leagueName}. Match stats, timeline, head-to-head and how ScoreOcs8's pre-match pick (${pickLabel}) fared.`
+    : `${home} vs ${away} ${leagueName} prediction, head-to-head record, pro pick (${pickLabel}) and live stats from ScoreOcs8 — free soccer predictions for Malaysia. Kickoff ${kickoff || 'TBD'}.`;
   const ogImage = `${SITE}/og/match?home=${encodeURIComponent(home)}&away=${encodeURIComponent(away)}&league=${encodeURIComponent(leagueName)}&date=${encodeURIComponent(fx?.fixture?.date || '')}`;
 
-  // FAQ entries (drive both FAQ schema and a visible Q&A block) — these target
-  // the long-tail "who will win X vs Y" / "X vs Y predicted score" queries.
+  // FAQ entries (drive both FAQ schema and a visible Q&A block). Tense follows
+  // match state: pre-match targets "who will win / predicted score" queries,
+  // post-match answers "who won / what was the score" with the real result.
   const faqReason = reason || `${home} face ${away} in ${leagueName}.`;
   const faqEntries = [];
-  if (pickLabel && pickLabel !== 'Preview coming up') {
+  if (isDone) {
+    const resultLine = homeScore > awayScore ? `${home} beat ${away} ${homeScore}–${awayScore}`
+      : awayScore > homeScore ? `${away} beat ${home} ${awayScore}–${homeScore}`
+      : `${home} and ${away} drew ${homeScore}–${awayScore}`;
     faqEntries.push({
-      q: `Who will win ${home} vs ${away}?`,
-      a: `ScoreOcs8's prediction favours ${pickLabel}${pickRaw?.confidence != null ? ` with ${pickRaw.confidence}% confidence` : ''}. ${faqReason}`,
+      q: `Who won ${home} vs ${away}?`,
+      a: `${resultLine} in ${leagueName}.${verdict ? (verdict.correct ? ` ScoreOcs8's pre-match pick (${pickLabel}) was correct.` : ` ScoreOcs8's pre-match pick (${pickLabel}) did not land.`) : ''}`,
     });
-  }
-  if (predScore) {
     faqEntries.push({
-      q: `What is the predicted score for ${home} vs ${away}?`,
-      a: `ScoreOcs8 projects a final score of ${home} ${predScore.h}–${predScore.a} ${away}. This is a form-and-data projection, not a guaranteed result.`,
+      q: `What was the final score of ${home} vs ${away}?`,
+      a: `The match finished ${home} ${homeScore}–${awayScore} ${away}${venue ? ` at ${venue}` : ''}.${predScore ? ` ScoreOcs8's pre-match projection was ${predScore.h}–${predScore.a}.` : ''}`,
     });
-  }
-  if (kickoff) {
-    faqEntries.push({
-      q: `When do ${home} and ${away} kick off?`,
-      a: `${home} vs ${away} kicks off on ${kickoff} Malaysia time (MYT)${venue ? `, at ${venue}` : ''}. Follow the live score and full prediction on ScoreOcs8.`,
-    });
+  } else {
+    if (pickLabel && pickLabel !== 'Preview coming up') {
+      faqEntries.push({
+        q: `Who will win ${home} vs ${away}?`,
+        a: `ScoreOcs8's prediction favours ${pickLabel}${pickRaw?.confidence != null ? ` with ${pickRaw.confidence}% confidence` : ''}. ${faqReason}`,
+      });
+    }
+    if (predScore) {
+      faqEntries.push({
+        q: `What is the predicted score for ${home} vs ${away}?`,
+        a: `ScoreOcs8 projects a final score of ${home} ${predScore.h}–${predScore.a} ${away}. This is a form-and-data projection, not a guaranteed result.`,
+      });
+    }
+    if (kickoff) {
+      faqEntries.push({
+        q: `When do ${home} and ${away} kick off?`,
+        a: `${home} vs ${away} kicks off on ${kickoff} Malaysia time (MYT)${venue ? `, at ${venue}` : ''}. Follow the live score and full prediction on ScoreOcs8.`,
+      });
+    }
   }
 
   // Schema.org SportsEvent JSON-LD with all the structured fields Google likes.
@@ -727,7 +749,7 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
     <div class="pick-card">
       <div class="pick-row">
         <div>
-          <div class="label">${pickKindLabel}</div>
+          <div class="label">${isDone ? `Pre-match ${pickKindLabel}` : pickKindLabel}</div>
           <div class="pick">${esc(pickLabel)}</div>
         </div>
         <div style="text-align:right;">
@@ -743,7 +765,7 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
         <span class="label">Predicted correct score${scoreChance ? ` · <em class="${scoreChanceCls}">${esc(scoreChance)}</em>` : ''}</span>
         <span style="font-family:var(--ff);font-weight:700;font-size:16px;">${esc(home)} <span style="color:var(--accent);">${esc(predScore.h)}–${esc(predScore.a)}</span> ${esc(away)}</span>
       </div>` : ''}
-      ${reason ? `<div class="pick-reason">${esc(reason)}</div>` : ''}
+      ${reason ? `<div class="pick-reason">${isDone ? '<b>Pre-match analysis:</b> ' : ''}${esc(reason)}</div>` : ''}
       ${hasMore ? `<details class="pred-more">
         <summary>See more prediction &amp; why →</summary>
         <div class="pred-more-grid">
@@ -883,8 +905,8 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
   </section>` : ''}
 
   <div class="cta">
-    <h3>Bet on this prediction</h3>
-    <p>Open the official OCS8 money-site domain to register, login, and place this pick.</p>
+    <h3>${isDone ? 'Bet on the next match' : 'Bet on this prediction'}</h3>
+    <p>${isDone ? 'This match is finished — daily picks continue on the homepage. Register on the official OCS8 money site for the next kickoff.' : 'Open the official OCS8 money-site domain to register, login, and place this pick.'}</p>
     <a class="cta-btn" href="https://ocs8my.com/signup?ref=OCSFMZ6HVI" target="_blank" rel="noopener">Open OCS8</a>
     <button type="button" onclick="window.BettingTutorial && window.BettingTutorial.open('1x2')" style="margin-top:12px;background:transparent;color:var(--accent);border:1px solid rgba(249,115,22,.4);border-radius:8px;padding:10px 18px;font-family:var(--ff,'Rajdhani',sans-serif);font-size:14px;font-weight:700;letter-spacing:.04em;cursor:pointer;">📘 See how betting markets settle →</button>
   </div>
