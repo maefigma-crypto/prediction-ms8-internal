@@ -371,14 +371,60 @@ async function lookupFixture(env, fixtureId) {
       }
     }
   }
+  // 2.5 World Cup: the cached wc-schedule is the ROBUST source (it has a
+  // paginated fallback and is kept warm by the site). The direct-id and bare
+  // full-season calls below are the flaky ones — so synthesize the fixture
+  // from wc-schedule before trying them. Without this, a flaky upstream left
+  // match pages rendering the empty "HOME VS AWAY" skeleton.
+  if (env?.CACHE) {
+    try {
+      const sched = await env.CACHE.get(`wc:schedule:${seasonFor(1)}`, 'json');
+      const m = (sched?.matches || []).find(x => x.fixture_id === id);
+      if (m) {
+        return {
+          fixture: {
+            id: m.fixture_id,
+            date: m.date,
+            status: { short: m.status || 'NS', long: '', elapsed: m.elapsed ?? null },
+            venue: { name: m.venue || '', city: m.city || '' },
+          },
+          league: { id: 1, name: 'FIFA World Cup', season: Number(seasonFor(1)), round: m.round || '' },
+          teams: {
+            home: { id: m.home?.id, name: m.home?.name || 'Home', logo: m.home?.logo || '' },
+            away: { id: m.away?.id, name: m.away?.name || 'Away', logo: m.away?.logo || '' },
+          },
+          goals: { home: m.goals?.home ?? null, away: m.goals?.away ?? null },
+          score: {
+            fulltime: { home: m.goals?.home ?? null, away: m.goals?.away ?? null },
+            penalty: { home: m.penalty?.home ?? null, away: m.penalty?.away ?? null },
+          },
+        };
+      }
+    } catch { /* fall through */ }
+  }
   // 3. Cup competitions (WC=1, UCL=2): the next/last pagination params are
   // unreliable (a finished group match may appear in neither), so fetch the
   // FULL season — same call wc-schedule uses — and scan it. This is what
   // makes a finished WC fixture resolve with its real FT score.
   for (const lgId of [1, 2]) {
     try {
-      const data = await afGet(env, '/fixtures', { league: lgId, season: seasonFor(lgId) });
-      const found = (data.response || []).find(fx => fx.fixture?.id === id);
+      const season = seasonFor(lgId);
+      const data = await afGet(env, '/fixtures', { league: lgId, season });
+      let found = (data.response || []).find(fx => fx.fixture?.id === id);
+      if (!found && lgId === 1) {
+        // The bare full-season query is flaky for the WC — retry with the
+        // paginated buckets that reliably return data.
+        const today = new Date().toISOString().slice(0, 10);
+        const [next, last, todayM] = await Promise.all([
+          afGet(env, '/fixtures', { league: 1, season, next: 40 }).catch(() => ({ response: [] })),
+          afGet(env, '/fixtures', { league: 1, season, last: 40 }).catch(() => ({ response: [] })),
+          afGet(env, '/fixtures', { league: 1, season, date: today }).catch(() => ({ response: [] })),
+        ]);
+        for (const arr of [last.response, todayM.response, next.response]) {
+          found = (arr || []).find(fx => fx.fixture?.id === id);
+          if (found) break;
+        }
+      }
       if (found) return found;
     } catch { /* try next */ }
   }
