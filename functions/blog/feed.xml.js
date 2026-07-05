@@ -30,10 +30,10 @@ export async function onRequestGet({ env }) {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>ScoreOcs8 Blog — Soccer Predictions Malaysia</title>
+    <title>ScoreOcs8 Blog | Soccer Predictions Malaysia</title>
     <link>${SITE_URL}/blog/</link>
     <atom:link href="${SITE_URL}/blog/feed.xml" rel="self" type="application/rss+xml"/>
-    <description>Daily soccer match previews, predictions and league analysis for EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup 2026 — in MYT.</description>
+    <description>Daily soccer match previews, predictions and league analysis for EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup 2026, in MYT.</description>
     <language>en-my</language>
 ${items.join('\n')}
   </channel>

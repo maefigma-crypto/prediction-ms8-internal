@@ -295,8 +295,8 @@ export async function onRequest(context) {
       <div class="sb-track"><div class="sb-fill" style="width:${Math.max(0, Math.min(100, Number(pct) || 0))}%"></div></div>`).join('')}
     </div>` : ''}
     ${hasForm ? `<div class="sb-forms">
-      <div class="sb-form"><div class="sb-form-t">${esc(home)} — recent form</div><div class="sb-form-b">${formBadges(homeForm)}</div></div>
-      <div class="sb-form"><div class="sb-form-t">${esc(away)} — recent form</div><div class="sb-form-b">${formBadges(awayForm)}</div></div>
+      <div class="sb-form"><div class="sb-form-t">${esc(home)}: recent form</div><div class="sb-form-b">${formBadges(homeForm)}</div></div>
+      <div class="sb-form"><div class="sb-form-t">${esc(away)}: recent form</div><div class="sb-form-b">${formBadges(awayForm)}</div></div>
     </div>` : ''}
     ${probs ? `<div class="sb-cards">
       ${totalGoals != null ? `<div class="sb-c"><span>Est. goals</span><strong>⚡ ${esc(totalGoals)}</strong></div>` : ''}
@@ -341,10 +341,10 @@ export async function onRequest(context) {
   const isDone = FINISHED.has(statusShort) && hasScore;
   const title = isDone
     ? `${home} ${homeScore}–${awayScore} ${away} Result — ${leagueName} | ScoreOcs8`
-    : `${home} vs ${away} Prediction — ${leagueName} | ScoreOcs8`;
+    : `${home} vs ${away} Prediction | ${leagueName} | ScoreOcs8`;
   const description = isDone
     ? `Full-time: ${home} ${homeScore}–${awayScore} ${away} in ${leagueName}. Match stats, timeline, head-to-head and how ScoreOcs8's pre-match pick (${pickLabel}) fared.`
-    : `${home} vs ${away} ${leagueName} prediction, head-to-head record, pro pick (${pickLabel}) and live stats from ScoreOcs8 — free soccer predictions for Malaysia. Kickoff ${kickoff || 'TBD'}.`;
+    : `${home} vs ${away} ${leagueName} prediction, head-to-head record, pro pick (${pickLabel}) and live stats from ScoreOcs8. Free soccer predictions for Malaysia. Kickoff ${kickoff || 'TBD'}.`;
   const ogImage = `${SITE}/og/match?home=${encodeURIComponent(home)}&away=${encodeURIComponent(away)}&league=${encodeURIComponent(leagueName)}&date=${encodeURIComponent(fx?.fixture?.date || '')}`;
 
   // FAQ entries (drive both FAQ schema and a visible Q&A block). Tense follows
@@ -785,7 +785,7 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
 
   ${faqEntries.length ? `
   <section class="section">
-    <h2>${esc(home)} vs ${esc(away)} — prediction FAQ</h2>
+    <h2>${esc(home)} vs ${esc(away)} prediction FAQ</h2>
     <div class="faq-list">
       ${faqEntries.map(f => `<details class="faq-item">
         <summary>${esc(f.q)}</summary>
@@ -906,7 +906,7 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
 
   <div class="cta">
     <h3>${isDone ? 'Bet on the next match' : 'Bet on this prediction'}</h3>
-    <p>${isDone ? 'This match is finished — daily picks continue on the homepage. Register on the official OCS8 money site for the next kickoff.' : 'Open the official OCS8 money-site domain to register, login, and place this pick.'}</p>
+    <p>${isDone ? 'This match is finished. Daily picks continue on the homepage. Register on the official OCS8 money site for the next kickoff.' : 'Open the official OCS8 money-site domain to register, login, and place this pick.'}</p>
     <a class="cta-btn" href="https://ocs8my.com/signup?ref=OCSFMZ6HVI" target="_blank" rel="noopener">Open OCS8</a>
     <button type="button" onclick="window.BettingTutorial && window.BettingTutorial.open('1x2')" style="margin-top:12px;background:transparent;color:var(--accent);border:1px solid rgba(249,115,22,.4);border-radius:8px;padding:10px 18px;font-family:var(--ff,'Rajdhani',sans-serif);font-size:14px;font-weight:700;letter-spacing:.04em;cursor:pointer;">📘 See how betting markets settle →</button>
   </div>
