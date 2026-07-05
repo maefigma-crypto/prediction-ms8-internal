@@ -117,6 +117,16 @@ async function pickTopFixtures(env) {
   return all.slice(0, 3);
 }
 
+// Shared writing-style rules injected into every content prompt. Kills the
+// tells that make text read as machine-written (em dashes, stock AI vocab,
+// uniform sentence rhythm) so posts read like a pundit typed them.
+const STYLE_RULES = `Writing style (strict, applies to every field):
+- NEVER use em dashes (—) or semicolons. Use commas, colons or full stops instead.
+- Never use these words/phrases: delve, moreover, furthermore, additionally, crucial, pivotal, landscape, testament, showcase, elevate, unleash, "it's worth noting", "in conclusion", "overall,".
+- Vary sentence length. Mix short punchy lines with longer ones. Do not start consecutive sentences the same way.
+- Write like an experienced football pundit talking to Malaysian fans, not like an essay. Concrete facts and numbers over adjectives.
+- No hype filler ("thrilling clash", "epic showdown", "eagerly anticipated"). If a fact is unknown, skip it rather than pad.`;
+
 function longPrompt(fx) {
   return `Write an SEO-optimised football match preview as JSON only (no prose outside the JSON).
 
@@ -124,6 +134,8 @@ Match: ${fx.teams.home.name} vs ${fx.teams.away.name}
 League: ${fx.league.name}
 Kickoff: ${fx.fixture.date}
 Venue: ${fx.fixture.venue?.name || 'TBD'}
+
+${STYLE_RULES}
 
 Shape (ALL fields required, double quotes, valid JSON):
 {
@@ -141,6 +153,8 @@ function shortPrompt(fx) {
 Match: ${fx.teams.home.name} vs ${fx.teams.away.name}
 League: ${fx.league.name}
 Kickoff: ${fx.fixture.date}
+
+${STYLE_RULES}
 
 Shape (ALL fields required, valid JSON):
 {
