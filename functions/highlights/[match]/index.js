@@ -69,7 +69,7 @@ export async function onRequest(context) {
 
   const title = `${home} ${score} ${away} Highlights | ${item.league || 'Football'} | ScoreOcs8`;
   const description = `Watch ${home} ${score} ${away} highlights, full-time result card, match detail and ScoreOcs8 prediction context. Updated in MYT.`;
-  const image = item.image_url?.startsWith('http') ? item.image_url : `${SITE}${item.image_url || '/og/default'}`;
+  const image = item.image_url?.startsWith('http') ? item.image_url : `${SITE}${item.image_url || '/og/default?v=2'}`;
   const videoId = item.youtube_video_id || videoIdFromUrl(item.youtube_url);
   const searchUrl = item.youtube_search_url || `https://www.youtube.com/results?search_query=${encodeURIComponent(`${home} ${score} ${away} highlights`)}`;
   const matchUrl = `/match/${id}-${slugify(`${home}-vs-${away}`)}/`;
