@@ -26,8 +26,8 @@ export async function onRequestGet() {
   <g font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-weight="900" letter-spacing="-2">
     <text x="80" y="280" font-size="124" fill="url(#brand)">ScoreOcs8</text>
   </g>
-  <text x="80" y="370" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-weight="700" font-size="46" fill="#eef1f8" letter-spacing="-0.5">Best Malaysia Online Casino</text>
-  <text x="80" y="430" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-weight="700" font-size="46" fill="#f97316" letter-spacing="-0.5">Soccer Prediction</text>
+  <text x="80" y="370" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-weight="700" font-size="46" fill="#eef1f8" letter-spacing="-0.5">Daily Soccer Predictions</text>
+  <text x="80" y="430" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-weight="700" font-size="46" fill="#f97316" letter-spacing="-0.5">Malaysia · Updated Daily (MYT)</text>
   <g font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="22" fill="#9aa5bd" letter-spacing="2">
     <text x="80" y="510">EPL · UCL · LA LIGA · SERIE A · BUNDESLIGA · LIGUE 1</text>
   </g>
@@ -35,7 +35,7 @@ export async function onRequestGet() {
     <rect width="180" height="46" rx="23" fill="#f97316"/>
     <text x="90" y="30" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="18" font-weight="700" fill="#fff" text-anchor="middle" letter-spacing="2">PRO PICKS DAILY</text>
   </g>
-  <text x="80" y="615" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="18" fill="#5a6680" letter-spacing="3">SCOREOCS8.PAGES.DEV</text>
+  <text x="80" y="615" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="18" fill="#5a6680" letter-spacing="3">SCOREOCS8.COM</text>
 </svg>`;
   return new Response(svg, {
     headers: {
