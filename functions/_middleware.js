@@ -71,13 +71,11 @@ class HomepageHeadInjector {
       );
     }
 
-    // hreflang alternates — homepage has 3 language variants via ?lang=.
-    parts.push(
-      `<link rel="alternate" hreflang="en" href="${SITE_URL}/">`,
-      `<link rel="alternate" hreflang="ms" href="${SITE_URL}/?lang=bm">`,
-      `<link rel="alternate" hreflang="zh" href="${SITE_URL}/?lang=zh">`,
-      `<link rel="alternate" hreflang="x-default" href="${SITE_URL}/">`
-    );
+    // NO hreflang for the ?lang= variants: they serve identical HTML (the
+    // language switch is client-side JS), so hreflang here contradicts the
+    // canonical and made Google index /?lang=bm as the representative page.
+    // Real hreflang returns if/when /ms/ pages with server-rendered Malay
+    // content exist.
 
     // Organisation + WebSite JSON-LD (single source of truth from settings).
     if (s.organisation_schema) {
