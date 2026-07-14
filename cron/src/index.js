@@ -1580,6 +1580,190 @@ async function postPrematchPolls(env) {
   return { status: 'ok', checked: seenFixtures.size, results };
 }
 
+// --- WC fan hot-take poll (bilingual) ----------------------------------------
+//
+// Anonymous EN ｜ 中文 poll for every queued World Cup fixture, fired off the
+// */15 heartbeat a few hours before kickoff. Format:
+//
+//   🏆 FIFA World Cup 2026 (Semi-Finals) ｜ 🏆 2026 FIFA世界杯（半决赛）
+//   Will Mikel Merino snatch a late winning goal again? 👀⚽ ｜ 梅里诺会再次在最后时刻打进绝杀吗? 👀⚽
+//     ❌ No ｜ 不会
+//     🤔 Maybe ｜ 有可能
+//     ✅ Yes ｜ 会
+//
+// The question comes from Claude Haiku (shared daily token budget); a rotating
+// template fallback keeps the poll shipping when the AI call fails or the
+// budget is spent. Complements postPrematchPolls (the KO-12h 1X2 "Who wins?"
+// poll, MOTD-only) — this one is a yes/no hot take, WC fixtures only.
+
+const WC_POLL_OPTIONS = ['❌ No ｜ 不会', '🤔 Maybe ｜ 有可能', '✅ Yes ｜ 会'];
+
+function wcRoundEn(round) {
+  const r = String(round || '').trim();
+  if (/group/i.test(r)) return 'Group Stage';
+  return r;
+}
+
+function wcRoundZh(round) {
+  const r = String(round || '');
+  if (/group/i.test(r)) return '小组赛';
+  if (/round of 32/i.test(r)) return '三十二强';
+  if (/round of 16/i.test(r)) return '十六强';
+  if (/quarter/i.test(r)) return '四分之一决赛';
+  if (/semi/i.test(r)) return '半决赛';
+  if (/3rd|third/i.test(r)) return '季军赛';
+  if (/final/i.test(r)) return '决赛';
+  return '';
+}
+
+function wcPollHeader(round) {
+  const en = wcRoundEn(round);
+  const zh = wcRoundZh(round);
+  return en && zh
+    ? `🏆 FIFA World Cup 2026 (${en}) ｜ 🏆 2026 FIFA世界杯（${zh}）`
+    : `🏆 FIFA World Cup 2026 ｜ 🏆 2026 FIFA世界杯`;
+}
+
+// Single line, no em dashes, hard length cap — the assembled poll question
+// (header + question line) must stay under Telegram's 300-char limit.
+function cleanPollLine(s, max) {
+  return String(s || '').replace(/\s+/g, ' ').replace(/—/g, ',').trim().slice(0, max);
+}
+
+function wcPollPrompt(home, away, round, kickoffIso) {
+  return `Write ONE bold fan-poll question for a Telegram football poll, as JSON only.
+
+Match: ${home} vs ${away}
+Competition: FIFA World Cup 2026, ${round || 'knockout stage'}
+Kickoff: ${kickoffIso}
+
+Rules:
+- Must be answerable with Yes / Maybe / No.
+- Pick ONE spicy angle: a star player scoring or starring, an upset, a clean sheet, extra time or penalties, a famous storyline between these teams. Name a real current star player from one of these squads when you can.
+- No em dashes, no hashtags, no links, no emojis.
+- q_en: max 80 characters, punchy, ends with "?".
+- q_zh: natural Simplified Chinese version of the same question, max 40 characters, ends with "?".
+
+Shape (valid JSON, double quotes, both fields required):
+{"q_en": "...", "q_zh": "..."}`;
+}
+
+// Deterministic fallback rotation keyed on fixture id.
+const WC_POLL_FALLBACKS = [
+  (h, a) => ({ q_en: `Will ${h} beat ${a}?`, q_zh: `${h}能击败${a}吗?` }),
+  (h, a) => ({ q_en: `Will we see 3 or more goals in ${h} vs ${a}?`, q_zh: `这场会打进3球或以上吗?` }),
+  (h, a) => ({ q_en: `Can ${a} pull off the upset against ${h}?`, q_zh: `${a}会爆冷击败${h}吗?` }),
+  (h, a) => ({ q_en: `Will ${h} vs ${a} go beyond 90 minutes?`, q_zh: `这场会踢到加时吗?` }),
+];
+
+async function generateWcPollQuestion(env, { home, away, round, kickoffIso, fixtureId }) {
+  try {
+    const { remaining } = await readBudget(env);
+    if (remaining >= 600) {
+      const call = await claudeCall(env, wcPollPrompt(home, away, round, kickoffIso));
+      await spendBudget(env, call.tokens);
+      const parsed = parseJsonLoose(call.text, { stopReason: call.stopReason });
+      const q_en = cleanPollLine(parsed.q_en, 90);
+      const q_zh = cleanPollLine(parsed.q_zh, 45);
+      if (q_en && q_zh) return { q_en, q_zh, source: 'ai' };
+    }
+  } catch { /* fall through to template */ }
+  const tpl = WC_POLL_FALLBACKS[Math.abs(Number(fixtureId) || 0) % WC_POLL_FALLBACKS.length](home, away);
+  return { ...tpl, source: 'template' };
+}
+
+async function postWcFanPolls(env, opts = {}) {
+  if (!env.TG_BOT_TOKEN || !env.TG_CHANNEL_ID) {
+    return { status: 'skipped', reason: 'telegram not configured' };
+  }
+  if (!env?.CACHE) {
+    return { status: 'skipped', reason: 'no KV binding' };
+  }
+
+  const now = Date.now();
+  // Fires on the first heartbeat tick once kickoff is within 6h; stops 45 min
+  // out so a late tick never posts a poll nobody has time to vote on. The
+  // per-fixture KV dedup makes the wide window safe across ticks.
+  const WINDOW_MAX_MS = 6 * 3600 * 1000;
+  const WINDOW_MIN_MS = 45 * 60 * 1000;
+
+  const { entries: queue } = await loadFtQueueWindow(env);
+  let candidates = queue.filter(e => e.is_wc && !e.posted);
+  if (opts.fixtureId) {
+    candidates = candidates.filter(e => String(e.fixture_id) === String(opts.fixtureId));
+  }
+
+  // Manual force with nothing queued (e.g. testing before the daily run):
+  // pull the target fixture — or the next upcoming WC match — straight from
+  // API-Football so ?task=wc-poll&force=1 always has something to post.
+  if (opts.force && !candidates.length) {
+    try {
+      const params = opts.fixtureId
+        ? { id: opts.fixtureId }
+        : { league: WC_LEAGUE_ID, season: seasonFor(WC_LEAGUE_ID), next: 1 };
+      const data = await afGet(env, '/fixtures', params);
+      const fx = data.response?.[0];
+      if (fx?.fixture?.id) {
+        candidates = [{
+          fixture_id: fx.fixture.id,
+          home: fx.teams?.home?.name,
+          away: fx.teams?.away?.name,
+          kickoff_iso: fx.fixture.date,
+          is_wc: true,
+        }];
+      }
+    } catch { /* fall through — reported as 0 candidates */ }
+  }
+
+  const results = [];
+  for (const item of candidates) {
+    const kickoffMs = new Date(item.kickoff_iso || 0).getTime();
+    if (!Number.isFinite(kickoffMs)) continue;
+    const tilKO = kickoffMs - now;
+    if (!opts.force && (tilKO < WINDOW_MIN_MS || tilKO > WINDOW_MAX_MS)) continue;
+    if (tilKO < 0) continue; // never poll a match that already kicked off
+
+    const flagKey = `poll:wc:${item.fixture_id}`;
+    if (!opts.force && await env.CACHE.get(flagKey).catch(() => null)) {
+      results.push({ id: item.fixture_id, status: 'skipped', reason: 'already posted' });
+      continue;
+    }
+
+    // Round label ("Semi-finals") lives on the live fixture record — the
+    // queue entry doesn't carry it. Non-fatal: header just drops the round.
+    let round = '';
+    try {
+      const data = await afGet(env, '/fixtures', { id: item.fixture_id });
+      round = data.response?.[0]?.league?.round || '';
+    } catch { }
+
+    const home = item.home || 'Home';
+    const away = item.away || 'Away';
+    const q = await generateWcPollQuestion(env, {
+      home, away, round, kickoffIso: item.kickoff_iso, fixtureId: item.fixture_id,
+    });
+
+    try {
+      const poll = await sendPoll(env, {
+        question: `${wcPollHeader(round)}\n${q.q_en} 👀⚽ ｜ ${q.q_zh} 👀⚽`,
+        options: WC_POLL_OPTIONS,
+        isAnonymous: true,
+      });
+      if (poll?.disabled) {
+        results.push({ id: item.fixture_id, status: 'skipped', reason: 'posting disabled (tg:posting=off)' });
+        continue;
+      }
+      // Expires well past kickoff so the flag can't reopen inside the window.
+      await env.CACHE.put(flagKey, '1', { expirationTtl: 12 * 3600 });
+      results.push({ id: item.fixture_id, status: 'ok', messageId: poll.message_id, source: q.source, kickoff: item.kickoff_iso });
+    } catch (e) {
+      results.push({ id: item.fixture_id, status: 'error', error: String(e.message || e) });
+    }
+  }
+
+  return { status: 'ok', candidates: candidates.length, results };
+}
+
 // --- KO-30 pre-match alert --------------------------------------------------
 //
 // Fires once per Match-of-the-Day fixture when kickoff is ~15-35 min away.
@@ -2330,13 +2514,15 @@ export default {
     } else if (cron.startsWith('0 2 ')) {
       ctx.waitUntil(postDailyToAll(env));
     } else if (cron.startsWith('*/15 ')) {
-      // Heartbeat does three things:
+      // Heartbeat does four things:
       //   1. KO-30 pre-match alert for the MOTD fixture
       //   2. 12h pre-match poll for upcoming featured fixtures
-      //   3. FT result slips for finished matches
-      // All three are KV-flagged so they fire at most once per fixture.
+      //   3. Bilingual hot-take fan poll ~KO-6h for each WC fixture
+      //   4. FT result slips for finished matches
+      // All four are KV-flagged so they fire at most once per fixture.
       ctx.waitUntil(postPreMatchAlerts(env));
       ctx.waitUntil(postPrematchPolls(env));
+      ctx.waitUntil(postWcFanPolls(env));
       ctx.waitUntil(checkFinishedMatches(env));
       // Engagement posts, all KV-deduped: goal alerts every tick while WC
       // matches are live; Golden Boot race ~every 2 days (13:00 MYT); fan
@@ -2366,7 +2552,7 @@ export default {
     if (url.searchParams.get('key') !== env.CRON_SECRET) {
       return new Response('unauthorized', { status: 401 });
     }
-    // Manual triggers: generate | wc-queue | wc-card | wc-recap | wc-upcoming | post | check | poll | premat | recap | push-test | sportsbook-test
+    // Manual triggers: generate | wc-queue | wc-card | wc-recap | wc-upcoming | wc-poll | post | check | poll | premat | recap | push-test | sportsbook-test
     const task = url.searchParams.get('task') || 'generate';
     // ?force=1 re-posts a card even if today's dedup flag is already set
     // (e.g. an earlier blank card burned the slot).
@@ -2388,6 +2574,9 @@ export default {
     else if (task === 'post') result = await postDailyToAll(env);
     else if (task === 'check') result = await checkFinishedMatches(env);
     else if (task === 'poll') result = await postPrematchPolls(env);
+    // ?task=wc-poll&force=1[&fixture=<id>] — force posts the hot-take poll for
+    // a specific fixture (or the next upcoming WC match), ignoring window+dedup.
+    else if (task === 'wc-poll') result = await postWcFanPolls(env, { force, fixtureId: url.searchParams.get('fixture') || undefined });
     else if (task === 'premat') result = await postPreMatchAlerts(env);
     else if (task === 'recap') result = await postDailyRecap(env);
     else if (task === 'scorers') result = await postScorersRace(env, { force });
