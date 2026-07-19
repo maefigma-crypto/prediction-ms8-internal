@@ -164,7 +164,7 @@ export async function onRequestGet({ request }) {
   ${pickBadge}
 
   <!-- footer -->
-  <text x="60" y="694" font-family="Menlo,monospace" font-size="12" fill="rgba(255,255,255,.4)" letter-spacing="2">18+ · NOT BETTING ADVICE · VIRTUAL CURRENCY</text>
+  <text x="60" y="694" font-family="Menlo,monospace" font-size="12" fill="rgba(255,255,255,.4)" letter-spacing="2">18+ · VIRTUAL CURRENCY · FOR ENTERTAINMENT</text>
   <text x="1220" y="694" font-family="Menlo,monospace" font-size="13" fill="rgba(255,122,26,.65)" text-anchor="end" letter-spacing="3">SCOREOCS8.COM</text>
 </svg>`;
 

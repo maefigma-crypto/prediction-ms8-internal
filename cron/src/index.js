@@ -875,10 +875,16 @@ async function postSportsbookTemplateTest(env) {
   // to read those and concatenate. The same {upcomingList} placeholder is used.
   const upcomingList = pickRows;
 
-  // Latest finished match (for result + highlight templates).
+  // Latest finished match (for result + highlight templates). FRESHNESS GATE:
+  // only use it if it kicked off within the last 36h — otherwise the daily
+  // batch would replay an old result (e.g. re-posting a days-old match every
+  // morning at 9 AM) instead of skipping to the fallback text.
   let highlights = [];
   try { highlights = JSON.parse(await env.CACHE.get('highlights:latest') || '[]'); } catch {}
-  const h = highlights[0];
+  const hRaw = highlights[0];
+  const hFresh = hRaw && Number.isFinite(Date.parse(hRaw.kickoff_iso)) &&
+    (Date.now() - Date.parse(hRaw.kickoff_iso)) < 36 * 3600 * 1000;
+  const h = hFresh ? hRaw : null;
 
   // Cache fetched pages — multiple templates often share a source.
   const pageCache = new Map();
@@ -1845,8 +1851,8 @@ async function checkFinishedMatches(env) {
         kickoff_iso: fx.fixture.date,
         sport: 'football',
         league_id: item.league_id,
-        home: item.home,
-        away: item.away,
+        home: fx.teams?.home?.name || item.home,
+        away: fx.teams?.away?.name || item.away,
         score_home: goalsHome,
         score_away: goalsAway,
         pick: pick?.pickLabel || pick?.pick || null,
@@ -1865,8 +1871,8 @@ async function checkFinishedMatches(env) {
         kickoff_iso: fx.fixture.date,
         league_id: item.league_id,
         league: fx.league?.name || null,
-        home: item.home,
-        away: item.away,
+        home: fx.teams?.home?.name || item.home,
+        away: fx.teams?.away?.name || item.away,
         home_logo: fx.teams?.home?.logo || null,
         away_logo: fx.teams?.away?.logo || null,
         score_home: goalsHome,
