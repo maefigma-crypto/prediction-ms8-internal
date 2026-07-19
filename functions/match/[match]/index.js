@@ -336,12 +336,27 @@ export async function onRequest(context) {
   const hStat = stats.find(x => x.team?.id === fx?.teams?.home?.id) || stats[0];
   const aStat = stats.find(x => x.team?.id === fx?.teams?.away?.id) || stats[1];
 
+  // Stage title (FINAL / SEMI-FINAL / …) from the round string — big matches
+  // get named as such in the page title and a banner above the scoreboard.
+  const stageTitle = (() => {
+    const r = String(fx?.league?.round || '').toLowerCase();
+    if (r.includes('semi')) return 'SEMI-FINAL';
+    if (r.includes('quarter')) return 'QUARTER-FINAL';
+    if (r.includes('3rd') || r.includes('third')) return '3RD PLACE MATCH';
+    if (r.includes('final')) return 'FINAL';
+    if (r.includes('16')) return 'ROUND OF 16';
+    if (r.includes('32')) return 'ROUND OF 32';
+    return '';
+  })();
+  const isWcKnockout = leagueId === 1 && !!stageTitle;
+
   // Post-match the page is a RESULT page — title, description and copy all
   // switch tense so it doesn't read like the game hasn't happened yet.
   const isDone = FINISHED.has(statusShort) && hasScore;
+  const stageSuffix = isWcKnockout ? ` ${stageTitle.charAt(0) + stageTitle.slice(1).toLowerCase()}` : '';
   const title = isDone
-    ? `${home} ${homeScore}–${awayScore} ${away} Result — ${leagueName} | ScoreOcs8`
-    : `${home} vs ${away} Prediction | ${leagueName} | ScoreOcs8`;
+    ? `${home} ${homeScore}–${awayScore} ${away} Result — ${leagueName}${stageSuffix} | ScoreOcs8`
+    : `${home} vs ${away} Prediction | ${leagueName}${stageSuffix} | ScoreOcs8`;
   const description = isDone
     ? `Full-time: ${home} ${homeScore}–${awayScore} ${away} in ${leagueName}. Match stats, timeline, head-to-head and how ScoreOcs8's pre-match pick (${pickLabel}) fared.`
     : `${home} vs ${away} ${leagueName} prediction, head-to-head record, pro pick (${pickLabel}) and live stats from ScoreOcs8. Free soccer predictions for Malaysia. Kickoff ${kickoff || 'TBD'}.`;
@@ -608,6 +623,8 @@ h1 .vs{color:var(--text3);margin:0 14px;font-weight:500;}
 .pick-reason{margin-top:14px;font-size:14px;color:var(--text2);line-height:1.7;border-top:1px solid rgba(249,115,22,0.20);padding-top:12px;}
 .label em{font-style:normal;font-weight:700;}
 .sc-high{color:#00e5a0;}.sc-mid{color:#f5a623;}.sc-low{color:#ff8a93;}
+.stage-hero{margin-bottom:14px;padding:13px 18px;border-radius:12px;text-align:center;font-family:var(--ff);font-size:24px;font-weight:700;letter-spacing:.1em;color:#ffd9b3;background:linear-gradient(135deg,rgba(249,115,22,.26),rgba(255,176,104,.08));border:1px solid rgba(249,115,22,.55);text-shadow:0 2px 14px rgba(249,115,22,.45);}
+.stage-hero span{color:var(--accent);}
 .faq-list{display:flex;flex-direction:column;gap:8px;}
 .faq-item{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:13px 16px;}
 .faq-item summary{font-family:var(--ff);font-size:16px;font-weight:700;color:var(--text);cursor:pointer;list-style:none;}
@@ -723,6 +740,7 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
   </div>
 
   <article class="hero">
+    ${isWcKnockout ? `<div class="stage-hero">🏆 FIFA WORLD CUP <span>${esc(stageTitle)}</span></div>` : ''}
     <span class="league-pill">${leagueFlag} ${esc(leagueName)}</span>
     <h1>${esc(home)}<span class="vs">vs</span>${esc(away)}</h1>
     <div class="kickoff">⏰ Kickoff: ${esc(kickoff || 'TBD')}${venue ? ` · 🏟 ${esc(venue)}${venueCity ? ', ' + esc(venueCity) : ''}` : ''}</div>

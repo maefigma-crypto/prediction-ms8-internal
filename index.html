@@ -306,6 +306,8 @@ body > nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-it
 .vote-row{display:flex;justify-content:space-between;gap:12px;font-family:var(--fm);font-size:15px;color:var(--text2);}
 .vote-row strong{font-family:var(--ff);font-size:21px;color:var(--text);}
 .odds-wrap{margin-top:13px;}
+.stage-banner{margin:-4px 0 14px;padding:12px 14px;border-radius:10px;text-align:center;font-family:var(--ff);font-size:21px;font-weight:700;letter-spacing:.08em;color:#ffd9b3;background:linear-gradient(135deg,rgba(249,115,22,.24),rgba(255,176,104,.08));border:1px solid rgba(249,115,22,.5);text-shadow:0 2px 12px rgba(249,115,22,.4);}
+.stage-banner span{color:var(--accent);}
 .cs-block{margin-top:12px;background:rgba(8,11,16,.4);border:1px solid var(--border2);border-radius:10px;padding:11px 13px;}
 .cs-head{font-family:var(--fm);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:9px;}
 .cs-scores{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
@@ -3204,6 +3206,19 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
   }
 
   /* ───── Prediction cards (#pred-grid) ───── */
+  // Human stage title from API-Football's round string — powers the big
+  // "FIFA WORLD CUP FINAL" banner on knockout cards.
+  function stageTitle(round) {
+    const r = String(round || '').toLowerCase();
+    if (r.includes('semi')) return 'SEMI-FINAL';
+    if (r.includes('quarter')) return 'QUARTER-FINAL';
+    if (r.includes('3rd') || r.includes('third')) return '3RD PLACE MATCH';
+    if (r.includes('final')) return 'FINAL';
+    if (r.includes('16')) return 'ROUND OF 16';
+    if (r.includes('32')) return 'ROUND OF 32';
+    if (r.includes('group')) { const m = r.match(/(\d+)\s*$/); return m ? `GROUP STAGE · MATCHDAY ${m[1]}` : 'GROUP STAGE'; }
+    return '';
+  }
   // From a "h-a" correct score + pick side, derive 3 scoreline options + a
   // goals (over/under) line + a likely total range. Numbers only, no team names.
   function scorePack(cs, pickSide) {
@@ -3291,6 +3306,12 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
       ${membersOverlay}
       <div class="pch"><span class="pcl"><span class="lbadge" style="background:${m.swatch}">${m.flag}</span>${esc(m.name)} · ${esc(dateStr)} · ${esc(kickoff)}</span><div class="pcmeta">${badge}${freeTag}</div></div>
       <div class="pcb">
+        ${(() => {
+          if (fx.league?.id !== 1) return '';
+          const st = stageTitle(fx.league?.round);
+          if (!st || st.startsWith('GROUP')) return '';
+          return `<div class="stage-banner">🏆 FIFA WORLD CUP <span>${st}</span></div>`;
+        })()}
         ${resultStrip}
         <div class="pct">
           <div class="team-side"><div class="tlogo"><img src="${esc(fx.teams.home.logo||'')}" onerror="this.style.display='none';this.parentElement.textContent='⚽'"></div><div class="tname">${esc(fx.teams.home.name)}</div></div>

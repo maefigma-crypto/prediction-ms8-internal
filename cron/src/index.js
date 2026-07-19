@@ -1356,13 +1356,26 @@ function tgResultCardUrl(fx, correct) {
   return `${PUBLIC_SITE_URL}/og/tg-result?${params.toString()}`;
 }
 
+// Stage title from the round string — names the big knockout matches.
+function wcStageTitle(round) {
+  const r = String(round || '').toLowerCase();
+  if (r.includes('semi')) return 'SEMI-FINAL';
+  if (r.includes('quarter')) return 'QUARTER-FINAL';
+  if (r.includes('3rd') || r.includes('third')) return '3RD PLACE MATCH';
+  if (r.includes('final')) return 'FINAL';
+  if (r.includes('16')) return 'ROUND OF 16';
+  if (r.includes('32')) return 'ROUND OF 32';
+  return '';
+}
+
 // Branded pre-match PREDICTION card image (pick, confidence, predicted score,
 // risk) — screenshotted and posted with the pre-match alert.
 function tgPredictionCardUrl(fx, pick) {
+  const stage = fx?.league?.id === 1 ? wcStageTitle(fx?.league?.round) : '';
   const params = new URLSearchParams({
     home:   fx?.teams?.home?.name || 'Home',
     away:   fx?.teams?.away?.name || 'Away',
-    league: fx?.league?.name || 'FIFA World Cup',
+    league: stage ? `FIFA World Cup · ${stage}` : (fx?.league?.name || 'FIFA World Cup'),
     date:   fx?.fixture?.date || '',
   });
   if (fx?.teams?.home?.logo) params.set('home_logo', fx.teams.home.logo);

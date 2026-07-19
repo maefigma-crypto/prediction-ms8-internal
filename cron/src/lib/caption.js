@@ -255,9 +255,20 @@ export function buildMatchUpdateCaption({ fixture, pick = null, siteUrl = 'https
   const conf = pick?.confidence != null ? ` (${pick.confidence}%)` : '';
   const reason = firstSentence(pick?.analysis || pick?.reason);
 
+  // Big-match stage title (FINAL / SEMI-FINAL / …) from the round string.
+  const stageRound = String(fixture?.league?.round || '').toLowerCase();
+  const stage = stageRound.includes('semi') ? 'SEMI-FINAL 半决赛'
+    : stageRound.includes('quarter') ? 'QUARTER-FINAL 四分之一决赛'
+    : (stageRound.includes('3rd') || stageRound.includes('third')) ? '3RD PLACE MATCH 季军赛'
+    : stageRound.includes('final') ? 'FINAL 决赛'
+    : stageRound.includes('16') ? 'ROUND OF 16 十六强'
+    : stageRound.includes('32') ? 'ROUND OF 32 三十二强'
+    : '';
+
   const lines = [];
   lines.push(`⏰ <b>Kicking off soon · 即将开赛</b>`);
   lines.push(`${flag} <b>${esc(league)}</b>`);
+  if (leagueId === 1 && stage) lines.push(`🏆 <b>${stage}</b>`);
   lines.push('');
   lines.push(`⚽ <b>${esc(home)} vs ${esc(away)}</b>`);
   lines.push(`🕐 Kickoff · 开赛: ${esc(kickoff)} MYT`);
