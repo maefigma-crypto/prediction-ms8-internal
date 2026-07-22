@@ -491,6 +491,81 @@ async function handlePredictions(env, url) {
   });
 }
 
+// ───── Dota 2 (dota2.scoreocs8.com) — OpenDota-backed endpoints ─────
+// OpenDota is the automated backbone (free, structured JSON). The TI event
+// schedule itself is CURATED — copied from Liquipedia into KV via the panel —
+// because scraping the wiki programmatically is brittle and rate-limited.
+const OPENDOTA_BASE = 'https://api.opendota.com/api';
+
+async function odGet(path) {
+  const res = await fetch(`${OPENDOTA_BASE}${path}`, {
+    headers: { 'user-agent': 'ScoreOCS8/1.0 (+https://dota2.scoreocs8.com)' },
+  });
+  if (!res.ok) throw new Error(`OpenDota ${path} ${res.status}`);
+  return res.json();
+}
+
+// Top pro teams by Elo — powers the "power rankings" panel.
+async function handleDotaTeams(env, url) {
+  const refresh = url.searchParams.get('refresh') === '1';
+  return cached(env, 'dota:teams:v1', 6 * 3600, async () => {
+    const teams = await odGet('/teams');
+    return {
+      updated: Date.now(),
+      teams: (teams || []).slice(0, 30).map(t => ({
+        team_id: t.team_id,
+        name: t.name || t.tag || 'Unknown',
+        tag: t.tag || '',
+        rating: Math.round(t.rating || 0),
+        wins: t.wins || 0,
+        losses: t.losses || 0,
+        logo: t.logo_url || '',
+        last_match_time: t.last_match_time || null,
+      })),
+    };
+  }, { refresh, validate: d => (d.teams || []).length > 0, emptyTtl: 120 });
+}
+
+// Recent pro matches (results feed). ?ti=1 filters to The International.
+async function handleDotaMatches(env, url) {
+  const refresh = url.searchParams.get('refresh') === '1';
+  const tiOnly = url.searchParams.get('ti') === '1';
+  return cached(env, `dota:promatches:v1${tiOnly ? ':ti' : ''}`, 10 * 60, async () => {
+    const list = await odGet('/proMatches');
+    let rows = (list || []).map(m => ({
+      match_id: m.match_id,
+      start_time: m.start_time || null,
+      duration: m.duration || null,
+      league: m.league_name || '',
+      series_type: m.series_type ?? null,
+      radiant: m.radiant_name || 'Radiant',
+      dire: m.dire_name || 'Dire',
+      radiant_win: !!m.radiant_win,
+      radiant_score: m.radiant_score ?? null,
+      dire_score: m.dire_score ?? null,
+    }));
+    if (tiOnly) rows = rows.filter(r => /international/i.test(r.league));
+    return { updated: Date.now(), count: rows.length, matches: rows.slice(0, 40) };
+  }, { refresh, validate: d => tiOnly || (d.matches || []).length > 0, emptyTtl: 120 });
+}
+
+// Curated TI 2026 schedule — hand-maintained in KV (dota:ti:schedule), copied
+// from Liquipedia. Serves a labelled placeholder until the panel fills it.
+async function handleDotaTiSchedule(env) {
+  const data = env?.CACHE ? await env.CACHE.get('dota:ti:schedule', 'json').catch(() => null) : null;
+  return {
+    data: data || {
+      updated: null,
+      event: 'The International 2026',
+      location: 'Shanghai, China',
+      dates: 'August 2026',
+      reference: 'https://liquipedia.net/dota2/The_International/2026',
+      matches: [],
+    },
+    source: data ? 'kv' : 'placeholder',
+  };
+}
+
 const FINISHED_STATUS = new Set(['FT', 'AET', 'PEN', 'WO', 'AWD']);
 const LIVE_STATUS = new Set(['1H', '2H', 'HT', 'ET', 'BT', 'P', 'LIVE', 'SUSP', 'INT']);
 
@@ -994,6 +1069,12 @@ export async function onRequest(context) {
         result = await handleMatchDetail(env, url);
         if (result.status) return json({ error: result.error }, result.status);
         break;
+      case 'dota/teams':
+        result = await handleDotaTeams(env, url); break;
+      case 'dota/matches':
+        result = await handleDotaMatches(env, url); break;
+      case 'dota/ti-schedule':
+        result = await handleDotaTiSchedule(env, url); break;
       case 'health':
         return json({ ok: true, time: Date.now() });
       case 'leagues': {

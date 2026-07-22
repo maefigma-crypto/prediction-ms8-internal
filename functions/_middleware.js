@@ -95,6 +95,23 @@ export async function onRequest(context) {
   const { request, env, next } = context;
   const url = new URL(request.url);
 
+  // 0. dota2.scoreocs8.com → serve the Dota 2 site (separate identity) from
+  // /dota2-site/*, sharing the same /api/* + /og/* backend. Football on the
+  // main domain is untouched. One-time setup: Pages project → Custom domains
+  // → add dota2.scoreocs8.com.
+  if (url.hostname.toLowerCase().startsWith('dota2.')) {
+    if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/og/')) {
+      return next();
+    }
+    const assetPath = (url.pathname === '/' || url.pathname === '')
+      ? '/dota2-site/index.html'
+      : `/dota2-site${url.pathname}`;
+    const asset = await env.ASSETS.fetch(new URL(assetPath, url.origin));
+    if (asset.status !== 404) return asset;
+    // Unknown path → Dota home (never leak football pages on this host).
+    return env.ASSETS.fetch(new URL('/dota2-site/index.html', url.origin));
+  }
+
   // 0a. /panel and /panel/* → opaque 404 on the customer domain.
   // panel/ source lives in this repo so the standalone admin Pages project
   // (ocs-super-panel) can build from it. That means the static panel files
