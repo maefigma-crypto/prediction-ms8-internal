@@ -1557,7 +1557,7 @@ footer{
       const elUpcoming = document.getElementById('msc-upcoming');
       const elResults = document.getElementById('msc-results');
       const cache = {};
-      const SEASON = '2025';
+      const SEASON = '2026';
       // API-Football tags tournaments by start year — WC 2026 is season 2026.
       const SEASON_BY_LEAGUE = { '1': '2026' };
       const seasonOf = id => SEASON_BY_LEAGUE[String(id)] || SEASON;
@@ -1725,8 +1725,12 @@ footer{
         loadLeague(t.dataset.league);
       }));
 
-      // Initial load — FIFA World Cup during the tournament
-      loadLeague('1');
+      // Initial load — FIFA WC during the tournament, EPL once it's over
+      // (2026 final was 19 Jul; the new domestic season starts mid-Aug).
+      const initialLeague = Date.now() > Date.parse('2026-07-21T00:00:00Z') ? '39' : '1';
+      const initTab = document.querySelector(`.msc-tab[data-league="${initialLeague}"]`);
+      if (initTab) { tabs.forEach(b => b.classList.remove('active')); initTab.classList.add('active'); }
+      loadLeague(initialLeague);
 
       /* ── WORLD CUP FULL SCHEDULE (all 104 matches) ── */
       const wcsList = document.getElementById('wcs-list');
@@ -3505,10 +3509,14 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     const live = await getJSON(API + '/live');
     if (!live) return;
     const liveSet = new Set((live.response || []).map(fx => fx.fixture.id));
-    // If any live match appears, re-render with fresh fixtures
+    // If any live match appears, re-render with fresh fixtures — WC feed only
+    // while the tournament still has upcoming/live games, else season feed.
     const fresh = await getJSON(API + '/wc-schedule');
     const wcFresh = wcMatchesToFixtures(fresh);
-    const all = wcFresh.length ? wcFresh : state.all;
+    const wcStillOn = wcFresh.some(fx => isLive(fx) || new Date(fx.fixture.date).getTime() > Date.now());
+    let all = state.all;
+    if (wcStillOn) all = wcFresh;
+    else { const f2 = await getJSON(API + '/fixtures'); const flat = wcFirst(flattenFixtures(f2)); if (flat.length) all = flat; }
     state.all = all;
     renderPreds(all, state.aiMap, state.slipMap);
     renderLiveCenter(all, state.aiMap, state.slipMap);
@@ -3519,15 +3527,23 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     const [wcSched, fixtures, standings, topScorers, slipBundle] = await Promise.all([
       getJSON(API + '/wc-schedule'),
       getJSON(API + '/fixtures'),
-      getJSON(API + '/standings?league=39&season=2025'),
-      getJSON(API + '/topscorers?league=39&season=2025'),
+      getJSON(API + '/standings?league=39&season=2026'),
+      getJSON(API + '/topscorers?league=39&season=2026'),
       loadSlipMap(),
     ]);
-    // World Cup section: source from /api/wc-schedule (the reliable full
-    // schedule — finished + upcoming). Falls back to the mixed feed only if
-    // wc-schedule is empty, so Completed/Today/Upcoming always populate.
+    // Tournament-aware feed: while the World Cup still has upcoming/live
+    // matches, the section is WC-only (wc-schedule). Once the tournament is
+    // over, pivot back to the domestic-season feed (EPL, UCL, La Liga…) so
+    // Upcoming fills with the new season instead of sitting empty.
     const wcAll = wcMatchesToFixtures(wcSched);
-    const all = wcAll.length ? wcAll : wcFirst(flattenFixtures(fixtures));
+    const wcActive = wcAll.some(fx => isLive(fx) || new Date(fx.fixture.date).getTime() > Date.now());
+    const all = wcActive ? wcAll : wcFirst(flattenFixtures(fixtures));
+    if (!wcActive) {
+      const tEl = document.getElementById('hl-predtitle');
+      const sEl = document.getElementById('hl-predsub');
+      if (tEl) tEl.textContent = 'Football Match Predictions';
+      if (sEl) sEl.textContent = 'Updated daily 08:00 MYT · EPL · UCL · La Liga · Serie A · Bundesliga · Ligue 1 · Powered by ScoreOcs8 Pro Analysis';
+    }
     const aiMap = await loadAIMap(all);
     const state = { all, aiMap, slipMap: slipBundle.map };
     window.predictionState = state;

@@ -48,7 +48,7 @@ function slipPath(fixtureId, home, away) {
   const slug = slugify(`${home}-vs-${away}`);
   return slug ? `/slip/${fixtureId}-${slug}/` : `/slip/${fixtureId}/`;
 }
-const DEFAULT_SEASON = '2025';
+const DEFAULT_SEASON = '2026';
 // API-Football tags tournaments by start year — the 2026 World Cup is season 2026.
 const LEAGUE_SEASONS = { 1: '2026' };
 const seasonFor = id => LEAGUE_SEASONS[String(id)] || DEFAULT_SEASON;

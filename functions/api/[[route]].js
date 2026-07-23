@@ -13,7 +13,7 @@ const HIGHLIGHT_LEAGUES = [
   { id: 61, key: 'LIGUE1', name: 'Ligue 1' },
   { id: 1, key: 'WC', name: 'FIFA World Cup' },
 ];
-const DEFAULT_SEASON = '2025';
+const DEFAULT_SEASON = '2026';
 // API-Football tags tournaments by start year — the 2026 World Cup is
 // season 2026 while domestic 2025-26 leagues are season 2025. Requests for
 // an overridden league that carry no season (or the stale default) are
