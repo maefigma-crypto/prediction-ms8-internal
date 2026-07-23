@@ -566,6 +566,25 @@ async function handleDotaTiSchedule(env) {
   };
 }
 
+// ───── Badminton (badminton.scoreocs8.com) — curated data ─────
+// No good free structured badminton API exists (BWF has no public API), so
+// the schedule + results are CURATED: loaded into KV (badminton:schedule)
+// from the BWF site via the cron worker's set-json task / panel. Tournament-
+// based sport with few matches a day makes manual curation practical.
+async function handleBadmintonSchedule(env) {
+  const data = env?.CACHE ? await env.CACHE.get('badminton:schedule', 'json').catch(() => null) : null;
+  return {
+    data: data || {
+      updated: null,
+      tournament: 'BWF World Tour',
+      location: '',
+      dates: '',
+      matches: [],
+    },
+    source: data ? 'kv' : 'placeholder',
+  };
+}
+
 const FINISHED_STATUS = new Set(['FT', 'AET', 'PEN', 'WO', 'AWD']);
 const LIVE_STATUS = new Set(['1H', '2H', 'HT', 'ET', 'BT', 'P', 'LIVE', 'SUSP', 'INT']);
 
@@ -1075,6 +1094,8 @@ export async function onRequest(context) {
         result = await handleDotaMatches(env, url); break;
       case 'dota/ti-schedule':
         result = await handleDotaTiSchedule(env, url); break;
+      case 'badminton/schedule':
+        result = await handleBadmintonSchedule(env, url); break;
       case 'health':
         return json({ ok: true, time: Date.now() });
       case 'leagues': {

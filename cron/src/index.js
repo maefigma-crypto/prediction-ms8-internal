@@ -2413,6 +2413,29 @@ export default {
     else if (task === 'group-table') result = await postGroupStandings(env, { force });
     else if (task === 'market') result = await postFanMarket(env, { force });
     else if (task === 'goals') result = await postGoalAlerts(env);
+    else if (task === 'set-json') {
+      // Curated-data loader: POST a JSON body to store it in KV. Whitelisted
+      // keys only (Dota TI schedule, badminton schedule) — the sport pages
+      // read these via /api/dota/ti-schedule and /api/badminton/schedule.
+      //   curl -X POST '.../?key=SECRET&task=set-json&kv=badminton:schedule' \
+      //        -H 'content-type: application/json' --data @schedule.json
+      const ALLOWED_KV = new Set(['dota:ti:schedule', 'badminton:schedule']);
+      const kvKey = url.searchParams.get('kv') || '';
+      if (!ALLOWED_KV.has(kvKey)) {
+        result = { status: 'error', error: `kv must be one of: ${[...ALLOWED_KV].join(', ')}` };
+      } else if (request.method !== 'POST') {
+        result = { status: 'error', error: 'POST a JSON body to this endpoint' };
+      } else {
+        try {
+          const body = await request.json();
+          body.updated = Date.now();
+          await env.CACHE.put(kvKey, JSON.stringify(body));
+          result = { status: 'ok', kv: kvKey, matches: Array.isArray(body.matches) ? body.matches.length : 0 };
+        } catch (e) {
+          result = { status: 'error', error: 'invalid JSON body: ' + (e.message || e) };
+        }
+      }
+    }
     else if (task === 'posting') {
       // Read or flip the global Telegram kill-switch (KV tg:posting).
       //   ?task=posting              → report current state
