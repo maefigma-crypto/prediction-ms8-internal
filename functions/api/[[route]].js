@@ -550,20 +550,51 @@ async function handleDotaMatches(env, url) {
 }
 
 // Curated TI 2026 schedule — hand-maintained in KV (dota:ti:schedule), copied
-// from Liquipedia. Serves a labelled placeholder until the panel fills it.
+// from Liquipedia. Each match is auto-enriched with an Elo-based prediction
+// (winner + confidence + series score) from OpenDota team ratings, unless the
+// curated entry already carries an explicit pick.
 async function handleDotaTiSchedule(env) {
   const data = env?.CACHE ? await env.CACHE.get('dota:ti:schedule', 'json').catch(() => null) : null;
-  return {
-    data: data || {
-      updated: null,
-      event: 'The International 2026',
-      location: 'Shanghai, China',
-      dates: 'August 2026',
-      reference: 'https://liquipedia.net/dota2/The_International/2026',
-      matches: [],
-    },
-    source: data ? 'kv' : 'placeholder',
-  };
+  if (!data) {
+    return {
+      data: {
+        updated: null,
+        event: 'The International 2026',
+        location: 'Shanghai, China',
+        dates: 'August 2026',
+        reference: 'https://liquipedia.net/dota2/The_International/2026',
+        matches: [],
+      },
+      source: 'placeholder',
+    };
+  }
+
+  // Elo enrichment — best-effort; schedule serves fine without it.
+  try {
+    const teamsBlob = await env.CACHE.get('dota:teams:v1', 'json').catch(() => null);
+    const teams = teamsBlob?.teams || [];
+    const findTeam = name => {
+      const n = String(name || '').toLowerCase().trim();
+      if (!n) return null;
+      return teams.find(t => (t.name || '').toLowerCase() === n)
+        || teams.find(t => (t.tag || '').toLowerCase() === n)
+        || teams.find(t => (t.name || '').toLowerCase().includes(n) || n.includes((t.name || '').toLowerCase()))
+        || null;
+    };
+    for (const m of (data.matches || [])) {
+      if (m.pick) continue; // curated pick wins
+      const a = findTeam(m.team1), b = findTeam(m.team2);
+      if (!a || !b || !a.rating || !b.rating) continue;
+      const pA = 1 / (1 + Math.pow(10, -((a.rating - b.rating) / 400)));
+      const conf = Math.max(55, Math.min(85, Math.round((pA >= 0.5 ? pA : 1 - pA) * 100)));
+      m.pick = pA >= 0.5 ? 1 : 2;
+      m.confidence = conf;
+      m.series_score = conf >= 72 ? '2-0' : '2-1'; // BO3 lean
+      m.pick_source = 'elo';
+    }
+  } catch { /* enrichment optional */ }
+
+  return { data, source: 'kv' };
 }
 
 // ───── Badminton (badminton.scoreocs8.com) — curated data ─────

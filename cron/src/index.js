@@ -2293,6 +2293,38 @@ async function postFanMarket(env, opts = {}) {
   return { status: 'ok', market: pickMkt.id, message_id: msg.message_id };
 }
 
+// --- Dota 2 TI daily digest --------------------------------------------------
+// Posts today's (MYT) TI series with ScoreOCS8 picks, from the curated
+// schedule (auto-enriched with Elo picks by the API). 12:00 MYT window,
+// once per day, skips silently when no TI matches are on today.
+async function postDotaTiDigest(env, opts = {}) {
+  if (!env.TG_BOT_TOKEN || !env.TG_CHANNEL_ID) return { status: 'skipped', reason: 'telegram not configured' };
+  if (!opts.force) {
+    const { h } = nowMytHM();
+    if (h !== 12) return { status: 'skipped', reason: 'outside 12:00 MYT window' };
+  }
+  const date = todayMYT();
+  const dedupKey = `posted:dota-ti:${date}`;
+  if (!opts.force && await env.CACHE.get(dedupKey).catch(() => null)) return { status: 'skipped', reason: 'already posted today' };
+  const d = await fetch(`https://dota2.scoreocs8.com/api/dota/ti-schedule`).then(r => r.ok ? r.json() : null).catch(() => null);
+  const mytKey = iso => { try { return new Date(iso).toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' }); } catch { return ''; } };
+  const mytTime = iso => { try { return new Date(iso).toLocaleTimeString('en-MY', { timeZone: 'Asia/Kuala_Lumpur', hour: '2-digit', minute: '2-digit', hour12: false }); } catch { return ''; } };
+  const todays = (d?.matches || []).filter(m => m.status !== 'FT' && mytKey(m.time_iso) === date);
+  if (!todays.length) return { status: 'skipped', reason: 'no TI matches today', date };
+  const lines = [`⚔️ <b>TI 2026 · Today's Series · 今日赛程</b>`, `🏆 The International — Shanghai`, ''];
+  for (const m of todays.slice(0, 8)) {
+    const pickName = m.pick === 2 ? m.team2 : m.team1;
+    lines.push(`🎮 <b>${m.team1} vs ${m.team2}</b>${m.bo ? ` (BO${m.bo})` : ''} · ${mytTime(m.time_iso)} MYT`);
+    if (m.pick) lines.push(`⚡ Pick: <b>${pickName}</b>${m.confidence ? ` (${m.confidence}%)` : ''}${m.series_score ? ` · series ${m.series_score}` : ''}`);
+    lines.push('');
+  }
+  lines.push(`🔗 All picks · 全部预测: https://dota2.scoreocs8.com/`, '', `🆕 <b>Sign up · OCS8 Sports</b> | 立即注册:`, `👉 https://ocs8my.com/signup?ref=OCSFMZ6HVI`, '', `#TI2026 #Dota2 #ScoreOcs8`);
+  const msg = await sendMessage(env, { text: lines.join('\n') });
+  if (msg?.disabled) return { status: 'skipped', reason: 'posting disabled' };
+  await env.CACHE.put(dedupKey, '1', { expirationTtl: 36 * 3600 });
+  return { status: 'ok', matches: todays.length, message_id: msg.message_id };
+}
+
 // --- Live goal alerts -------------------------------------------------------
 // Each heartbeat: compare live WC scores to the last posted score (KV) and
 // announce changes. First sighting of a match records the score silently so
@@ -2364,6 +2396,7 @@ export default {
       ctx.waitUntil(postGoalAlerts(env));
       ctx.waitUntil(postScorersRace(env));
       ctx.waitUntil(postFanMarket(env));
+      ctx.waitUntil(postDotaTiDigest(env));
       // 'Today at the World Cup' digest. This used to depend on dedicated
       // 30-16 / 0-7 UTC cron triggers that were never registered in
       // wrangler.toml, so it silently stopped posting. Drive it from the
@@ -2413,6 +2446,7 @@ export default {
     else if (task === 'group-table') result = await postGroupStandings(env, { force });
     else if (task === 'market') result = await postFanMarket(env, { force });
     else if (task === 'goals') result = await postGoalAlerts(env);
+    else if (task === 'dota-digest') result = await postDotaTiDigest(env, { force });
     else if (task === 'set-json') {
       // Curated-data loader: POST a JSON body to store it in KV. Whitelisted
       // keys only (Dota TI schedule, badminton schedule) — the sport pages

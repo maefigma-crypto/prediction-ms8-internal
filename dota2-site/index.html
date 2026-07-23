@@ -119,6 +119,7 @@ footer a{color:var(--text2);}
   <div class="ti-box" id="ti-box">
     <h3>🏆 TI 2026 Schedule &amp; Predictions</h3>
     <p id="ti-note">The official TI 2026 match schedule lands here the moment it's confirmed — with a ScoreOCS8 series prediction (winner, series score, confidence) for every match.</p>
+    <div id="ti-list" style="display:none;max-width:760px;margin:0 auto 16px;text-align:left;"></div>
     <a class="cta" href="https://t.me/scoreocs8" target="_blank" rel="noopener">📲 Get TI picks on Telegram</a>
   </div>
 </section>
@@ -181,9 +182,31 @@ footer a{color:var(--text2);}
 
   async function ti() {
     const d = await get('/api/dota/ti-schedule');
-    if (d && Array.isArray(d.matches) && d.matches.length) {
-      document.getElementById('ti-note').textContent = `${d.matches.length} TI 2026 matches scheduled — predictions attach automatically as each series is confirmed.`;
-    }
+    const list = d?.matches || [];
+    if (!list.length) return;
+    document.getElementById('ti-note').textContent = `${list.length} TI 2026 series scheduled — ScoreOCS8 pick, confidence and series score per match. All times MYT.`;
+    const host = document.getElementById('ti-list');
+    host.style.display = 'block';
+    host.innerHTML = list.map(m => {
+      const done = m.status === 'FT';
+      const pickName = m.pick === 2 ? m.team2 : m.team1;
+      const pickOk = done && m.pick && m.winner ? (m.pick === m.winner) : null;
+      return `<div style="padding:12px 14px;margin-bottom:8px;background:rgba(10,7,5,.55);border:1px solid var(--border);border-radius:10px;">
+        <div style="display:flex;justify-content:space-between;gap:8px;font-family:var(--fm);font-size:10px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px;">
+          <span>${esc(m.round || 'TI 2026')}${m.bo ? ` · BO${esc(m.bo)}` : ''}</span>
+          <span>${done ? 'FINAL' : m.status === 'LIVE' ? '<b style="color:#ff5d5d;">● LIVE</b>' : esc(myt(Date.parse(m.time_iso) / 1000)) + ' MYT'}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+          <div style="font-family:var(--ff);font-size:17px;font-weight:600;">
+            <span style="${done && m.winner === 1 ? 'color:var(--green);' : ''}">${esc(m.team1)}</span>
+            <span style="color:var(--text3);font-size:12px;"> vs </span>
+            <span style="${done && m.winner === 2 ? 'color:var(--green);' : ''}">${esc(m.team2)}</span>
+          </div>
+          <div style="font-family:var(--ff);font-weight:700;color:var(--gold);white-space:nowrap;">${done ? (esc(m.score || '') + (pickOk === true ? ' · ✅' : pickOk === false ? ' · ❌' : '')) : ''}</div>
+        </div>
+        ${!done && m.pick ? `<div style="margin-top:6px;font-family:var(--fm);font-size:11px;color:var(--text2);">⚡ Pick: <b style="color:var(--gold);">${esc(pickName)}</b>${m.confidence ? ` · ${esc(m.confidence)}%` : ''}${m.series_score ? ` · series ${esc(m.series_score)}` : ''}${m.pick_source === 'elo' ? ' · Elo model' : ''}</div>` : ''}
+      </div>`;
+    }).join('');
   }
 
   teams(); matches(); ti();
