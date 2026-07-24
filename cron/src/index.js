@@ -1097,6 +1097,24 @@ async function runSportsbookDaily(env) {
     return { status: 'skipped', reason: 'autopost disabled — toggle Automation ON in panel' };
   }
 
+  // Content freshness gate: between seasons/tournaments there are no upcoming
+  // fixtures, and the batch would post empty shells ("Upcoming Matches" with
+  // nothing behind it — exactly what happened after the WC final). Skip
+  // WITHOUT burning the daily slot until a fixture is coming up within 72h;
+  // when the new season's fixtures land, posting resumes by itself.
+  try {
+    const fx = await fetch(`${PUBLIC_SITE_URL}/api/fixtures`).then(r => r.ok ? r.json() : null);
+    const now = Date.now();
+    const hasUpcoming = (fx?.leagues || []).some(lg =>
+      ['today', 'next'].some(k => (lg[k] || []).some(m => {
+        const t = new Date(m.fixture?.date || 0).getTime();
+        return Number.isFinite(t) && t > now && t - now < 72 * 3600 * 1000;
+      })));
+    if (!hasUpcoming) {
+      return { status: 'skipped', reason: 'no upcoming fixtures within 72h — paused until fresh matches land' };
+    }
+  } catch { /* if the check itself fails, fall through and post as before */ }
+
   const todayMyt = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' });
   const dedupKey = `sportsbook:daily-fired:${todayMyt}`;
   const alreadyFired = await env.CACHE.get(dedupKey);
@@ -2218,6 +2236,16 @@ async function postScorersRace(env, opts = {}) {
     if (h !== 13) return { status: 'skipped', reason: 'outside 13:00 MYT window' };
     if (await env.CACHE.get('posted:scorers').catch(() => null)) return { status: 'skipped', reason: 'posted within 44h' };
   }
+  // Tournament-active gate: the Golden Boot race is stale once the WC is
+  // over — only post while a WC match kicked off in the last 72h or is
+  // still upcoming.
+  const sched = await fetch(`${SITE_URL}/api/wc-schedule`).then(r => r.ok ? r.json() : null).catch(() => null);
+  const nowMs = Date.now();
+  const wcActive = (sched?.matches || []).some(m => {
+    const t = Date.parse(m.date);
+    return Number.isFinite(t) && (t > nowMs || nowMs - t < 72 * 3600 * 1000);
+  });
+  if (!wcActive && !opts.force) return { status: 'skipped', reason: 'World Cup finished — scorers race paused' };
   const data = await fetch(`${SITE_URL}/api/topscorers?league=1&season=2026`).then(r => r.ok ? r.json() : null).catch(() => null);
   const list = (data?.response || []).slice(0, 5);
   if (!list.length) return { status: 'skipped', reason: 'no scorer data' };
