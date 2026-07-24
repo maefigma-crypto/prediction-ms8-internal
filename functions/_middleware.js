@@ -103,7 +103,10 @@ export async function onRequest(context) {
   const hostLower = url.hostname.toLowerCase();
   const subPrefix = Object.keys(SUBSITES).find(p => hostLower.startsWith(p));
   if (subPrefix) {
-    if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/og/')) {
+    // Shared backend + the cross-sport /schedule page (the function detects
+    // the hostname and pre-filters to that sport).
+    if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/og/') ||
+        url.pathname === '/schedule' || url.pathname === '/schedule-2026-27.json') {
       return next();
     }
     const dir = SUBSITES[subPrefix];
