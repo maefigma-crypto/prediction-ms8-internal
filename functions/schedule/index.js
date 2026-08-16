@@ -1,17 +1,14 @@
-// GET /schedule — public, SEO-indexable, bilingual (EN/简中) sports calendar,
-// Jul 2026 → Apr 2027, covering Dota 2 / football / badminton.
+// GET /schedule — public, SEO-indexable, bilingual (EN/简中) football calendar,
+// Aug 2026 → Apr 2027: EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1 and
+// the international windows.
 //
 // - Source of truth: /schedule-2026-27.json (static asset — the single edit
 //   point; no dates live in this component).
-// - Served on all three hosts: scoreocs8.com/schedule (all sports, filter
-//   tabs), dota2.scoreocs8.com/schedule and badminton.scoreocs8.com/schedule
-//   (pre-filtered by hostname, tabs hidden).
 // - Status (completed/live/upcoming) is computed per-request from today's
 //   date in Asia/Kuala_Lumpur — never hardcoded. The Workers cron can reuse
 //   the same date-window logic to trigger AI content when an event goes live.
-// - CONTENT PIPELINE NOTE: BWF switches to the new 3x15 scoring system from
-//   4 Jan 2027 — this changes set-score prediction copy (21-point language
-//   must go) and is a strong explainer-article topic before Malaysia Open.
+// - Football-only since Aug 2026 (the Dota 2 / badminton verticals were
+//   retired); the sport filter tabs went with them.
 
 function esc(s) {
   return String(s ?? '').replace(/[<>&"']/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -19,8 +16,6 @@ function esc(s) {
 
 const SPORT_META = {
   football: { icon: '⚽', pred: 'https://scoreocs8.com/predictions/' },
-  dota2: { icon: '🎮', pred: 'https://dota2.scoreocs8.com/' },
-  badminton: { icon: '🏸', pred: 'https://badminton.scoreocs8.com/' },
 };
 
 function todayKL() {
@@ -61,10 +56,10 @@ export async function onRequestGet({ request, env }) {
   const host = url.hostname.toLowerCase();
   const lang = url.searchParams.get('lang') === 'zh' ? 'zh' : 'en';
 
-  // Host pre-filter (subdomains) or ?sport= tab (main site).
-  const hostSport = host.startsWith('dota2.') ? 'dota2' : host.startsWith('badminton.') ? 'badminton' : null;
-  const qSport = url.searchParams.get('sport');
-  const sport = hostSport || (['football', 'dota2', 'badminton'].includes(qSport) ? qSport : 'all');
+  // Football-only: the sport filter is retained as a no-op so old links
+  // carrying ?sport= keep working.
+  const hostSport = null;
+  const sport = 'all';
 
   const dataRes = await env.ASSETS.fetch(new URL('/schedule-2026-27.json', `https://${host}`)).catch(() => null);
   const data = dataRes && dataRes.ok ? await dataRes.json().catch(() => null) : null;
@@ -138,10 +133,7 @@ export async function onRequestGet({ request, env }) {
     </details>`;
   };
 
-  const tabs = hostSport ? '' : `<div class="tabs">
-    ${[['all', S.all], ['football', '⚽'], ['dota2', '🎮'], ['badminton', '🏸']].map(([k, label]) =>
-      `<a class="tab ${sport === k ? 'act' : ''}" href="/schedule?sport=${k}${lang === 'zh' ? '&lang=zh' : ''}">${esc(label)}</a>`).join('')}
-  </div>`;
+  const tabs = '';
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -252,7 +244,7 @@ footer{border-top:1px solid var(--border);padding:22px;text-align:center;color:v
   ${[...byMonth.entries()].map(([k, list]) => `<div class="month">${esc(monthLabel(k, lang))}</div>${list.map(evRow).join('')}`).join('')}
   ${tba.length ? `<details class="tba"><summary>📌 ${esc(S.tba_strip)} (${tba.length})</summary><p class="tba-note">${esc(S.tba_note)}</p>${tba.map(t => `<div class="tba-item"><span>${SPORT_META[t.sport]?.icon || ''} ${esc(lang === 'zh' ? (t.name_zh || t.name_en) : t.name_en)}</span><small>${esc(lang === 'zh' ? (t.estimate_zh || t.estimate_en) : t.estimate_en)}</small></div>`).join('')}</details>` : ''}
 </main>
-<footer>© 2026 ScoreOCS8 · <a href="https://scoreocs8.com/" style="color:var(--text2);">⚽</a> · <a href="https://dota2.scoreocs8.com/" style="color:var(--text2);">🎮</a> · <a href="https://badminton.scoreocs8.com/" style="color:var(--text2);">🏸</a> · ${esc(data.meta?.last_verified ? 'Data verified ' + data.meta.last_verified : '')}</footer>
+<footer>© 2026 ScoreOCS8 · <a href="https://scoreocs8.com/" style="color:var(--text2);">⚽ Football predictions</a> · ${esc(data.meta?.last_verified ? 'Data verified ' + data.meta.last_verified : '')}</footer>
 </body>
 </html>`;
 

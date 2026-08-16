@@ -29,8 +29,9 @@ export async function onRequestGet({ env, request }) {
     { loc: `${SITE_URL}/predictions/serie-a/`,            priority: '0.9', changefreq: 'daily' },
     { loc: `${SITE_URL}/predictions/bundesliga/`,         priority: '0.9', changefreq: 'daily' },
     { loc: `${SITE_URL}/predictions/ligue-1/`,            priority: '0.9', changefreq: 'daily' },
-    { loc: `${SITE_URL}/predictions/fifa-world-cup/`,     priority: '0.9', changefreq: 'weekly' },
-    { loc: `${SITE_URL}/worldcup-markets/`,               priority: '0.9', changefreq: 'daily' },
+    // 2026 World Cup pages kept as an archive — demoted now the tournament is over.
+    { loc: `${SITE_URL}/predictions/fifa-world-cup/`,     priority: '0.4', changefreq: 'monthly' },
+    { loc: `${SITE_URL}/worldcup-markets/`,               priority: '0.4', changefreq: 'monthly' },
   ];
 
   // Dynamic per-match pages: /match/<id>-<home>-vs-<away>/

@@ -491,130 +491,10 @@ async function handlePredictions(env, url) {
   });
 }
 
-// ───── Dota 2 (dota2.scoreocs8.com) — OpenDota-backed endpoints ─────
-// OpenDota is the automated backbone (free, structured JSON). The TI event
-// schedule itself is CURATED — copied from Liquipedia into KV via the panel —
-// because scraping the wiki programmatically is brittle and rate-limited.
-const OPENDOTA_BASE = 'https://api.opendota.com/api';
-
-async function odGet(path) {
-  const res = await fetch(`${OPENDOTA_BASE}${path}`, {
-    headers: { 'user-agent': 'ScoreOCS8/1.0 (+https://dota2.scoreocs8.com)' },
-  });
-  if (!res.ok) throw new Error(`OpenDota ${path} ${res.status}`);
-  return res.json();
-}
-
-// Top pro teams by Elo — powers the "power rankings" panel.
-async function handleDotaTeams(env, url) {
-  const refresh = url.searchParams.get('refresh') === '1';
-  return cached(env, 'dota:teams:v1', 6 * 3600, async () => {
-    const teams = await odGet('/teams');
-    return {
-      updated: Date.now(),
-      teams: (teams || []).slice(0, 30).map(t => ({
-        team_id: t.team_id,
-        name: t.name || t.tag || 'Unknown',
-        tag: t.tag || '',
-        rating: Math.round(t.rating || 0),
-        wins: t.wins || 0,
-        losses: t.losses || 0,
-        logo: t.logo_url || '',
-        last_match_time: t.last_match_time || null,
-      })),
-    };
-  }, { refresh, validate: d => (d.teams || []).length > 0, emptyTtl: 120 });
-}
-
-// Recent pro matches (results feed). ?ti=1 filters to The International.
-async function handleDotaMatches(env, url) {
-  const refresh = url.searchParams.get('refresh') === '1';
-  const tiOnly = url.searchParams.get('ti') === '1';
-  return cached(env, `dota:promatches:v1${tiOnly ? ':ti' : ''}`, 10 * 60, async () => {
-    const list = await odGet('/proMatches');
-    let rows = (list || []).map(m => ({
-      match_id: m.match_id,
-      start_time: m.start_time || null,
-      duration: m.duration || null,
-      league: m.league_name || '',
-      series_type: m.series_type ?? null,
-      radiant: m.radiant_name || 'Radiant',
-      dire: m.dire_name || 'Dire',
-      radiant_win: !!m.radiant_win,
-      radiant_score: m.radiant_score ?? null,
-      dire_score: m.dire_score ?? null,
-    }));
-    if (tiOnly) rows = rows.filter(r => /international/i.test(r.league));
-    return { updated: Date.now(), count: rows.length, matches: rows.slice(0, 40) };
-  }, { refresh, validate: d => tiOnly || (d.matches || []).length > 0, emptyTtl: 120 });
-}
-
-// Curated TI 2026 schedule — hand-maintained in KV (dota:ti:schedule), copied
-// from Liquipedia. Each match is auto-enriched with an Elo-based prediction
-// (winner + confidence + series score) from OpenDota team ratings, unless the
-// curated entry already carries an explicit pick.
-async function handleDotaTiSchedule(env) {
-  const data = env?.CACHE ? await env.CACHE.get('dota:ti:schedule', 'json').catch(() => null) : null;
-  if (!data) {
-    return {
-      data: {
-        updated: null,
-        event: 'The International 2026',
-        location: 'Shanghai, China',
-        dates: 'August 2026',
-        reference: 'https://liquipedia.net/dota2/The_International/2026',
-        matches: [],
-      },
-      source: 'placeholder',
-    };
-  }
-
-  // Elo enrichment — best-effort; schedule serves fine without it.
-  try {
-    const teamsBlob = await env.CACHE.get('dota:teams:v1', 'json').catch(() => null);
-    const teams = teamsBlob?.teams || [];
-    const findTeam = name => {
-      const n = String(name || '').toLowerCase().trim();
-      if (!n) return null;
-      return teams.find(t => (t.name || '').toLowerCase() === n)
-        || teams.find(t => (t.tag || '').toLowerCase() === n)
-        || teams.find(t => (t.name || '').toLowerCase().includes(n) || n.includes((t.name || '').toLowerCase()))
-        || null;
-    };
-    for (const m of (data.matches || [])) {
-      if (m.pick) continue; // curated pick wins
-      const a = findTeam(m.team1), b = findTeam(m.team2);
-      if (!a || !b || !a.rating || !b.rating) continue;
-      const pA = 1 / (1 + Math.pow(10, -((a.rating - b.rating) / 400)));
-      const conf = Math.max(55, Math.min(85, Math.round((pA >= 0.5 ? pA : 1 - pA) * 100)));
-      m.pick = pA >= 0.5 ? 1 : 2;
-      m.confidence = conf;
-      m.series_score = conf >= 72 ? '2-0' : '2-1'; // BO3 lean
-      m.pick_source = 'elo';
-    }
-  } catch { /* enrichment optional */ }
-
-  return { data, source: 'kv' };
-}
-
-// ───── Badminton (badminton.scoreocs8.com) — curated data ─────
-// No good free structured badminton API exists (BWF has no public API), so
-// the schedule + results are CURATED: loaded into KV (badminton:schedule)
-// from the BWF site via the cron worker's set-json task / panel. Tournament-
-// based sport with few matches a day makes manual curation practical.
-async function handleBadmintonSchedule(env) {
-  const data = env?.CACHE ? await env.CACHE.get('badminton:schedule', 'json').catch(() => null) : null;
-  return {
-    data: data || {
-      updated: null,
-      tournament: 'BWF World Tour',
-      location: '',
-      dates: '',
-      matches: [],
-    },
-    source: data ? 'kv' : 'placeholder',
-  };
-}
+// ───── Retired verticals ─────
+// The Dota 2 and badminton endpoints (OpenDota-backed + curated KV) were
+// removed in Aug 2026 when ScoreOCS8 went football-only. Their KV keys
+// (dota:*, badminton:schedule) can be purged.
 
 const FINISHED_STATUS = new Set(['FT', 'AET', 'PEN', 'WO', 'AWD']);
 const LIVE_STATUS = new Set(['1H', '2H', 'HT', 'ET', 'BT', 'P', 'LIVE', 'SUSP', 'INT']);
@@ -1119,14 +999,6 @@ export async function onRequest(context) {
         result = await handleMatchDetail(env, url);
         if (result.status) return json({ error: result.error }, result.status);
         break;
-      case 'dota/teams':
-        result = await handleDotaTeams(env, url); break;
-      case 'dota/matches':
-        result = await handleDotaMatches(env, url); break;
-      case 'dota/ti-schedule':
-        result = await handleDotaTiSchedule(env, url); break;
-      case 'badminton/schedule':
-        result = await handleBadmintonSchedule(env, url); break;
       case 'health':
         return json({ ok: true, time: Date.now() });
       case 'leagues': {
@@ -1148,7 +1020,7 @@ export async function onRequest(context) {
         });
       }
       case 'track-record': {
-        // Live track-record: overall / football / badminton % + current
+        // Live track-record: overall / football % + current
         // win streak + last 6 matches. Reads from history:matches which
         // the cron's checkFinishedMatches() appends to at each FT.
         const raw = await env.CACHE.get('history:matches');
@@ -1163,7 +1035,6 @@ export async function onRequest(context) {
         };
 
         const football = reconciled.filter(m => m.sport === 'football');
-        const badminton = reconciled.filter(m => m.sport === 'badminton');
 
         let streak = 0;
         for (const m of reconciled) {
@@ -1183,7 +1054,6 @@ export async function onRequest(context) {
           updated: Date.now(),
           overall: { pct: pct(reconciled), count: reconciled.length },
           football: { pct: pct(football), count: football.length },
-          badminton: { pct: pct(badminton), count: badminton.length },
           winStreak: streak,
           recent: list.slice(0, 6).map(m => ({
             date: fmtDate(m.kickoff_iso),

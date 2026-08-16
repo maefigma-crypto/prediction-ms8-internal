@@ -9,3 +9,11 @@
 # baking the third-party URL into search engines.
 /register.html  https://ocs8my.com/signup?ref=OCSFMZ6HVI  302
 /register       https://ocs8my.com/signup?ref=OCSFMZ6HVI  302
+
+# Retired verticals (Aug 2026): ScoreOCS8 is football-only. Old dota2. /
+# badminton. subdomain hosts are 301'd in functions/_middleware.js; these
+# cover any in-repo paths that were linked internally or picked up by search.
+/dota2/*      /   301
+/badminton/*  /   301
+/dota2-site/*      /   301
+/badminton-site/*  /   301

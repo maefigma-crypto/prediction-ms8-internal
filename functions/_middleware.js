@@ -95,28 +95,16 @@ export async function onRequest(context) {
   const { request, env, next } = context;
   const url = new URL(request.url);
 
-  // 0. Sport subdomains → each serves its own site directory (separate
-  // identity) while sharing the same /api/* + /og/* backend. Football on the
-  // main domain is untouched. Setup: Pages project → Custom domains → add
-  // dota2.scoreocs8.com + badminton.scoreocs8.com.
-  const SUBSITES = { 'dota2.': '/dota2-site', 'badminton.': '/badminton-site' };
+  // 0. RETIRED SPORT SUBDOMAINS → football home, 301.
+  // ScoreOCS8 is football-only from Aug 2026. The old dota2./badminton.
+  // subdomains stay pointed at this Pages project so their indexed URLs
+  // pass their link equity to the football site instead of 404ing. Keep
+  // the DNS + custom domains in place until Search Console shows the old
+  // URLs de-indexed, then they can be removed entirely.
+  const RETIRED_SUBS = ['dota2.', 'badminton.'];
   const hostLower = url.hostname.toLowerCase();
-  const subPrefix = Object.keys(SUBSITES).find(p => hostLower.startsWith(p));
-  if (subPrefix) {
-    // Shared backend + the cross-sport /schedule page (the function detects
-    // the hostname and pre-filters to that sport).
-    if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/og/') ||
-        url.pathname === '/schedule' || url.pathname === '/schedule-2026-27.json') {
-      return next();
-    }
-    const dir = SUBSITES[subPrefix];
-    const assetPath = (url.pathname === '/' || url.pathname === '')
-      ? `${dir}/index.html`
-      : `${dir}${url.pathname}`;
-    const asset = await env.ASSETS.fetch(new URL(assetPath, url.origin));
-    if (asset.status !== 404) return asset;
-    // Unknown path → that sport's home (never leak football pages here).
-    return env.ASSETS.fetch(new URL(`${dir}/index.html`, url.origin));
+  if (RETIRED_SUBS.some(p => hostLower.startsWith(p))) {
+    return Response.redirect('https://scoreocs8.com/', 301);
   }
 
   // 0a. /panel and /panel/* → opaque 404 on the customer domain.
