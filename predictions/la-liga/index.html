@@ -281,7 +281,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:2.
   <a href="/" class="nav-logo"><img src="/logo.png" alt="ScoreOcs8" style="height:34px;width:auto;display:block;"></a>
   <ul class="nav-links">
     <li><a href="/">🏠 Home</a></li>
-    <li><a href="/worldcup-markets/" style="color:var(--accent);">🏆 World Cup</a></li>
+    <li><a href="/worldcup-markets/" style="color:var(--accent);">🎯 Fan Markets</a></li>
     <li><a href="/predictions" class="active">📊 Predictions</a></li>
     <li><a href="/blog/">📝 Blog</a></li>
     <li><a href="/#faq">❓ FAQ</a></li>
@@ -304,7 +304,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:2.
     <a href="/predictions/serie-a/" class="dr-link">🇮🇹 Serie A</a>
     <a href="/predictions/bundesliga/" class="dr-link">🇩🇪 Bundesliga</a>
     <a href="/predictions/ligue-1/" class="dr-link">🇫🇷 Ligue 1</a>
-    <a href="/predictions/fifa-world-cup/" class="dr-link">🏆 FIFA World Cup 2026</a>
+    <a href="/predictions/fifa-world-cup/" class="dr-link">🌍 Today's Matches</a>
     <a href="https://t.me/scoreocs8" target="_blank" rel="noopener" class="dr-link dr-tg">📲 Join @scoreocs8 on Telegram</a>
     <a href="https://ocs8my.com/signup?ref=OCSFMZ6HVI" target="_blank" rel="noopener" class="dr-cta">Register</a>
   </div>
@@ -355,7 +355,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeBurger();});
     <div class="cat-pills">
       <a href="/predictions/premier-league/" class="cat-pill"><span class="flag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span> Premier League</a>
       <a href="/predictions/champions-league/" class="cat-pill"><span class="flag">⭐</span> UEFA Champions League</a>
-      <a href="/predictions/fifa-world-cup/" class="cat-pill"><span class="flag">🏆</span> FIFA World Cup 2026</a>
+      <a href="/predictions/fifa-world-cup/" class="cat-pill"><span class="flag">🌍</span> Today's Matches</a>
       <a href="/predictions/la-liga/" class="cat-pill active"><span class="flag">🇪🇸</span> La Liga</a>
       <a href="/predictions/bundesliga/" class="cat-pill"><span class="flag">🇩🇪</span> Bundesliga</a>
       <a href="/predictions/serie-a/" class="cat-pill"><span class="flag">🇮🇹</span> Serie A</a>
@@ -463,7 +463,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeBurger();});
     <div class="faqitem"><div class="faqq" onclick="this.parentElement.classList.toggle('open')">How accurate are your La Liga predictions? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">Our La Liga predictions achieve 87% overall accuracy. All results are logged publicly in our Track Record section: every win and loss is shown with no editing.</div></div></div>
     <div class="faqitem"><div class="faqq" onclick="this.parentElement.classList.toggle('open')">What time are La Liga predictions posted? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">Predictions are updated daily at 08:00 MYT (Asia/Kuala Lumpur, UTC+8). Telegram alerts via @scoreocs8 are sent automatically 30 minutes before each kick-off.</div></div></div>
     <div class="faqitem"><div class="faqq" onclick="this.parentElement.classList.toggle('open')">Which La Liga teams does ScoreOcs8 cover? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">Real Madrid, Barcelona, Atlético Madrid, Athletic Club, Real Sociedad, Girona, Sevilla, Valencia, Villarreal, Real Betis, Celta Vigo, Osasuna, RCD Mallorca, Getafe, UD Las Palmas, Leganés, Alavés, Espanyol, Rayo Vallecano, Real Valladolid.</div></div></div>
-    <div class="faqitem"><div class="faqq" onclick="this.parentElement.classList.toggle('open')">Do you cover other leagues besides La Liga? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">Currently we focus on La Liga, plus EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup internationally. More leagues coming soon.</div></div></div>
+    <div class="faqitem"><div class="faqq" onclick="this.parentElement.classList.toggle('open')">Do you cover other leagues besides La Liga? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">Currently we focus on La Liga, plus EPL, UEFA Champions League, La Liga, Serie A, Bundesliga and Ligue 1 across the 2026-27 season. More leagues coming soon.</div></div></div>
   </div>
 </div>
 
@@ -554,7 +554,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeBurger();});
     if (!matches.length) empty(matchHost, 'No upcoming fixtures from the API right now. Check back later. The feed updates hourly.');
     else matchHost.innerHTML = matches.map(matchCard).join('');
 
-    // Standings — knockout comps (UCL, FIFA WC) will return empty.
+    // Standings — knockout comps (UCL play-offs) will return empty.
     const st = await getJSON(`/api/standings?league=${L.api_id}&season=${encodeURIComponent(L.api_season||'')}`);
     const rows = st?.response?.[0]?.league?.standings?.[0];
     if (!rows?.length) empty(stHost, `${L.short || L.name} is a knockout competition or has no league table available.`);

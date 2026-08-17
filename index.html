@@ -54,7 +54,7 @@
       "url": "https://scoreocs8.com/",
       "logo": "https://scoreocs8.com/logo.png",
       "slogan": "Malaysia's best online soccer prediction site",
-      "description": "Malaysia's dedicated soccer prediction site. Pro picks for EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup 2026.",
+      "description": "Malaysia's dedicated football prediction site. 2026-27 season pro picks for EPL, UCL, La Liga, Serie A, Bundesliga and Ligue 1.",
       "areaServed": "MY",
       "sameAs": [
         "https://t.me/scoreocs8",
@@ -78,7 +78,7 @@
       "@type": "WebPage",
       "@id": "https://scoreocs8.com/#webpage",
       "url": "https://scoreocs8.com/",
-      "name": "ScoreOcs8 | FIFA World Cup 2026 Predictions & Daily Football Pro Picks (Malaysia)",
+      "name": "ScoreOcs8 | Football Predictions Malaysia — EPL, UCL, La Liga & Serie A Pro Picks",
       "isPartOf": { "@id": "https://scoreocs8.com/#website" },
       "about": { "@id": "https://scoreocs8.com/#org" },
       "primaryImageOfPage": "https://scoreocs8.com/og/default?v=2",
@@ -92,7 +92,7 @@
           "name": "How accurate are ScoreOcs8 predictions?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Every prediction is logged and its result is published publicly in our track record, so you can verify our accuracy yourself. We only cover major soccer leagues: English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup."
+            "text": "Every prediction is logged and its result is published publicly in our track record, so you can verify our accuracy yourself. We only cover major football leagues: English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga and Ligue 1."
           }
         },
         {
@@ -100,7 +100,7 @@
           "name": "What leagues does ScoreOcs8 cover?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup qualifying and finals. We do not cover small or lower-league competitions."
+            "text": "English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga and Ligue 1 — the 2026-27 season. We do not cover small or lower-league competitions."
           }
         },
         {
@@ -1331,7 +1331,7 @@ footer{
     <div class="intro-copy fu v">
       <div class="stag">Bet On OCS8</div>
       <h2 class="stitle">Bet on Pro Match Predictions, Win Real Money</h2>
-      <p class="ssub">ScoreOcs8 covers major soccer leagues only: EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup. Read daily pro picks, match context, and result records before kickoff.</p>
+      <p class="ssub">ScoreOcs8 covers major football leagues only: EPL, UEFA Champions League, La Liga, Serie A, Bundesliga and Ligue 1. Read daily pro picks, match context, and result records before kickoff.</p>
       <div class="intro-points">
         <div><strong>1</strong><span>Read free pro picks</span></div>
         <div><strong>2</strong><span>Open OCS8 register</span></div>
@@ -1429,7 +1429,7 @@ footer{
       .msc-tab{font-family:var(--ff);font-size:16px;font-weight:700;letter-spacing:.03em;padding:11px 18px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.04);color:var(--text2);border-radius:999px;backdrop-filter:blur(12px);cursor:pointer;transition:all .2s;white-space:nowrap;}
       .msc-tab:hover{background:rgba(255,255,255,0.08);color:var(--text);border-color:rgba(249,115,22,0.30);}
       .msc-tab.active{background:linear-gradient(180deg,#ff9c4a 0%,#f97316 50%,#c75808 100%);color:#fff;border-color:transparent;box-shadow:0 4px 14px rgba(249,115,22,0.40),inset 0 1px 0 rgba(255,255,255,0.30);}
-      /* WORLD CUP FULL SCHEDULE */
+      /* SEASON FIXTURES WIDGET */
       .wcs-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
       .wcs-filters{display:flex;gap:7px;flex-wrap:wrap;}
       .wcs-chip{font-family:var(--fm);font-size:11px;font-weight:600;letter-spacing:.05em;padding:7px 13px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.04);color:var(--text2);border-radius:999px;cursor:pointer;transition:all .2s;white-space:nowrap;}
@@ -1586,7 +1586,7 @@ footer{
           const freshEl = document.getElementById('msc-table-fresh');
           if (freshEl) freshEl.textContent = std.length ? fmtAgo(data?.updated) : '';
           if (!std.length) { elTable.innerHTML = empty('Standings not available for this league'); return; }
-          // Cup competitions (FIFA WC) return one standings array per group —
+          // Cup competitions (UCL league phase) return one standings array per group —
           // render every group under its own header instead of a single table.
           if (groups.length > 1) {
             const head = `<div class="msc-head"><div></div><div>Team</div><div>MP</div><div>W</div><div>L</div><div>PTS</div></div>`;
@@ -1683,24 +1683,11 @@ footer{
         elResults.innerHTML = '<div class="msc-loading">Loading results…</div>';
 
         const season = seasonOf(leagueId);
-        const isWC = String(leagueId) === '1';
-        const [std, scor, fxRaw] = await Promise.all([
+        const [std, scor, fx] = await Promise.all([
           fetch(`/api/standings?league=${leagueId}&season=${season}`).then(r => r.ok ? r.json() : null).catch(() => null),
           fetch(`/api/topscorers?league=${leagueId}&season=${season}`).then(r => r.ok ? r.json() : null).catch(() => null),
-          isWC
-            ? fetch('/api/wc-schedule').then(r => r.ok ? r.json() : null).catch(() => null)
-            : fetch(`/api/fixtures?league=${leagueId}&season=${season}`).then(r => r.ok ? r.json() : null).catch(() => null),
+          fetch(`/api/fixtures?league=${leagueId}&season=${season}`).then(r => r.ok ? r.json() : null).catch(() => null),
         ]);
-        // World Cup fixtures come from wc-schedule (reliable full schedule);
-        // reshape into the {leagues:[{next,last}]} form the renderers expect.
-        let fx = fxRaw;
-        if (isWC && fxRaw?.matches) {
-          const now = Date.now(); const FIN = new Set(['FT', 'AET', 'PEN']);
-          const arr = (fxRaw.matches || []).map(m => ({ fixture: { id: m.fixture_id, date: m.date, status: { short: m.status, elapsed: m.elapsed ?? null } }, teams: { home: m.home, away: m.away }, goals: m.goals || {} }));
-          const next = arr.filter(f => new Date(f.fixture.date).getTime() > now && !FIN.has(f.fixture.status.short)).sort((a, b) => new Date(a.fixture.date) - new Date(b.fixture.date));
-          const last = arr.filter(f => FIN.has(f.fixture.status.short)).sort((a, b) => new Date(b.fixture.date) - new Date(a.fixture.date));
-          fx = { leagues: [{ leagueId: 1, next, last, today: [] }] };
-        }
         cache[leagueId] = { std, scor, fx };
         renderTable(std); renderScorers(scor); renderUpcoming(fx); renderResults(fx);
       }
@@ -1711,8 +1698,7 @@ footer{
         loadLeague(t.dataset.league);
       }));
 
-      // Initial load — FIFA WC during the tournament, EPL once it's over
-      // (2026 final was 19 Jul; the new domestic season starts mid-Aug).
+      // Initial load — EPL is the default league tab for the 2026-27 season.
       const initialLeague = '39';
       const initTab = document.querySelector(`.msc-tab[data-league="${initialLeague}"]`);
       if (initTab) { tabs.forEach(b => b.classList.remove('active')); initTab.classList.add('active'); }
@@ -1876,8 +1862,8 @@ footer{
 <section id="predictions" style="position:relative;z-index:1;background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
   <div class="sec">
     <div class="stag">Daily Pro Picks</div>
-    <h2 class="stitle" id="hl-predtitle">FIFA World Cup Predictions</h2>
-    <p class="ssub" id="hl-predsub">Updated daily 08:00 MYT · FIFA World Cup 2026 & big matches · Powered by ScoreOcs8 Pro Analysis</p>
+    <h2 class="stitle" id="hl-predtitle">Football Predictions</h2>
+    <p class="ssub" id="hl-predsub">Updated daily 08:00 MYT · EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1 · Powered by ScoreOcs8 Pro Analysis</p>
     <div class="mtabs">
       <button class="mtab active" data-mode="upcoming" onclick="switchMTab(this)">⏰ Upcoming</button>
       <button class="mtab" data-mode="today" onclick="switchMTab(this)">📅 Today</button>
@@ -1973,7 +1959,7 @@ footer{
     <div class="wgrid fu">
       <div class="wc"><div class="wci">🎯</div><div class="wct">Pro Match Analysis</div><div class="wcd">Advanced ML models analyse thousands of data points per match: form, H2H, injuries, odds movements.</div></div>
       <div class="wc"><div class="wci">⚡</div><div class="wct">Real-time Updates</div><div class="wcd">Instant updates on matches, odds and predictions. Live scores every 30s. All times in MYT (Asia/KL).</div></div>
-      <div class="wc"><div class="wci">🛡️</div><div class="wct">Comprehensive Data</div><div class="wcd">EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1, FIFA World Cup. Major leagues only, no small competition noise.</div></div>
+      <div class="wc"><div class="wci">🛡️</div><div class="wct">Comprehensive Data</div><div class="wcd">EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1. Major leagues only, no small competition noise.</div></div>
       <div class="wc"><div class="wci">📈</div><div class="wct">87% Accuracy</div><div class="wcd">Prediction accuracy backed by historical data. Full transparency: every result logged publicly.</div></div>
     </div>
     <h3 class="stitle" style="text-align:center;margin-top:56px;font-size:26px;">Our Track Record</h3>
@@ -2113,8 +2099,8 @@ footer{
     <h2 class="stitle">Frequently Asked Questions</h2>
     <p class="ssub">Everything you need to know about ScoreOcs8</p>
     <div class="faqlist fu">
-      <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">How accurate are ScoreOcs8 predictions? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">Every prediction is logged and its result is published publicly in our track record, so you can verify our accuracy yourself. We only cover major soccer leagues: English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup.</div></div></div>
-      <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">What leagues does ScoreOcs8 cover? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup qualifying and finals. We do not cover small or lower-league competitions.</div></div></div>
+      <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">How accurate are ScoreOcs8 predictions? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">Every prediction is logged and its result is published publicly in our track record, so you can verify our accuracy yourself. We only cover major football leagues: English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga and Ligue 1.</div></div></div>
+      <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">What leagues does ScoreOcs8 cover? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga and Ligue 1 — the 2026-27 season. We do not cover small or lower-league competitions.</div></div></div>
       <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">Where do I register or login? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">Registration and login happen on the official OCS8 money-site domain. ScoreOcs8 is the prediction and alert site, so use our Register buttons to open OCS8 when you want to create an account or place a bet.</div></div></div>
       <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">What timezone are all match times shown in? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">All times on ScoreOcs8 are displayed in Asia/Kuala Lumpur time (MYT, UTC+8). The live clock in the nav bar always shows current MYT time so you never miss a kick-off.</div></div></div>
       <div class="faqitem"><div class="faqq" onclick="toggleFaq(this)">How do I get started with ScoreOcs8 for free? <span class="faqch">▼</span></div><div class="faqa"><div class="faqai">Read the predictions on ScoreOcs8 and join @scoreocs8 on Telegram for free pick alerts. When you want to bet, open the OCS8 money-site domain to register or login there.</div></div></div>
@@ -2205,7 +2191,7 @@ footer{
     </div>
     <div class="seob">
       <h3>Daily Soccer Predictions Malaysia: Major Leagues Only</h3>
-      <p>ScoreOcs8 delivers pro match predictions for the English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup 2026 qualifying and finals, all displayed in MYT (Asia/Kuala Lumpur, UTC+8) timezone. Our analysis team reviews head-to-head records, team form, injury data and live betting odds to generate daily soccer predictions with confidence percentages. Built for Malaysian punters who want disciplined picks instead of small-league noise. ScoreOcs8 predictions are also auto-broadcast daily to our free Telegram channel @scoreocs8 before every match kick-off. Register and login on the official OCS8 money-site domain to bet on the picks.</p>
+      <p>ScoreOcs8 delivers pro match predictions for the English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga and Ligue 1 across the 2026-27 season, all displayed in MYT (Asia/Kuala Lumpur, UTC+8) timezone. Our analysis team reviews head-to-head records, team form, injury data and live betting odds to generate daily soccer predictions with confidence percentages. Built for Malaysian punters who want disciplined picks instead of small-league noise. ScoreOcs8 predictions are also auto-broadcast daily to our free Telegram channel @scoreocs8 before every match kick-off. Register and login on the official OCS8 money-site domain to bet on the picks.</p>
     </div>
     <div class="fbot"><div class="fcp">© 2026 ScoreOcs8 · Football predictions &amp; analysis — not betting advice. 18+ only · Play responsibly · <a href="https://www.gamblingtherapy.org" rel="noopener nofollow" style="color:var(--text2);text-decoration:underline;">Get help</a>.</div><div class="fpl"><a href="/about.html">About</a><a href="/privacy.html">Privacy Policy</a><a href="/terms.html">Terms of Service</a><a href="/privacy.html#cookies">Cookie Policy</a></div></div>
   </div>
@@ -2490,7 +2476,7 @@ const SCOREOCS8_I18N = {
       why2: 'Real-time Updates',
       why2d: 'Instant updates on matches, odds and predictions. Live scores every 30s. All times in MYT (Asia/KL).',
       why3: 'Comprehensive Data',
-      why3d: 'EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1, FIFA World Cup. Major leagues only, no small competition noise.',
+      why3d: 'EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1. Major leagues only, no small competition noise.',
       why4: '87% Accuracy',
       why4d: 'Prediction accuracy backed by historical data. Full transparency: every result logged publicly.',
       performance: 'Performance',
@@ -2500,8 +2486,8 @@ const SCOREOCS8_I18N = {
       highlightsTitle: 'Highlights',
       highlightsSub: 'Finished big matches with result cards first. Official YouTube links appear here when matched from trusted channels.',
       viewAll: 'View All',
-      matchCenter: 'FIFA World Cup 2026™',
-      matchScheduleTitle: 'Follow the FIFA World Cup',
+      matchCenter: '2026/27 Season',
+      matchScheduleTitle: 'Follow the 2026/27 Season',
       matchScheduleSub: 'All 104 matches · 11 June – 19 July 2026 · Group tables, kickoff times in MYT, live scores and results, auto-updated',
       liveTable: 'Live Table',
       topScorers: 'Top Scorers',
@@ -2526,9 +2512,9 @@ const SCOREOCS8_I18N = {
       faqTitle: 'Frequently Asked Questions',
       faqSub: 'Everything you need to know about ScoreOcs8',
       faq1q: 'How accurate are ScoreOcs8 predictions? ▼',
-      faq1a: 'Every prediction is logged and its result is published publicly in our track record, so you can verify our accuracy yourself. We only cover major soccer leagues: English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup.',
+      faq1a: 'Every prediction is logged and its result is published publicly in our track record, so you can verify our accuracy yourself. We only cover major football leagues: English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga and Ligue 1.',
       faq2q: 'What leagues does ScoreOcs8 cover? ▼',
-      faq2a: 'English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup qualifying and finals. We do not cover small or lower-league competitions.',
+      faq2a: 'English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga and Ligue 1 — the 2026-27 season. We do not cover small or lower-league competitions.',
       faq3q: 'Where do I register or login? ▼',
       faq3a: 'Registration and login happen on the official OCS8 money-site domain. ScoreOcs8 is the prediction and alert site, so use our Register buttons to open OCS8 when you want to create an account or place a bet.',
       faq4q: 'What timezone are all match times shown in? ▼',
@@ -2545,7 +2531,7 @@ const SCOREOCS8_I18N = {
       resources: 'Resources',
       connect: 'Connect',
       seoTitle: 'Daily Soccer Predictions Malaysia: Major Leagues Only',
-      seoText: "ScoreOcs8 delivers pro match predictions for the English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup 2026 qualifying and finals, all displayed in MYT (Asia/Kuala Lumpur, UTC+8) timezone. Our analysis team reviews head-to-head records, team form, injury data and live betting odds to generate daily soccer predictions with confidence percentages. Built for Malaysian punters who want disciplined picks instead of small-league noise. ScoreOcs8 predictions are also auto-broadcast daily to our free Telegram channel @scoreocs8 before every match kick-off. Register and login on the official OCS8 money-site domain to bet on the picks."
+      seoText: "ScoreOcs8 delivers pro match predictions for the English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga and Ligue 1 across the 2026-27 season, all displayed in MYT (Asia/Kuala Lumpur, UTC+8) timezone. Our analysis team reviews head-to-head records, team form, injury data and live betting odds to generate daily soccer predictions with confidence percentages. Built for Malaysian punters who want disciplined picks instead of small-league noise. ScoreOcs8 predictions are also auto-broadcast daily to our free Telegram channel @scoreocs8 before every match kick-off. Register and login on the official OCS8 money-site domain to bet on the picks."
     }
   },
   BM: {
@@ -2603,7 +2589,7 @@ const SCOREOCS8_I18N = {
       why2: 'Update Masa Nyata',
       why2d: 'Update segera untuk perlawanan, odds dan ramalan. Skor live setiap 30s. Semua masa dalam MYT (Asia/KL).',
       why3: 'Data Menyeluruh',
-      why3d: 'EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1, FIFA World Cup. Liga utama sahaja, tiada gangguan liga kecil.',
+      why3d: 'EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1. Liga utama sahaja, tiada gangguan liga kecil.',
       why4: 'Ketepatan 87%',
       why4d: 'Ketepatan ramalan disokong data sejarah. Telus sepenuhnya: setiap keputusan direkod secara publik.',
       performance: 'Prestasi',
@@ -2613,8 +2599,8 @@ const SCOREOCS8_I18N = {
       highlightsTitle: 'Highlights',
       highlightsSub: 'Perlawanan besar yang selesai dengan kad keputusan dahulu. Link YouTube rasmi muncul di sini apabila dipadankan daripada channel dipercayai.',
       viewAll: 'Lihat Semua',
-      matchCenter: 'Piala Dunia FIFA 2026™',
-      matchScheduleTitle: 'Ikuti Piala Dunia FIFA',
+      matchCenter: 'Musim 2026/27',
+      matchScheduleTitle: 'Ikuti Musim 2026/27',
       matchScheduleSub: 'Kesemua 104 perlawanan · 11 Jun – 19 Julai 2026 · Carta kumpulan, masa kick-off dalam MYT, skor langsung dan keputusan, auto-update',
       liveTable: 'Carta Liga Live',
       topScorers: 'Penjaring Terbanyak',
@@ -2639,9 +2625,9 @@ const SCOREOCS8_I18N = {
       faqTitle: 'Soalan Lazim',
       faqSub: 'Semua yang anda perlu tahu tentang ScoreOcs8',
       faq1q: 'Sejauh mana tepat ramalan ScoreOcs8? ▼',
-      faq1a: 'Semua ramalan kami direkod dan keputusannya dipaparkan secara publik dalam track record, jadi anda boleh menyemak ketepatan kami sendiri. Kami hanya meliputi liga bola sepak utama: English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 dan FIFA World Cup.',
+      faq1a: 'Semua ramalan kami direkod dan keputusannya dipaparkan secara publik dalam track record, jadi anda boleh menyemak ketepatan kami sendiri. Kami hanya meliputi liga bola sepak utama: English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga dan Ligue 1.',
       faq2q: 'Liga apa yang ScoreOcs8 cover? ▼',
-      faq2a: 'English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 serta kelayakan dan final FIFA World Cup. Kami tidak cover liga kecil atau divisyen rendah.',
+      faq2a: 'English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga dan Ligue 1 — musim 2026-27. Kami tidak cover liga kecil atau divisyen rendah.',
       faq3q: 'Di mana saya daftar atau login? ▼',
       faq3a: 'Pendaftaran dan login berlaku di domain rasmi money-site OCS8. ScoreOcs8 ialah laman ramalan dan alert, jadi gunakan butang Register kami untuk buka OCS8 apabila anda mahu cipta akaun atau place bet.',
       faq4q: 'Semua masa perlawanan guna timezone apa? ▼',
@@ -2658,7 +2644,7 @@ const SCOREOCS8_I18N = {
       resources: 'Sumber',
       connect: 'Hubungi',
       seoTitle: 'Ramalan Bola Sepak Malaysia Terbaik: Liga Utama Sahaja',
-      seoText: 'ScoreOcs8 menyediakan ramalan pro untuk English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga, Ligue 1 serta kelayakan dan final FIFA World Cup 2026, semua dipaparkan dalam waktu MYT (Asia/Kuala Lumpur, UTC+8). Pasukan analisis kami menyemak rekod H2H, form pasukan, data kecederaan dan odds live untuk menghasilkan ramalan bola harian dengan peratus keyakinan. Dibina untuk pemain Malaysia yang mahukan pilihan berdisiplin, bukan gangguan liga kecil. Ramalan ScoreOcs8 juga diauto-broadcast setiap hari ke channel Telegram percuma @scoreocs8 sebelum sepak mula. Daftar dan login di domain rasmi money-site OCS8 untuk bet pada pilihan.'
+      seoText: 'ScoreOcs8 menyediakan ramalan pro untuk English Premier League, UEFA Champions League, La Liga, Serie A, Bundesliga dan Ligue 1 sepanjang musim 2026-27, semua dipaparkan dalam waktu MYT (Asia/Kuala Lumpur, UTC+8). Pasukan analisis kami menyemak rekod H2H, form pasukan, data kecederaan dan odds live untuk menghasilkan ramalan bola harian dengan peratus keyakinan. Dibina untuk pemain Malaysia yang mahukan pilihan berdisiplin, bukan gangguan liga kecil. Ramalan ScoreOcs8 juga diauto-broadcast setiap hari ke channel Telegram percuma @scoreocs8 sebelum sepak mula. Daftar dan login di domain rasmi money-site OCS8 untuk bet pada pilihan.'
     }
   },
   ZH: {
@@ -2716,7 +2702,7 @@ const SCOREOCS8_I18N = {
       why2: '实时更新',
       why2d: '比赛、赔率和预测即时更新。实时比分每 30 秒刷新。全部时间为 MYT（Asia/KL）。',
       why3: '完整数据',
-      why3d: 'EPL、UCL、La Liga、Serie A、Bundesliga、Ligue 1、FIFA World Cup。只做主要联赛，不做小联赛噪音。',
+      why3d: 'EPL、UCL、La Liga、Serie A、Bundesliga、Ligue 1。只做主要联赛，不做小联赛噪音。',
       why4: '87% 准确率',
       why4d: '预测准确率由历史数据支持。完全透明：每个结果都会公开记录。',
       performance: '表现',
@@ -2726,8 +2712,8 @@ const SCOREOCS8_I18N = {
       highlightsTitle: '比赛精华',
       highlightsSub: '已结束大赛会先显示赛果卡。匹配到可信频道后，这里会显示官方 YouTube 链接。',
       viewAll: '查看全部',
-      matchCenter: '2026 FIFA世界杯™',
-      matchScheduleTitle: '关注FIFA世界杯',
+      matchCenter: '2026/27 赛季',
+      matchScheduleTitle: '关注 2026/27 赛季',
       matchScheduleSub: '全部104场比赛 · 2026年6月11日–7月19日 · 小组积分榜、开球时间（MYT）、实时比分与赛果，自动更新',
       liveTable: '实时积分榜',
       topScorers: '射手榜',
@@ -2752,9 +2738,9 @@ const SCOREOCS8_I18N = {
       faqTitle: '常见问题',
       faqSub: '你需要了解 ScoreOcs8 的所有重点',
       faq1q: 'ScoreOcs8 预测有多准确？ ▼',
-      faq1a: '我们的每一个预测都会记录，结果公开发布，您可以自行验证我们的准确率。我们只覆盖主要足球联赛：English Premier League、UEFA Champions League、La Liga、Serie A、Bundesliga、Ligue 1 和 FIFA World Cup。',
+      faq1a: '我们的每一个预测都会记录，结果公开发布，您可以自行验证我们的准确率。我们只覆盖主要足球联赛：English Premier League、UEFA Champions League、La Liga、Serie A、Bundesliga 和 Ligue 1。',
       faq2q: 'ScoreOcs8 覆盖哪些联赛？ ▼',
-      faq2a: 'English Premier League、UEFA Champions League、La Liga、Serie A、Bundesliga、Ligue 1 以及 FIFA World Cup 资格赛和决赛。我们不覆盖小联赛或低级别赛事。',
+      faq2a: 'English Premier League、UEFA Champions League、La Liga、Serie A、Bundesliga 和 Ligue 1 — 2026-27 赛季。我们不覆盖小联赛或低级别赛事。',
       faq3q: '我要在哪里注册或登录？ ▼',
       faq3a: '注册和登录在 OCS8 官方 money-site 域名完成。ScoreOcs8 是预测和提醒网站，所以当你要创建账号或投注时，使用我们的 Register 按钮打开 OCS8。',
       faq4q: '所有比赛时间使用什么时区？ ▼',
@@ -2771,7 +2757,7 @@ const SCOREOCS8_I18N = {
       resources: '资源',
       connect: '联系',
       seoTitle: '马来西亚每日足球预测：只做主要联赛',
-      seoText: 'ScoreOcs8 提供 English Premier League、UEFA Champions League、La Liga、Serie A、Bundesliga、Ligue 1 以及 FIFA World Cup 2026 资格赛和决赛的专业比赛预测，全部以 MYT（Asia/Kuala Lumpur, UTC+8）显示。我们的分析团队会审查 H2H、球队状态、伤停数据和实时赔率，生成带信心百分比的每日足球预测。专为想要纪律性推荐、避免小联赛噪音的马来西亚球迷打造。ScoreOcs8 预测也会在每场比赛开赛前自动广播到免费 Telegram 频道 @scoreocs8。请在 OCS8 官方 money-site 域名注册和登录，投注这些推荐。'
+      seoText: 'ScoreOcs8 提供 2026-27 赛季 English Premier League、UEFA Champions League、La Liga、Serie A、Bundesliga 和 Ligue 1 的专业比赛预测，全部以 MYT（Asia/Kuala Lumpur, UTC+8）显示。我们的分析团队会审查 H2H、球队状态、伤停数据和实时赔率，生成带信心百分比的每日足球预测。专为想要纪律性推荐、避免小联赛噪音的马来西亚球迷打造。ScoreOcs8 预测也会在每场比赛开赛前自动广播到免费 Telegram 频道 @scoreocs8。请在 OCS8 官方 money-site 域名注册和登录，投注这些推荐。'
     }
   }
 };
@@ -2979,7 +2965,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
   const API = '/api';
   const LEAGUE_ID = { 39: { code: 'epl', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', name: 'English Premier League', swatch: '#1a1a2a' },
                       2:  { code: 'ucl', flag: '⭐',                       name: 'UEFA Champions League', swatch: '#1a1a20' },
-                      1:  { code: 'fifa',flag: '🏆',                       name: 'FIFA World Cup', swatch: '#1a2010' } };
+                      1:  { code: 'intl',flag: '🌍',                       name: 'International', swatch: '#1a2010' } };
   const LIVE = new Set(['1H','2H','HT','ET','BT','P','LIVE']);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const slugify = s => String(s||'').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,64);
@@ -3287,18 +3273,20 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
 
   /* ───── Prediction cards (#pred-grid) ───── */
   // Human stage title from API-Football's round string — powers the big
-  // "FIFA WORLD CUP FINAL" banner on knockout cards.
+  // "CHAMPIONS LEAGUE SEMI-FINAL" banner on knockout cards. Only knockout
+  // rounds get a banner; the league phase and domestic matchweeks don't.
   function stageTitle(round) {
     const r = String(round || '').toLowerCase();
     if (r.includes('semi')) return 'SEMI-FINAL';
     if (r.includes('quarter')) return 'QUARTER-FINAL';
-    if (r.includes('3rd') || r.includes('third')) return '3RD PLACE MATCH';
     if (r.includes('final')) return 'FINAL';
+    if (r.includes('play-off') || r.includes('playoff')) return 'PLAY-OFF ROUND';
     if (r.includes('16')) return 'ROUND OF 16';
     if (r.includes('32')) return 'ROUND OF 32';
-    if (r.includes('group')) { const m = r.match(/(\d+)\s*$/); return m ? `GROUP STAGE · MATCHDAY ${m[1]}` : 'GROUP STAGE'; }
     return '';
   }
+  // Competitions whose knockout rounds are worth shouting about on the card.
+  const BANNER_COMPS = { 2: '⭐ CHAMPIONS LEAGUE' };
   // From a "h-a" correct score + pick side, derive 3 scoreline options + a
   // goals (over/under) line + a likely total range. Numbers only, no team names.
   function scorePack(cs, pickSide) {
@@ -3387,10 +3375,11 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
       <div class="pch"><span class="pcl"><span class="lbadge" style="background:${m.swatch}">${m.flag}</span>${esc(m.name)} · ${esc(dateStr)} · ${esc(kickoff)}</span><div class="pcmeta">${badge}${freeTag}</div></div>
       <div class="pcb">
         ${(() => {
-          if (fx.league?.id !== 1) return '';
+          const comp = BANNER_COMPS[fx.league?.id];
+          if (!comp) return '';
           const st = stageTitle(fx.league?.round);
-          if (!st || st.startsWith('GROUP')) return '';
-          return `<div class="stage-banner">🏆 FIFA WORLD CUP <span>${st}</span></div>`;
+          if (!st) return '';
+          return `<div class="stage-banner">${comp} <span>${st}</span></div>`;
         })()}
         ${resultStrip}
         <div class="pct">
@@ -3435,28 +3424,9 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     return out;
   }
 
-  // Map /api/wc-schedule matches into the fixture shape the renderers expect.
-  // wc-schedule is the reliable full-schedule source (finished + upcoming),
-  // unlike /api/fixtures next/last which can come back empty for the World Cup.
-  function wcMatchesToFixtures(sched) {
-    return (sched?.matches || []).map(m => ({
-      fixture: { id: m.fixture_id, date: m.date, status: { short: m.status, elapsed: m.elapsed ?? null } },
-      league: { id: 1, name: 'FIFA World Cup', round: m.round || '' },
-      teams: {
-        home: { id: m.home?.id, name: m.home?.name, logo: m.home?.logo },
-        away: { id: m.away?.id, name: m.away?.name, logo: m.away?.logo },
-      },
-      goals: { home: m.goals?.home ?? null, away: m.goals?.away ?? null },
-    })).sort((a, b) => new Date(a.fixture.date) - new Date(b.fixture.date));
-  }
-
-  // During the World Cup the homepage "FIFA World Cup Predictions" section
-  // should show WC fixtures (league id 1) only. Fall back to all leagues on
-  // rest days so the section is never empty.
-  function wcFirst(list) {
-    const wc = (list || []).filter(fx => fx.league?.id === 1);
-    return wc.length ? wc : (list || []);
-  }
+  // Season feed ordering. The World Cup is over (final: 19 Jul 2026) and the
+  // site is football-club-only, so the feed is simply every covered league in
+  // date order — no tournament gets promoted ahead of the others.
 
   function renderPreds(all, aiMap, slipMap = {}) {
     const grid = document.getElementById('pred-grid'); if (!grid) return;
@@ -3480,10 +3450,6 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
       list = all.filter(fx => FIN.has(fx.fixture?.status?.short))
         .sort((a,b) => new Date(b.fixture.date) - new Date(a.fixture.date));
     }
-    // FIFA World Cup first while tournament fixtures are in the feed
-    // (stable partition keeps date order within each side).
-    const isWC = fx => fx.league?.id === 1;
-    if (list.some(isWC)) list = [...list.filter(isWC), ...list.filter(fx => !isWC(fx))];
     list = list.slice(0, 6);
     if (!list.length) {
       const msg = mode === 'completed' ? 'No completed fixtures in this feed yet.' : mode === 'today' ? 'No matches scheduled today.' : 'No upcoming fixtures in covered leagues. Check back later.';
@@ -3583,14 +3549,11 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     const live = await getJSON(API + '/live');
     if (!live) return;
     const liveSet = new Set((live.response || []).map(fx => fx.fixture.id));
-    // If any live match appears, re-render with fresh fixtures — WC feed only
-    // while the tournament still has upcoming/live games, else season feed.
-    const fresh = await getJSON(API + '/wc-schedule');
-    const wcFresh = wcMatchesToFixtures(fresh);
-    const wcStillOn = wcFresh.some(fx => isLive(fx) || new Date(fx.fixture.date).getTime() > Date.now());
+    // If any live match appears, re-render with fresh season fixtures.
     let all = state.all;
-    if (wcStillOn) all = wcFresh;
-    else { const f2 = await getJSON(API + '/fixtures'); const flat = wcFirst(flattenFixtures(f2)); if (flat.length) all = flat; }
+    const f2 = await getJSON(API + '/fixtures');
+    const flat = flattenFixtures(f2);
+    if (flat.length) all = flat;
     state.all = all;
     renderPreds(all, state.aiMap, state.slipMap);
     renderLiveCenter(all, state.aiMap, state.slipMap);
@@ -3598,26 +3561,15 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
   }
 
   async function main() {
-    const [wcSched, fixtures, standings, topScorers, slipBundle] = await Promise.all([
-      getJSON(API + '/wc-schedule'),
+    const [fixtures, standings, topScorers, slipBundle] = await Promise.all([
       getJSON(API + '/fixtures'),
       getJSON(API + '/standings?league=39&season=2026'),
       getJSON(API + '/topscorers?league=39&season=2026'),
       loadSlipMap(),
     ]);
-    // Tournament-aware feed: while the World Cup still has upcoming/live
-    // matches, the section is WC-only (wc-schedule). Once the tournament is
-    // over, pivot back to the domestic-season feed (EPL, UCL, La Liga…) so
-    // Upcoming fills with the new season instead of sitting empty.
-    const wcAll = wcMatchesToFixtures(wcSched);
-    const wcActive = wcAll.some(fx => isLive(fx) || new Date(fx.fixture.date).getTime() > Date.now());
-    const all = wcActive ? wcAll : wcFirst(flattenFixtures(fixtures));
-    if (!wcActive) {
-      const tEl = document.getElementById('hl-predtitle');
-      const sEl = document.getElementById('hl-predsub');
-      if (tEl) tEl.textContent = 'Football Match Predictions';
-      if (sEl) sEl.textContent = 'Updated daily 08:00 MYT · EPL · UCL · La Liga · Serie A · Bundesliga · Ligue 1 · Powered by ScoreOcs8 Pro Analysis';
-    }
+    // Season feed: every covered league in date order. The heading is set in
+    // the markup and localised by the i18n dicts — no runtime override.
+    const all = flattenFixtures(fixtures);
     const aiMap = await loadAIMap(all);
     const state = { all, aiMap, slipMap: slipBundle.map };
     window.predictionState = state;
@@ -3646,7 +3598,7 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
 
   const LIVE_STATUS = new Set(['1H','2H','HT','ET','BT','P','LIVE']);
   // Whitelist: only show major European leagues + UCL in the ticker. No Malaysian
-  // clubs, no World Cup qualifiers between minor nations, no friendlies.
+  // clubs, no international qualifiers between minor nations, no friendlies.
   const MAJOR_LEAGUES = new Set([39, 2, 140, 78, 135, 61]); // EPL, UCL, LaLiga, Bundesliga, SerieA, Ligue1
   const LEAGUE_FLAG = { 39:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', 2:'⭐', 140:'🇪🇸', 78:'🇩🇪', 135:'🇮🇹', 61:'🇫🇷' };
   const isMajor = fx => MAJOR_LEAGUES.has(fx?.league?.id);

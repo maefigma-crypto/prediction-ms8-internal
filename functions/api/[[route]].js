@@ -11,13 +11,12 @@ const HIGHLIGHT_LEAGUES = [
   { id: 135, key: 'SERIEA', name: 'Serie A' },
   { id: 78, key: 'BUNDESLIGA', name: 'Bundesliga' },
   { id: 61, key: 'LIGUE1', name: 'Ligue 1' },
-  { id: 1, key: 'WC', name: 'FIFA World Cup' },
 ];
 const DEFAULT_SEASON = '2026';
-// API-Football tags tournaments by start year — the 2026 World Cup is
-// season 2026 while domestic 2025-26 leagues are season 2025. Requests for
-// an overridden league that carry no season (or the stale default) are
-// coerced so old cached pages keep working.
+// API-Football tags tournaments by start year, so the 2026-27 club season is
+// season 2026. LEAGUE_SEASONS holds any per-league override; requests for an
+// overridden league that carry no season (or the stale default) are coerced so
+// old cached pages keep working.
 const LEAGUE_SEASONS = { 1: '2026' };
 function seasonFor(leagueId, requested) {
   const override = LEAGUE_SEASONS[String(leagueId)];
@@ -146,105 +145,49 @@ async function handleFixtures(env, url) {
   }, { refresh, validate: d => d.leagues.some(l => l.next.length || l.last.length || l.today.length) });
 }
 
-// Full FIFA World Cup schedule — all 104 fixtures with group + venue
-// details for the homepage "Follow the FIFA World Cup" section. One
-// API-Football call returns the whole season; standings provide the
-// team→group mapping (fixture rounds only say "Group Stage - 1").
-async function handleWcSchedule(env, url) {
-  const refresh = url.searchParams.get('refresh') === '1';
-  const season = seasonFor(1);
-  return cached(env, `wc:schedule:${season}`, TTL.fixtures, async () => {
-    const [fixturesData, standingsData] = await Promise.all([
-      afGet(env, '/fixtures', { league: 1, season }).catch(() => ({ response: [] })),
-      afGet(env, '/standings', { league: 1, season }).catch(() => ({ response: [] })),
-    ]);
-    // The bare league+season /fixtures query occasionally comes back empty
-    // (API-Football hiccup / plan quirk) even though paginated queries return
-    // data. Fall back to next/last/date — the same calls /api/fixtures uses
-    // successfully — and merge+dedupe so the schedule is never empty when
-    // fixtures actually exist.
-    let fixturesResp = fixturesData.response || [];
-    if (!fixturesResp.length) {
-      const today = new Date().toISOString().slice(0, 10);
-      const [next, last, todayM] = await Promise.all([
-        afGet(env, '/fixtures', { league: 1, season, next: 40 }).catch(() => ({ response: [] })),
-        afGet(env, '/fixtures', { league: 1, season, last: 20 }).catch(() => ({ response: [] })),
-        afGet(env, '/fixtures', { league: 1, season, date: today }).catch(() => ({ response: [] })),
-      ]);
-      const byId = new Map();
-      for (const arr of [last.response, todayM.response, next.response]) {
-        for (const fx of (arr || [])) if (fx.fixture?.id != null) byId.set(fx.fixture.id, fx);
-      }
-      fixturesResp = [...byId.values()];
-    }
-    const groupOf = {};
-    for (const group of standingsData.response?.[0]?.league?.standings || []) {
-      for (const row of group) {
-        if (row.team?.id) groupOf[row.team.id] = row.group || '';
-      }
-    }
-    const matches = fixturesResp.map(fx => {
-      const homeGroup = groupOf[fx.teams?.home?.id] || '';
-      const awayGroup = groupOf[fx.teams?.away?.id] || '';
-      return {
-        fixture_id: fx.fixture?.id,
-        date: fx.fixture?.date,
-        status: fx.fixture?.status?.short || 'NS',
-        elapsed: fx.fixture?.status?.elapsed ?? null,
-        round: fx.league?.round || '',
-        group: homeGroup && homeGroup === awayGroup ? homeGroup : '',
-        venue: fx.fixture?.venue?.name || '',
-        city: fx.fixture?.venue?.city || '',
-        home: { id: fx.teams?.home?.id, name: fx.teams?.home?.name || 'TBD', logo: fx.teams?.home?.logo || '' },
-        away: { id: fx.teams?.away?.id, name: fx.teams?.away?.name || 'TBD', logo: fx.teams?.away?.logo || '' },
-        goals: { home: fx.goals?.home ?? null, away: fx.goals?.away ?? null },
-        penalty: { home: fx.score?.penalty?.home ?? null, away: fx.score?.penalty?.away ?? null },
-      };
-    }).sort((a, b) => new Date(a.date) - new Date(b.date));
-    return { updated: Date.now(), season, count: matches.length, matches };
-  }, { refresh, validate: d => (d.matches || []).length > 0 });
-}
-
-// ───── World Cup prediction markets (fan votes + AI lean, no money) ─────
+// ───── Season prediction markets (fan votes + AI lean, no money) ─────
 // Votes accumulate in KV (mkt:votes:<id>); a market settles when the
 // panel/admin writes mkt:result:<id> = 'yes' | 'no' | 'void'. Displayed
 // percentages blend the AI lean as a prior so day-one bars aren't empty:
 // the lean counts as MARKET_PRIOR_WEIGHT virtual votes.
+//
+// Refreshed for 2026-27 (Aug 2026) — the 2026 World Cup markets they replaced
+// all settled in July. Market ids are permanent: reusing an old id would
+// inherit its stale votes, so new markets always get new ids.
 const MARKET_PRIOR_WEIGHT = 40;
-const WC_MARKETS = [
-  // Daily / match-specific
-  { id: 'mex-rsa-mexico-2plus', cat: 'daily', q: 'Mexico vs South Africa — Will Mexico win by 2+ goals?', ai: 48, closes: '2026-06-11T19:00:00Z', event: '2026-06-11T19:00:00Z' },
-  { id: 'mex-rsa-mexico-first', cat: 'daily', q: 'Mexico vs South Africa — Will Mexico score first?', ai: 85, closes: '2026-06-11T19:00:00Z', event: '2026-06-11T19:00:00Z' },
-  { id: 'kor-cze-korea-win', cat: 'daily', q: 'Korea Republic vs Czechia — Will Korea Republic win?', ai: 38, closes: '2026-06-12T02:00:00Z', event: '2026-06-12T02:00:00Z' },
-  // Group stage
-  { id: 'goals-55-md1', cat: 'group', q: 'Will there be 55+ goals across Matchday 1 (24 matches)?', ai: 60, closes: '2026-06-11T19:00:00Z' },
-  { id: 'hattrick-md1', cat: 'group', q: 'Will a player score a hat-trick in Matchday 1?', ai: 35, closes: '2026-06-11T19:00:00Z' },
-  { id: 'owngoals-2-md1', cat: 'group', q: 'Will there be 2+ own goals in Matchday 1?', ai: 45, closes: '2026-06-11T19:00:00Z' },
-  { id: 'hosts-all-r32', cat: 'group', q: 'Will all three host nations (USA, Mexico, Canada) reach the Round of 32?', ai: 64, closes: '2026-06-24T00:00:00Z' },
-  { id: 'asian-3-r32', cat: 'group', q: 'Will 3+ Asian teams reach the Round of 32?', ai: 74, closes: '2026-06-24T00:00:00Z' },
-  { id: 'usa-r16', cat: 'group', q: 'Will USA reach the Round of 16?', ai: 51, closes: '2026-06-28T00:00:00Z' },
-  { id: 'japan-r16', cat: 'group', q: 'Will Japan reach the Round of 16?', ai: 76, closes: '2026-06-28T00:00:00Z' },
-  { id: 'korea-r16', cat: 'group', q: 'Will Korea Republic reach the Round of 16?', ai: 30, closes: '2026-06-28T00:00:00Z' },
-  // Knockout
-  { id: 'portugal-qf', cat: 'knockout', q: 'Will Portugal reach the Quarter-finals?', ai: 89, closes: '2026-06-28T00:00:00Z' },
-  { id: 'argentina-qf', cat: 'knockout', q: 'Will Argentina reach the Quarter-finals?', ai: 84, closes: '2026-06-28T00:00:00Z' },
-  { id: 'brazil-qf', cat: 'knockout', q: 'Will Brazil reach the Quarter-finals?', ai: 81, closes: '2026-06-28T00:00:00Z' },
-  { id: 'germany-qf', cat: 'knockout', q: 'Will Germany reach the Quarter-finals?', ai: 81, closes: '2026-06-28T00:00:00Z' },
-  { id: 'france-sf', cat: 'knockout', q: 'Will France reach the Semi-finals?', ai: 80, closes: '2026-06-28T00:00:00Z' },
-  { id: 'spain-sf', cat: 'knockout', q: 'Will Spain reach the Semi-finals?', ai: 79, closes: '2026-06-28T00:00:00Z' },
-  { id: 'england-sf', cat: 'knockout', q: 'Will England reach the Semi-finals?', ai: 58, closes: '2026-06-28T00:00:00Z' },
-  { id: 'champion-europe', cat: 'knockout', q: 'Will the World Cup winner be from Europe?', ai: 55, closes: '2026-06-28T00:00:00Z' },
-  { id: 'final-both-europe', cat: 'knockout', q: 'Will both teams in the final be from Europe?', ai: 52, closes: '2026-06-28T00:00:00Z' },
-  { id: 'champion-top4', cat: 'knockout', q: 'Will the champion be France, Spain, Argentina or England?', ai: 45, closes: '2026-06-28T00:00:00Z' },
-  { id: 'champion-unbeaten', cat: 'knockout', q: 'Will the champion stay unbeaten all tournament?', ai: 46, closes: '2026-06-28T00:00:00Z' },
-  { id: 'shootouts-5', cat: 'knockout', q: 'Will there be 5+ penalty shootouts in the tournament?', ai: 70, closes: '2026-06-28T00:00:00Z' },
+const SEASON_MARKETS = [
+  // Opening weeks
+  { id: 's2627-epl-mw1-30goals', cat: 'opening', q: 'Will 30+ goals be scored across Premier League matchweek 1?', ai: 48, closes: '2026-08-21T11:00:00Z' },
+  { id: 's2627-epl-mw1-hattrick', cat: 'opening', q: 'Will a player score a hat-trick in Premier League matchweek 1?', ai: 30, closes: '2026-08-21T11:00:00Z' },
+  { id: 's2627-promoted-win-mw1', cat: 'opening', q: 'Will a newly promoted club win on the Premier League opening weekend?', ai: 42, closes: '2026-08-21T11:00:00Z' },
+  { id: 's2627-five-goal-game-sep', cat: 'opening', q: 'Will any club score 5+ in a single Premier League match before October?', ai: 55, closes: '2026-10-01T00:00:00Z' },
+  { id: 's2627-ucl-playoff-upset', cat: 'opening', q: 'Will a Champions League play-off tie be decided on penalties?', ai: 35, closes: '2026-08-26T18:00:00Z' },
+
+  // Title races
+  { id: 's2627-epl-city', cat: 'title', q: 'Will Manchester City win the 2026-27 Premier League?', ai: 40, closes: '2027-05-23T00:00:00Z' },
+  { id: 's2627-epl-arsenal-top4', cat: 'title', q: 'Will Arsenal finish in the Premier League top four?', ai: 78, closes: '2027-05-23T00:00:00Z' },
+  { id: 's2627-epl-liverpool-above-united', cat: 'title', q: 'Will Liverpool finish above Manchester United?', ai: 74, closes: '2027-05-23T00:00:00Z' },
+  { id: 's2627-epl-final-day', cat: 'title', q: 'Will the Premier League title be decided on the final day?', ai: 38, closes: '2027-05-23T00:00:00Z' },
+  { id: 's2627-laliga-madrid', cat: 'title', q: 'Will Real Madrid win La Liga 2026-27?', ai: 52, closes: '2027-05-23T00:00:00Z' },
+  { id: 's2627-laliga-barca', cat: 'title', q: 'Will Barcelona win La Liga 2026-27?', ai: 44, closes: '2027-05-23T00:00:00Z' },
+  { id: 's2627-bundesliga-bayern', cat: 'title', q: 'Will Bayern Munich win the Bundesliga again?', ai: 72, closes: '2027-05-15T00:00:00Z' },
+  { id: 's2627-ligue1-psg', cat: 'title', q: 'Will Paris Saint-Germain win Ligue 1 again?', ai: 76, closes: '2027-05-22T00:00:00Z' },
+  { id: 's2627-seriea-inter', cat: 'title', q: 'Will Inter Milan win Serie A 2026-27?', ai: 46, closes: '2027-05-23T00:00:00Z' },
+  { id: 's2627-manager-sacked-oct', cat: 'title', q: 'Will a Premier League manager be sacked before November?', ai: 68, closes: '2026-11-01T00:00:00Z' },
+
+  // Champions League
+  { id: 's2627-ucl-english-winner', cat: 'europe', q: 'Will an English club win the 2026-27 Champions League?', ai: 45, closes: '2027-05-29T00:00:00Z' },
+  { id: 's2627-ucl-madrid-sf', cat: 'europe', q: 'Will Real Madrid reach the Champions League semi-finals?', ai: 50, closes: '2027-05-29T00:00:00Z' },
+  { id: 's2627-ucl-holder-out-early', cat: 'europe', q: 'Will the holders go out before the quarter-finals?', ai: 42, closes: '2027-04-30T00:00:00Z' },
+  { id: 's2627-ucl-top8-direct', cat: 'europe', q: 'Will an English club finish top of the Champions League league phase?', ai: 40, closes: '2027-01-31T00:00:00Z' },
+  { id: 's2627-ucl-final-same-country', cat: 'europe', q: 'Will both Champions League finalists come from the same country?', ai: 22, closes: '2027-05-29T00:00:00Z' },
+
   // Players
-  { id: 'mbappe-2plus-group', cat: 'player', q: 'Will Kylian Mbappé score 2+ goals in a single group-stage match?', ai: 84, closes: '2026-06-24T00:00:00Z' },
-  { id: 'haaland-2plus-group', cat: 'player', q: 'Will Erling Haaland score 2+ goals in a single group-stage match?', ai: 72, closes: '2026-06-24T00:00:00Z' },
-  { id: 'kane-2plus-group', cat: 'player', q: 'Will Harry Kane score 2+ goals in a single group-stage match?', ai: 64, closes: '2026-06-24T00:00:00Z' },
-  { id: 'kane-hattrick', cat: 'player', q: 'Will Harry Kane score a hat-trick during the tournament?', ai: 27, closes: '2026-06-28T00:00:00Z' },
-  { id: 'messi-vs-ronaldo', cat: 'player', q: 'Will Lionel Messi score more goals than Cristiano Ronaldo?', ai: 63, closes: '2026-06-28T00:00:00Z' },
-  { id: 'goldenboot-7', cat: 'player', q: 'Will the Golden Boot winner score 7+ goals?', ai: 41, closes: '2026-06-28T00:00:00Z' },
+  { id: 's2627-epl-boot-25', cat: 'player', q: 'Will the Premier League Golden Boot winner score 25+ goals?', ai: 47, closes: '2027-05-23T00:00:00Z' },
+  { id: 's2627-haaland-30', cat: 'player', q: 'Will Erling Haaland score 30+ Premier League goals this season?', ai: 33, closes: '2027-05-23T00:00:00Z' },
+  { id: 's2627-mbappe-pichichi', cat: 'player', q: 'Will Kylian Mbappe finish as La Liga top scorer?', ai: 55, closes: '2027-05-23T00:00:00Z' },
+  { id: 's2627-four-goal-game', cat: 'player', q: 'Will any player score 4+ goals in a single league match this season?', ai: 58, closes: '2027-05-23T00:00:00Z' },
+  { id: 's2627-defender-10', cat: 'player', q: 'Will a defender score 10+ league goals in any of the big five leagues?', ai: 26, closes: '2027-05-23T00:00:00Z' },
 ];
 
 function marketShape(m, votes, result) {
@@ -262,16 +205,16 @@ function marketShape(m, votes, result) {
 
 async function handleMarkets(env) {
   const [votes, results] = await Promise.all([
-    Promise.all(WC_MARKETS.map(m => env.CACHE.get(`mkt:votes:${m.id}`, 'json').catch(() => null))),
-    Promise.all(WC_MARKETS.map(m => env.CACHE.get(`mkt:result:${m.id}`).catch(() => null))),
+    Promise.all(SEASON_MARKETS.map(m => env.CACHE.get(`mkt:votes:${m.id}`, 'json').catch(() => null))),
+    Promise.all(SEASON_MARKETS.map(m => env.CACHE.get(`mkt:result:${m.id}`).catch(() => null))),
   ]);
-  return { updated: Date.now(), count: WC_MARKETS.length, markets: WC_MARKETS.map((m, i) => marketShape(m, votes[i], results[i])) };
+  return { updated: Date.now(), count: SEASON_MARKETS.length, markets: SEASON_MARKETS.map((m, i) => marketShape(m, votes[i], results[i])) };
 }
 
 async function handleMarketVote(env, url) {
   const id = url.searchParams.get('id') || '';
   const side = url.searchParams.get('side');
-  const m = WC_MARKETS.find(x => x.id === id);
+  const m = SEASON_MARKETS.find(x => x.id === id);
   if (!m || (side !== 'yes' && side !== 'no')) return { error: 'invalid market or side', status: 400 };
   if (Date.parse(m.closes) < Date.now()) return { error: 'market closed', status: 409 };
   const result = await env.CACHE.get(`mkt:result:${id}`).catch(() => null);
@@ -297,7 +240,7 @@ async function handleStandings(env, url) {
       const data = await afGet(env, '/standings', { league: leagueId, season });
       return { updated: Date.now(), leagueId, season, response: data.response || [] };
     } catch (err) {
-      // Knockout comps (UCL, FIFA WC) don't have a league table — return empty.
+      // Knockout comps (UCL play-offs) don't have a league table — return empty.
       return { updated: Date.now(), leagueId, season, response: [], error: String(err.message || err) };
     }
   }, {
@@ -357,7 +300,7 @@ async function lookupFixture(env, fixtureId) {
   // 2. Multi-league cached payload (homepage default)
   const tryKeys = [
     `fixtures:v2:${DEFAULT_SEASON}`,
-    ...[39, 2, 1, 140, 135, 78, 61].map(lgId => `fixtures:v2:league:${lgId}:${seasonFor(lgId)}`),
+    ...[39, 2, 140, 135, 78, 61].map(lgId => `fixtures:v2:league:${lgId}:${seasonFor(lgId)}`),
   ];
   if (env?.CACHE) {
     for (const key of tryKeys) {
@@ -371,42 +314,11 @@ async function lookupFixture(env, fixtureId) {
       }
     }
   }
-  // 2.5 World Cup: the cached wc-schedule is the ROBUST source (it has a
-  // paginated fallback and is kept warm by the site). The direct-id and bare
-  // full-season calls below are the flaky ones — so synthesize the fixture
-  // from wc-schedule before trying them. Without this, a flaky upstream left
-  // match pages rendering the empty "HOME VS AWAY" skeleton.
-  if (env?.CACHE) {
-    try {
-      const sched = await env.CACHE.get(`wc:schedule:${seasonFor(1)}`, 'json');
-      const m = (sched?.matches || []).find(x => x.fixture_id === id);
-      if (m) {
-        return {
-          fixture: {
-            id: m.fixture_id,
-            date: m.date,
-            status: { short: m.status || 'NS', long: '', elapsed: m.elapsed ?? null },
-            venue: { name: m.venue || '', city: m.city || '' },
-          },
-          league: { id: 1, name: 'FIFA World Cup', season: Number(seasonFor(1)), round: m.round || '' },
-          teams: {
-            home: { id: m.home?.id, name: m.home?.name || 'Home', logo: m.home?.logo || '' },
-            away: { id: m.away?.id, name: m.away?.name || 'Away', logo: m.away?.logo || '' },
-          },
-          goals: { home: m.goals?.home ?? null, away: m.goals?.away ?? null },
-          score: {
-            fulltime: { home: m.goals?.home ?? null, away: m.goals?.away ?? null },
-            penalty: { home: m.penalty?.home ?? null, away: m.penalty?.away ?? null },
-          },
-        };
-      }
-    } catch { /* fall through */ }
-  }
-  // 3. Cup competitions (WC=1, UCL=2): the next/last pagination params are
-  // unreliable (a finished group match may appear in neither), so fetch the
-  // FULL season — same call wc-schedule uses — and scan it. This is what
-  // makes a finished WC fixture resolve with its real FT score.
-  for (const lgId of [1, 2]) {
+  // 3. Cup competitions (UCL=2): the next/last pagination params are
+  // unreliable (a finished league-phase match may appear in neither), so fetch
+  // the FULL season and scan it. This is what makes a finished cup fixture
+  // resolve with its real FT score.
+  for (const lgId of [2]) {
     try {
       const season = seasonFor(lgId);
       const data = await afGet(env, '/fixtures', { league: lgId, season });
@@ -978,8 +890,6 @@ export async function onRequest(context) {
         result = await handleFixtures(env, url); break;
       case 'standings':
         result = await handleStandings(env, url); break;
-      case 'wc-schedule':
-        result = await handleWcSchedule(env, url); break;
       case 'markets':
         return json(await handleMarkets(env));
       case 'markets/vote': {
@@ -1184,7 +1094,7 @@ export async function onRequest(context) {
         return json({
           error: 'not found',
           route,
-          routes: ['/api/live', '/api/fixtures', '/api/standings', '/api/wc-schedule', '/api/topscorers', '/api/odds', '/api/predictions?fixture_id=', '/api/highlights', '/api/health'],
+          routes: ['/api/live', '/api/fixtures', '/api/standings', '/api/topscorers', '/api/odds', '/api/predictions?fixture_id=', '/api/highlights', '/api/health'],
         }, 404);
     }
     return json(result.data, 200, { 'X-Cache': result.source });

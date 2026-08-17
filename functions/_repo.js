@@ -196,11 +196,10 @@ export async function listKvContent(env, days = 30) {
 function toKvPost(dateKey, kind, entry, generatedAt) {
   const c = entry?.content || {};
   const fx = entry?.fixture || {};
-  const leagueKey = fx._leagueKey || (fx.league?.id === 39 ? 'EPL' : fx.league?.id === 2 ? 'UCL' : fx.league?.id === 1 ? 'FIFA' : 'General');
+  const leagueKey = fx._leagueKey || (fx.league?.id === 39 ? 'EPL' : fx.league?.id === 2 ? 'UCL' : 'General');
   const categoryMap = {
     EPL: 'English Premier League',
     UCL: 'UEFA Champions League',
-    FIFA: 'FIFA World Cup',
     General: 'Soccer Prediction',
   };
   const slug = `daily-${dateKey}-${kind}`;

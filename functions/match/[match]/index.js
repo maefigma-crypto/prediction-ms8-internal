@@ -8,8 +8,8 @@
 const SITE = 'https://scoreocs8.com';
 
 const LEAGUE_FLAG = { 39:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', 2:'⭐', 1:'🏆', 140:'🇪🇸', 78:'🇩🇪', 135:'🇮🇹', 61:'🇫🇷' };
-const LEAGUE_NAME = { 39:'Premier League', 2:'UEFA Champions League', 1:'FIFA World Cup', 140:'La Liga', 78:'Bundesliga', 135:'Serie A', 61:'Ligue 1' };
-const LEAGUE_SLUG = { 39:'premier-league', 2:'champions-league', 1:'fifa-world-cup', 140:'la-liga', 78:'bundesliga', 135:'serie-a', 61:'ligue-1' };
+const LEAGUE_NAME = { 39:'Premier League', 2:'UEFA Champions League', 140:'La Liga', 78:'Bundesliga', 135:'Serie A', 61:'Ligue 1' };
+const LEAGUE_SLUG = { 39:'premier-league', 2:'champions-league', 140:'la-liga', 78:'bundesliga', 135:'serie-a', 61:'ligue-1' };
 
 const esc = s => String(s ?? '').replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
 const escJson = s => String(s ?? '').replace(/[\\"]/g, c => '\\' + c).replace(/\n/g, '\\n');
@@ -102,7 +102,7 @@ export async function onRequest(context) {
   const homeScoreDisplay = showScore ? homeScore : '–';
   const awayScoreDisplay = showScore ? awayScore : '–';
 
-  // Team W-D-L records from league standings. Knockout comps (UCL, FIFA WC)
+  // Team W-D-L records from league standings. Knockout comps (UCL play-offs)
   // have no league table — skip the fetch to avoid wasted API hits.
   const KNOCKOUT_LEAGUES = new Set([1, 2]);
   let homeRecord = null, awayRecord = null;
@@ -342,18 +342,19 @@ export async function onRequest(context) {
     const r = String(fx?.league?.round || '').toLowerCase();
     if (r.includes('semi')) return 'SEMI-FINAL';
     if (r.includes('quarter')) return 'QUARTER-FINAL';
-    if (r.includes('3rd') || r.includes('third')) return '3RD PLACE MATCH';
     if (r.includes('final')) return 'FINAL';
     if (r.includes('16')) return 'ROUND OF 16';
     if (r.includes('32')) return 'ROUND OF 32';
     return '';
   })();
-  const isWcKnockout = leagueId === 1 && !!stageTitle;
+  // Knockout banner: Champions League ties only — domestic matchweeks don't
+  // get one, and the World Cup is no longer covered.
+  const isKnockoutTie = leagueId === 2 && !!stageTitle;
 
   // Post-match the page is a RESULT page — title, description and copy all
   // switch tense so it doesn't read like the game hasn't happened yet.
   const isDone = FINISHED.has(statusShort) && hasScore;
-  const stageSuffix = isWcKnockout ? ` ${stageTitle.charAt(0) + stageTitle.slice(1).toLowerCase()}` : '';
+  const stageSuffix = isKnockoutTie ? ` ${stageTitle.charAt(0) + stageTitle.slice(1).toLowerCase()}` : '';
   const title = isDone
     ? `${home} ${homeScore}–${awayScore} ${away} Result — ${leagueName}${stageSuffix} | ScoreOcs8`
     : `${home} vs ${away} Prediction | ${leagueName}${stageSuffix} | ScoreOcs8`;
@@ -740,7 +741,7 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
   </div>
 
   <article class="hero">
-    ${isWcKnockout ? `<div class="stage-hero">🏆 FIFA WORLD CUP <span>${esc(stageTitle)}</span></div>` : ''}
+    ${isKnockoutTie ? `<div class="stage-hero">⭐ CHAMPIONS LEAGUE <span>${esc(stageTitle)}</span></div>` : ''}
     <span class="league-pill">${leagueFlag} ${esc(leagueName)}</span>
     <h1>${esc(home)}<span class="vs">vs</span>${esc(away)}</h1>
     <div class="kickoff">⏰ Kickoff: ${esc(kickoff || 'TBD')}${venue ? ` · 🏟 ${esc(venue)}${venueCity ? ', ' + esc(venueCity) : ''}` : ''}</div>

@@ -49,7 +49,7 @@ function slipPath(fixtureId, home, away) {
   return slug ? `/slip/${fixtureId}-${slug}/` : `/slip/${fixtureId}/`;
 }
 const DEFAULT_SEASON = '2026';
-// API-Football tags tournaments by start year — the 2026 World Cup is season 2026.
+// API-Football tags tournaments by start year — the 2026-27 club season is season 2026.
 const LEAGUE_SEASONS = { 1: '2026' };
 const seasonFor = id => LEAGUE_SEASONS[String(id)] || DEFAULT_SEASON;
 
@@ -183,10 +183,10 @@ function parseJsonLoose(text, context = {}) {
 async function generateDaily(env) {
   const date = today();
 
-  // Refresh full World Cup coverage first — this is independent of the AI
+  // Refresh full season coverage first — this is independent of the AI
   // preview pipeline, so it must run even when today's content already exists
   // (otherwise re-runs would skip queueing the day's WC matches).
-  const wcQueue = await queueWorldCupFixtures(env).catch(e => ({ status: 'error', error: String(e.message || e) }));
+  const wcQueue = await queueSeasonFixtures(env).catch(e => ({ status: 'error', error: String(e.message || e) }));
 
   const existing = await env.CACHE.get(`content:${date}`);
   if (existing) return { status: 'skipped', reason: 'already generated', date, wcQueue };
@@ -335,7 +335,7 @@ async function queueFtChecks(env, output, date) {
   //
   // Entries are bucketed under their KICKOFF MYT date, not the generation
   // date: the KO-30 / FT / recap readers all look up ft-queue:<todayMYT>,
-  // and World Cup matches mostly kick off 01:00-09:00 MYT the morning
+  // and European matches mostly kick off 01:00-09:00 MYT the morning
   // after the 07:00 MYT generation run — a generation-dated queue would
   // hide them from every reader.
   const byDate = {};
@@ -370,26 +370,32 @@ async function queueFtChecks(env, output, date) {
   return { count };
 }
 
-// --- World Cup full-coverage queue ------------------------------------------
+// --- Season full-coverage queue ---------------------------------------------
 //
 // Unlike queueFtChecks (which only tracks the 3 featured AI fixtures and posts
-// for the single Match-of-the-Day), this enqueues EVERY upcoming World Cup
-// fixture in the next `daysAhead` days and tags them is_wc. The heartbeat then
-// fires a pre-match update (~KO-30) and a full-time result for each, so the
-// channel covers the whole tournament — not just one match a day.
+// for the single Match-of-the-Day), this enqueues EVERY upcoming fixture in
+// the competitions we cover over the next `daysAhead` days and tags them
+// is_covered. The heartbeat then fires a pre-match update (~KO-30) and a
+// full-time result for each, so the channel covers the whole slate — not just
+// one match a day.
 //
-// Cost: one API-Football /fixtures list call per daily run. The per-match
-// FT lookups still only happen at KO+100min via the existing checker.
-const WC_LEAGUE_ID = 1;
+// Cost: one API-Football /fixtures list call per league per daily run. The
+// per-match FT lookups still only happen at KO+100min via the existing checker.
+const COVERED_LEAGUE_IDS = [39, 2, 140, 135, 78, 61]; // EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1
 
-async function queueWorldCupFixtures(env, daysAhead = 2) {
-  let data;
-  try {
-    data = await afGet(env, '/fixtures', { league: WC_LEAGUE_ID, season: seasonFor(WC_LEAGUE_ID), next: 30 });
-  } catch (e) {
-    return { status: 'error', error: String(e.message || e) };
+async function queueSeasonFixtures(env, daysAhead = 2) {
+  const fixtures = [];
+  const errors = [];
+  for (const lgId of COVERED_LEAGUE_IDS) {
+    try {
+      const data = await afGet(env, '/fixtures', { league: lgId, season: seasonFor(lgId), next: 20 });
+      fixtures.push(...(data.response || []));
+    } catch (e) {
+      errors.push(`${lgId}: ${String(e.message || e)}`);
+    }
   }
-  const fixtures = data.response || [];
+  // Only a total wipeout is an error — one flaky league shouldn't drop the run.
+  if (!fixtures.length) return { status: 'error', error: errors.join('; ') || 'no fixtures returned' };
   const now = Date.now();
   const horizon = now + daysAhead * 86400000;
 
@@ -409,7 +415,7 @@ async function queueWorldCupFixtures(env, daysAhead = 2) {
       attempts: 0,
       posted: false,
       is_motd: false,
-      is_wc: true,
+      is_covered: true,
     });
   }
 
@@ -420,8 +426,8 @@ async function queueWorldCupFixtures(env, daysAhead = 2) {
     for (const e of entries) {
       const cur = byId.get(e.fixture_id);
       if (cur) {
-        // Already queued (e.g. as the MOTD) — just flag it for WC coverage.
-        if (!cur.is_wc) { cur.is_wc = true; tagged += 1; }
+        // Already queued (e.g. as the MOTD) — just flag it for full coverage.
+        if (!cur.is_covered) { cur.is_covered = true; tagged += 1; }
       } else {
         existing.push(e);
         byId.set(e.fixture_id, e);
@@ -430,7 +436,7 @@ async function queueWorldCupFixtures(env, daysAhead = 2) {
     }
     await env.CACHE.put(`ft-queue:${kd}`, JSON.stringify(existing), { expirationTtl: 72 * 3600 });
   }
-  return { status: 'ok', added, tagged, dates: Object.keys(byDate) };
+  return { status: 'ok', added, tagged, dates: Object.keys(byDate), errors };
 }
 
 // --- Daily social posting pipeline (Step 2 + 3) -----------------------------
@@ -746,7 +752,7 @@ function firstPickLine(item) {
 // empty — so this endpoint always returns a usable preview.
 
 // 'proof' (What Our Users Say) intentionally dropped — sample testimonials
-// don't fit the World Cup focus. Re-add it here to bring the template back.
+// don't fit the current focus. Re-add it here to bring the template back.
 const SPORTSBOOK_TEMPLATE_KEYS = ['prediction', 'upcoming', 'reminder', 'result', 'blog'];
 
 // Affiliate signup URL — appended via {signupCta} to every default template
@@ -1374,26 +1380,25 @@ function tgResultCardUrl(fx, correct) {
   return `${PUBLIC_SITE_URL}/og/tg-result?${params.toString()}`;
 }
 
-// Stage title from the round string — names the big knockout matches.
-function wcStageTitle(round) {
+// Stage title from the round string — names the big knockout ties (UCL).
+function knockoutStageTitle(round) {
   const r = String(round || '').toLowerCase();
   if (r.includes('semi')) return 'SEMI-FINAL';
   if (r.includes('quarter')) return 'QUARTER-FINAL';
-  if (r.includes('3rd') || r.includes('third')) return '3RD PLACE MATCH';
   if (r.includes('final')) return 'FINAL';
+  if (r.includes('play-off') || r.includes('playoff')) return 'PLAY-OFF';
   if (r.includes('16')) return 'ROUND OF 16';
-  if (r.includes('32')) return 'ROUND OF 32';
   return '';
 }
 
 // Branded pre-match PREDICTION card image (pick, confidence, predicted score,
 // risk) — screenshotted and posted with the pre-match alert.
 function tgPredictionCardUrl(fx, pick) {
-  const stage = fx?.league?.id === 1 ? wcStageTitle(fx?.league?.round) : '';
+  const stage = fx?.league?.id === 2 ? knockoutStageTitle(fx?.league?.round) : '';
   const params = new URLSearchParams({
     home:   fx?.teams?.home?.name || 'Home',
     away:   fx?.teams?.away?.name || 'Away',
-    league: stage ? `FIFA World Cup · ${stage}` : (fx?.league?.name || 'FIFA World Cup'),
+    league: stage ? `UEFA Champions League · ${stage}` : (fx?.league?.name || 'Football'),
     date:   fx?.fixture?.date || '',
   });
   if (fx?.teams?.home?.logo) params.set('home_logo', fx.teams.home.logo);
@@ -1646,10 +1651,13 @@ async function postPreMatchAlerts(env) {
   const report = { date, eligible: 0, posted: 0, skipped: 0, errors: [] };
 
   for (const item of queue) {
-    // Pre-match alert fires for the MOTD fixture AND every World Cup fixture
-    // (is_wc). Other non-WC featured fixtures track silently — same
-    // channel-flood-prevention as the FT result post in checkFinishedMatches().
-    if (!item.is_motd && !item.is_wc) continue;
+    // Pre-match alert fires for the MOTD fixture AND every covered fixture.
+    // Other featured fixtures track silently — same channel-flood-prevention
+    // as the FT result post in checkFinishedMatches(). `is_wc` is the pre-Aug
+    // 2026 name of this flag; read it too so queue entries written before the
+    // rename keep their coverage until they expire.
+    const covered = item.is_covered ?? item.is_wc;
+    if (!item.is_motd && !covered) continue;
     const kickoffMs = new Date(item.kickoff_iso).getTime();
     if (!Number.isFinite(kickoffMs)) continue;
     const tilKO = kickoffMs - now;
@@ -1666,10 +1674,10 @@ async function postPreMatchAlerts(env) {
       const pick = await env.CACHE.get(`prediction:${item.fixture_id}`, 'json').catch(() => null);
       const pickReady = isPickReady(pick);
 
-      // For a non-WC MOTD we still refuse to ship a "Pro analysis pending"
-      // alert — the slip-style caption needs a real pick. World Cup matches
+      // For an uncovered MOTD we still refuse to ship a "Pro analysis pending"
+      // alert — the slip-style caption needs a real pick. Covered fixtures
       // always post: the lightweight match-update caption is fine pick-less.
-      if (!item.is_wc && !pickReady) {
+      if (!covered && !pickReady) {
         report.skipped += 1;
         report.errors.push({ fixture_id: item.fixture_id, error: 'pick not ready at KO-30' });
         continue;
@@ -1682,26 +1690,26 @@ async function postPreMatchAlerts(env) {
         continue;
       }
 
-      // World Cup match update now carries a compact prediction (pick +
+      // A covered match update carries a compact prediction (pick +
       // confidence + one line). Use the warmed KV pick if present, else fetch
-      // /api/predictions so even un-warmed WC fixtures get a form preview.
-      let wcPick = (pick && (pick.pickLabel || pick.pick)) ? pick : null;
-      if (item.is_wc && !wcPick) {
-        wcPick = await fetch(`${SITE_URL}/api/predictions?fixture_id=${item.fixture_id}`)
+      // /api/predictions so even un-warmed fixtures get a form preview.
+      let matchPick = (pick && (pick.pickLabel || pick.pick)) ? pick : null;
+      if (covered && !matchPick) {
+        matchPick = await fetch(`${SITE_URL}/api/predictions?fixture_id=${item.fixture_id}`)
           .then(r => r.ok ? r.json() : null).catch(() => null);
       }
-      const caption = item.is_wc
-        ? buildMatchUpdateCaption({ fixture: fx, pick: wcPick, siteUrl: SITE_URL })
+      const caption = covered
+        ? buildMatchUpdateCaption({ fixture: fx, pick: matchPick, siteUrl: SITE_URL })
         : buildPreMatchMotdCaption({ fixture: fx, pick, siteUrl: SITE_URL });
 
-      // World Cup: post a branded prediction CARD IMAGE (screenshot of
+      // Covered match: post a branded prediction CARD IMAGE (screenshot of
       // /og/tg-prediction) with the caption; fall back to text if the render
-      // fails. Non-WC MOTD stays a plain text alert.
+      // fails. An uncovered MOTD stays a plain text alert.
       let msg;
-      if (item.is_wc) {
+      if (covered) {
         try {
           const png = await screenshot(env, {
-            url: tgPredictionCardUrl(fx, wcPick),
+            url: tgPredictionCardUrl(fx, matchPick),
             viewport: { width: 1280, height: 720 },
             waitUntil: 'networkidle0',
             timeoutMs: 25000,
@@ -1768,7 +1776,7 @@ async function checkFinishedMatches(env) {
 
   // Batch the status lookups: one API-Football call per 20 due fixtures
   // instead of one call per fixture. This keeps quota flat even on a busy
-  // 6-match World Cup day — a heartbeat tick now costs a single /fixtures
+  // 6-match slate — a heartbeat tick now costs a single /fixtures
   // read regardless of how many matches are being checked.
   const fxById = new Map();
   let batchError = null;
@@ -1819,12 +1827,12 @@ async function checkFinishedMatches(env) {
       const accAfter = correct === null ? null : await bumpAccuracy(env, correct);
 
       // Result posting:
-      //   • World Cup match → clean branded /og/tg-result card (score only,
+      //   • Covered match → clean branded /og/tg-result card (score only,
       //     no AI-pick verdict / accuracy / badge). Text fallback if the
       //     screenshot fails so a finished match is never dropped.
-      //   • Non-WC MOTD → rich virtual-bet-slip screenshot (needs a pick).
+      //   • Uncovered MOTD → rich virtual-bet-slip screenshot (needs a pick).
       //   • Everything else → tracked silently.
-      if (item.is_wc) {
+      if (item.is_covered ?? item.is_wc) {
         const caption = buildResultCaption({
           fixture: fx,
           pickCorrect: null,
@@ -1894,7 +1902,7 @@ async function checkFinishedMatches(env) {
 
       // YouTube highlight lookup is the priciest per-match external call
       // (a few search units each). Limit it to the Match of the Day; other
-      // World Cup matches still get a highlights-feed entry below, just with
+      // Covered matches still get a highlights-feed entry below, just with
       // the zero-cost search URL instead of a resolved video.
       const youtube = item.is_motd ? await findYoutubeHighlight(env, fx) : null;
       await appendHighlight(env, {
@@ -2093,7 +2101,7 @@ async function postDailyRecap(env) {
   }
 }
 
-// --- Daily World Cup group card -------------------------------------------
+// --- Daily match digest card ----------------------------------------------
 //
 // Screenshots /wc-card/ (the group fixtures + standings digest) once per day
 // and posts it to Telegram. The page auto-features the group with the next
@@ -2104,27 +2112,27 @@ async function postDailyRecap(env) {
 // final scores after the day's matches finish). Same card URL — the page
 // auto-shows kickoff times or FT scores per match — only the dedup key and
 // caption differ, so both can post on the same day.
-// Count World Cup matches whose kickoff falls on the given MYT day. Used to
-// guard the daily digest card from posting "0 MATCHES". Reads wc-schedule,
-// falling back to /api/fixtures (the source the predictions page uses).
-async function countWcMatchesForDay(env, dayKey) {
+// Count covered matches whose kickoff falls on the given MYT day. Used to
+// guard the daily digest card from posting "0 MATCHES".
+async function countMatchesForDay(env, dayKey) {
   const mytKey = iso => { try { return new Date(iso).toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' }); } catch { return ''; } };
   try {
-    const sched = await fetch(`${SITE_URL}/api/wc-schedule`).then(r => r.ok ? r.json() : null).catch(() => null);
-    let dates = (sched?.matches || []).map(m => m.date);
-    if (!dates.length) {
-      const fx = await fetch(`${SITE_URL}/api/fixtures?league=1&season=2026`).then(r => r.ok ? r.json() : null).catch(() => null);
+    const packs = await Promise.all(COVERED_LEAGUE_IDS.map(id =>
+      fetch(`${SITE_URL}/api/fixtures?league=${id}&season=${seasonFor(id)}`)
+        .then(r => r.ok ? r.json() : null).catch(() => null)
+    ));
+    const dates = packs.flatMap(fx => {
       const lg = fx?.leagues?.[0];
-      const buckets = lg ? [...(lg.today || []), ...(lg.next || []), ...(lg.last || [])] : [];
-      dates = buckets.map(f => f.fixture?.date);
-    }
+      if (!lg) return [];
+      return [...(lg.today || []), ...(lg.next || []), ...(lg.last || [])].map(f => f.fixture?.date);
+    });
     return dates.filter(d => mytKey(d) === dayKey).length;
   } catch {
     return 0;
   }
 }
 
-async function postWorldCupCard(env, slot = 'preview', opts = {}) {
+async function postMatchdayCard(env, slot = 'preview', opts = {}) {
   if (!env.TG_BOT_TOKEN || !env.TG_CHANNEL_ID) {
     return { status: 'skipped', reason: 'telegram not configured' };
   }
@@ -2135,7 +2143,7 @@ async function postWorldCupCard(env, slot = 'preview', opts = {}) {
   }
   // Never post a blank "0 MATCHES" card. Skip (without burning the dedup slot)
   // when nothing is scheduled for today so a later tick retries once data lands.
-  const todayCount = await countWcMatchesForDay(env, date);
+  const todayCount = await countMatchesForDay(env, date);
   if (todayCount === 0) {
     return { status: 'skipped', reason: 'no WC matches today', slot, date };
   }
@@ -2166,23 +2174,24 @@ async function postWorldCupCard(env, slot = 'preview', opts = {}) {
 // to Telegram. Fired event-driven from checkFinishedMatches once every match
 // in the day's queue is done, so it lands right after the last final whistle.
 // Dedup: posted:wc-upcoming:<date>.
-// Count upcoming World Cup matches from the same sources the card uses, so we
-// never screenshot+post a blank "Upcoming Matches" card. Falls back to
-// /api/fixtures (the source the predictions page uses) if wc-schedule is empty.
-async function countUpcomingWcMatches(env) {
+// Count upcoming matches from the same source the card uses, so we never
+// screenshot+post a blank "Upcoming Matches" card.
+async function countUpcomingMatches(env) {
   const now = Date.now();
   const FIN = new Set(['FT', 'AET', 'PEN', 'AWD', 'WO']);
   const upcoming = (date, status) =>
     !FIN.has(status) && new Date(date).getTime() > now - 15 * 60 * 1000;
   try {
-    const sched = await fetch(`${SITE_URL}/api/wc-schedule`).then(r => r.ok ? r.json() : null).catch(() => null);
-    let matches = (sched?.matches || []).map(m => ({ date: m.date, status: m.status }));
-    if (!matches.length) {
-      const fx = await fetch(`${SITE_URL}/api/fixtures?league=1&season=2026`).then(r => r.ok ? r.json() : null).catch(() => null);
+    const packs = await Promise.all(COVERED_LEAGUE_IDS.map(id =>
+      fetch(`${SITE_URL}/api/fixtures?league=${id}&season=${seasonFor(id)}`)
+        .then(r => r.ok ? r.json() : null).catch(() => null)
+    ));
+    const matches = packs.flatMap(fx => {
       const lg = fx?.leagues?.[0];
-      const buckets = lg ? [...(lg.today || []), ...(lg.next || [])] : [];
-      matches = buckets.map(f => ({ date: f.fixture?.date, status: f.fixture?.status?.short || 'NS' }));
-    }
+      if (!lg) return [];
+      return [...(lg.today || []), ...(lg.next || [])]
+        .map(f => ({ date: f.fixture?.date, status: f.fixture?.status?.short || 'NS' }));
+    });
     return matches.filter(m => upcoming(m.date, m.status)).length;
   } catch {
     return 0; // on error, treat as "no data" and skip — better blank than wrong
@@ -2203,8 +2212,8 @@ async function postWcUpcomingCard(env, opts = {}) {
   // Never post a blank card. If there are no matches for the target window,
   // skip WITHOUT setting the dedup flag so a later heartbeat retries.
   const matchCount = opts.date
-    ? await countWcMatchesForDay(env, opts.date)
-    : await countUpcomingWcMatches(env);
+    ? await countMatchesForDay(env, opts.date)
+    : await countUpcomingMatches(env);
   if (matchCount === 0) {
     return { status: 'skipped', reason: 'no matches for that day', date: opts.date || date };
   }
@@ -2228,7 +2237,7 @@ async function postWcUpcomingCard(env, opts = {}) {
 }
 
 // --- Golden Boot race post ---------------------------------------------------
-// Top-5 WC scorers, posted roughly every 2 days (13:00 MYT window, 44h dedup).
+// Top-5 Premier League scorers, posted roughly every 2 days (13:00 MYT window, 44h dedup).
 async function postScorersRace(env, opts = {}) {
   if (!env.TG_BOT_TOKEN || !env.TG_CHANNEL_ID) return { status: 'skipped', reason: 'telegram not configured' };
   if (!opts.force) {
@@ -2236,50 +2245,40 @@ async function postScorersRace(env, opts = {}) {
     if (h !== 13) return { status: 'skipped', reason: 'outside 13:00 MYT window' };
     if (await env.CACHE.get('posted:scorers').catch(() => null)) return { status: 'skipped', reason: 'posted within 44h' };
   }
-  // Tournament-active gate: the Golden Boot race is stale once the WC is
-  // over — only post while a WC match kicked off in the last 72h or is
-  // still upcoming.
-  const sched = await fetch(`${SITE_URL}/api/wc-schedule`).then(r => r.ok ? r.json() : null).catch(() => null);
-  const nowMs = Date.now();
-  const wcActive = (sched?.matches || []).some(m => {
-    const t = Date.parse(m.date);
-    return Number.isFinite(t) && (t > nowMs || nowMs - t < 72 * 3600 * 1000);
-  });
-  if (!wcActive && !opts.force) return { status: 'skipped', reason: 'World Cup finished — scorers race paused' };
-  const data = await fetch(`${SITE_URL}/api/topscorers?league=1&season=2026`).then(r => r.ok ? r.json() : null).catch(() => null);
+  const data = await fetch(`${SITE_URL}/api/topscorers?league=39&season=2026`).then(r => r.ok ? r.json() : null).catch(() => null);
   const list = (data?.response || []).slice(0, 5);
   if (!list.length) return { status: 'skipped', reason: 'no scorer data' };
   const medals = ['🥇', '🥈', '🥉', '4.', '5.'];
-  const lines = [`👑 <b>Golden Boot Race · 金靴榜</b>`, `🏆 2026 FIFA World Cup`, ''];
+  const lines = [`👑 <b>Golden Boot Race · 金靴榜</b>`, `🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League 2026/27`, ''];
   list.forEach((p, i) => {
     const s = p.statistics?.[0] || {};
     lines.push(`${medals[i]} <b>${p.player?.name || '?'}</b> (${s.team?.name || ''}) — ${s.goals?.total ?? 0} ⚽`);
   });
-  lines.push('', `Who takes the Golden Boot? 谁能穿金靴?`, '', `🔗 Live table: ${SITE_URL}/predictions/fifa-world-cup/`, '', `#GoldenBoot #WorldCup2026 #ScoreOcs8 #足球预测`);
+  lines.push('', `Who takes the Golden Boot? 谁能穿金靴?`, '', `🔗 Live table: ${SITE_URL}/predictions/premier-league/`, '', `#GoldenBoot #PremierLeague #ScoreOcs8 #足球预测`);
   const msg = await sendMessage(env, { text: lines.join('\n') });
   if (msg?.disabled) return { status: 'skipped', reason: 'posting disabled' };
   await env.CACHE.put('posted:scorers', '1', { expirationTtl: 44 * 3600 });
   return { status: 'ok', message_id: msg.message_id };
 }
 
-// --- Group standings digest ---------------------------------------------------
-// Compact per-group points table, fired after the day's last match (allDone)
+// --- League standings digest -------------------------------------------------
+// Compact league points table, fired after the day's last match (allDone)
 // or manually. One per day.
 async function postGroupStandings(env, opts = {}) {
   if (!env.TG_BOT_TOKEN || !env.TG_CHANNEL_ID) return { status: 'skipped', reason: 'telegram not configured' };
   const date = todayMYT();
   const dedupKey = `posted:grouptable:${date}`;
   if (!opts.force && await env.CACHE.get(dedupKey).catch(() => null)) return { status: 'skipped', reason: 'already posted today' };
-  const data = await fetch(`${SITE_URL}/api/standings?league=1&season=2026`).then(r => r.ok ? r.json() : null).catch(() => null);
+  const data = await fetch(`${SITE_URL}/api/standings?league=39&season=2026`).then(r => r.ok ? r.json() : null).catch(() => null);
   const groups = data?.response?.[0]?.league?.standings || [];
   if (!groups.length) return { status: 'skipped', reason: 'no standings data' };
-  const lines = [`📊 <b>Group Standings · 小组积分榜</b>`, `🏆 2026 FIFA World Cup`, ''];
+  const lines = [`📊 <b>Premier League Table · 英超积分榜</b>`, `🏴󠁧󠁢󠁥󠁮󠁧󠁿 2026/27 Season`, ''];
   for (const g of groups) {
-    const label = (g?.[0]?.group || '').replace(/^Group\s*/i, '');
-    const row = g.map(t => `${t.team?.name} ${t.points}`).join(' · ');
-    lines.push(`<b>${label ? 'Group ' + label : 'Group'}</b>: ${row}`);
+    g.slice(0, 10).forEach(t => {
+      lines.push(`${t.rank}. <b>${t.team?.name}</b> — ${t.points} pts (${t.all?.played ?? 0} played)`);
+    });
   }
-  lines.push('', `🔗 Full tables: ${SITE_URL}/predictions/fifa-world-cup/`, '', `#WorldCup2026 #ScoreOcs8 #足球预测`);
+  lines.push('', `🔗 Full table: ${SITE_URL}/predictions/premier-league/`, '', `#PremierLeague #ScoreOcs8 #足球预测`);
   const text = lines.join('\n');
   const msg = await sendMessage(env, { text: text.length > 4000 ? text.slice(0, 3997) + '...' : text });
   if (msg?.disabled) return { status: 'skipped', reason: 'posting disabled' };
@@ -2312,7 +2311,7 @@ async function postFanMarket(env, opts = {}) {
     `✅ YES ${pickMkt.yesPct}%  ·  ❌ NO ${pickMkt.noPct}%`,
     `🗳 ${pickMkt.votes} fan votes so far`, '',
     `Cast your vote 👉 ${SITE_URL}/worldcup-markets/`, '',
-    `#FanVote #WorldCup2026 #ScoreOcs8 #足球预测`,
+    `#FanVote #Football #ScoreOcs8 #足球预测`,
   ];
   const msg = await sendMessage(env, { text: lines.join('\n') });
   if (msg?.disabled) return { status: 'skipped', reason: 'posting disabled' };
@@ -2352,7 +2351,7 @@ async function postGoalAlerts(env) {
       `👉 ${SITE_URL}${matchPath}`, '',
       `🆕 <b>Bet live · OCS8 Sports</b> | 立即投注:`,
       `👉 https://ocs8my.com/signup?ref=OCSFMZ6HVI`, '',
-      `#WorldCup2026 #ScoreOcs8`,
+      `#Football #ScoreOcs8`,
     ];
     const msg = await sendMessage(env, { text: lines.join('\n') });
     if (msg?.disabled) return { ...report, reason: 'posting disabled' };
@@ -2392,7 +2391,7 @@ export default {
       ctx.waitUntil(postGoalAlerts(env));
       ctx.waitUntil(postScorersRace(env));
       ctx.waitUntil(postFanMarket(env));
-      // 'Today at the World Cup' digest. This used to depend on dedicated
+      // 'Today's football' digest. This used to depend on dedicated
       // 30-16 / 0-7 UTC cron triggers that were never registered in
       // wrangler.toml, so it silently stopped posting. Drive it from the
       // heartbeat instead, time-gated to a window (so a transient failure
@@ -2400,9 +2399,9 @@ export default {
       // each card still posts exactly once.
       const { h, m } = nowMytHM();
       if ((h === 0 && m >= 30) || (h >= 1 && h < 3)) {
-        ctx.waitUntil(postWorldCupCard(env, 'preview')); // ~00:30 MYT, before kickoffs
+        ctx.waitUntil(postMatchdayCard(env, 'preview')); // ~00:30 MYT, before kickoffs
       } else if (h >= 15 && h < 17) {
-        ctx.waitUntil(postWorldCupCard(env, 'recap'));    // ~15:00 MYT, after the slate
+        ctx.waitUntil(postMatchdayCard(env, 'recap'));    // ~15:00 MYT, after the slate
       }
     } else {
       ctx.waitUntil(generateDaily(env));
@@ -2428,9 +2427,9 @@ export default {
       const u = url.searchParams.get('url');
       result = await googleIndexUrls(env, u ? [u] : [`https://${SITE_HOST}/`]);
     }
-    else if (task === 'wc-queue') result = await queueWorldCupFixtures(env);
-    else if (task === 'wc-card') result = await postWorldCupCard(env, 'preview', { force });
-    else if (task === 'wc-recap') result = await postWorldCupCard(env, 'recap', { force });
+    else if (task === 'wc-queue' || task === 'season-queue') result = await queueSeasonFixtures(env);
+    else if (task === 'wc-card') result = await postMatchdayCard(env, 'preview', { force });
+    else if (task === 'wc-recap') result = await postMatchdayCard(env, 'recap', { force });
     else if (task === 'wc-upcoming') result = await postWcUpcomingCard(env, { force, date: wantDate || undefined });
     else if (task === 'post') result = await postDailyToAll(env);
     else if (task === 'check') result = await checkFinishedMatches(env);
@@ -2496,7 +2495,7 @@ export default {
           due_in_min: Math.round((e.check_at_ms - now) / 60000),
           posted: e.posted,
           attempts: e.attempts,
-          is_wc: e.is_wc,
+          is_covered: e.is_covered ?? e.is_wc,
           is_motd: e.is_motd,
           correct: e.correct,
           note: e.note || null,

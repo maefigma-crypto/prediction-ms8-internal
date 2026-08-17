@@ -4,12 +4,11 @@ const slugify = s => String(s||'').toLowerCase().normalize('NFKD').replace(/[̀-
 
 export async function onRequestGet({ env, request }) {
   const origin = new URL(request.url).origin;
-  const [githubPosts, kvPosts, settings, fixtures, wcSchedule, highlights] = await Promise.all([
+  const [githubPosts, kvPosts, settings, fixtures, highlights] = await Promise.all([
     listPosts(env),
     listKvContent(env, 30),
     getSettings(env),
     fetch(origin + '/api/fixtures').then(r => r.ok ? r.json() : null).catch(() => null),
-    fetch(origin + '/api/wc-schedule').then(r => r.ok ? r.json() : null).catch(() => null),
     fetch(origin + '/api/highlights?limit=12').then(r => r.ok ? r.json() : null).catch(() => null),
   ]);
   const posts = [...kvPosts, ...githubPosts];
@@ -29,9 +28,10 @@ export async function onRequestGet({ env, request }) {
     { loc: `${SITE_URL}/predictions/serie-a/`,            priority: '0.9', changefreq: 'daily' },
     { loc: `${SITE_URL}/predictions/bundesliga/`,         priority: '0.9', changefreq: 'daily' },
     { loc: `${SITE_URL}/predictions/ligue-1/`,            priority: '0.9', changefreq: 'daily' },
-    // 2026 World Cup pages kept as an archive — demoted now the tournament is over.
-    { loc: `${SITE_URL}/predictions/fifa-world-cup/`,     priority: '0.4', changefreq: 'monthly' },
-    { loc: `${SITE_URL}/worldcup-markets/`,               priority: '0.4', changefreq: 'monthly' },
+    // Repurposed for 2026-27: the old World Cup URLs now serve the
+    // cross-competition "today's matches" page and the season fan markets.
+    { loc: `${SITE_URL}/predictions/fifa-world-cup/`,     priority: '0.8', changefreq: 'daily' },
+    { loc: `${SITE_URL}/worldcup-markets/`,               priority: '0.7', changefreq: 'daily' },
   ];
 
   // Dynamic per-match pages: /match/<id>-<home>-vs-<away>/
@@ -52,23 +52,6 @@ export async function onRequestGet({ env, request }) {
         lastmod: (fx?.fixture?.date || new Date().toISOString()).slice(0, 10),
       });
     }
-  }
-
-  // All World Cup fixtures (the /api/fixtures buckets above only cover the
-  // next/last ~30; wc-schedule has every match), so every WC match page is
-  // discoverable — the bulk of the long-tail during the tournament.
-  for (const m of (wcSchedule?.matches || [])) {
-    const id = m?.fixture_id;
-    if (!id || seenMatchIds.has(id)) continue;
-    seenMatchIds.add(id);
-    const slug = slugify(`${m.home?.name || ''}-vs-${m.away?.name || ''}`);
-    const path = slug ? `/match/${id}-${slug}/` : `/match/${id}/`;
-    urls.push({
-      loc: SITE_URL + path,
-      priority: '0.7',
-      changefreq: 'daily',
-      lastmod: (m.date || new Date().toISOString()).slice(0, 10),
-    });
   }
 
   // Dynamic highlight pages: /highlights/<id>-<home>-vs-<away>/

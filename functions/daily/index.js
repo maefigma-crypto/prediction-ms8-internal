@@ -16,7 +16,6 @@
 const LEAGUE_EMOJI = {
   39: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',   // Premier League
   2: '⭐',                                // Champions League
-  1: '🏆',                                // FIFA World Cup
   140: '🇪🇸',                             // La Liga
   78: '🇩🇪',                              // Bundesliga
   135: '🇮🇹',                             // Serie A

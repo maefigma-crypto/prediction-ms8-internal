@@ -45,7 +45,7 @@ a{color:inherit}
 <nav class="gnav">
   <a href="/" class="gnav-logo"><img src="/logo.png" alt="ScoreOcs8"></a>
   <div style="display:flex;gap:10px;align-items:center;">
-    <a href="/worldcup-markets/" class="gnav-cta" style="color:var(--accent,#f97316);">🏆 World Cup</a>
+    <a href="/worldcup-markets/" class="gnav-cta" style="color:var(--accent,#f97316);">🎯 Fan Markets</a>
     <a href="/" class="gnav-cta">Home</a>
   </div>
 </nav>
@@ -87,7 +87,6 @@ const LEAGUES = [
   { id: 135, code: 'SERIEA', name: 'Serie A' },
   { id: 78, code: 'BUNDESLIGA', name: 'Bundesliga' },
   { id: 61, code: 'LIGUE1', name: 'Ligue 1' },
-  { id: 1, code: 'WC', name: 'FIFA World Cup' },
 ];
 let all = [];
 let mode = 'upcoming';
@@ -148,26 +147,13 @@ function render(){
   list.sort((a,b) => mode === 'completed' ? new Date(b.fixture.date) - new Date(a.fixture.date) : new Date(a.fixture.date) - new Date(b.fixture.date));
   grid.innerHTML = list.length ? list.slice(0, 24).map(card).join('') : '<div class="empty">No matches found for this filter.</div>';
 }
-// The World Cup's /api/fixtures next/last buckets are unreliable — merge the
-// full schedule from /api/wc-schedule so Completed/Today always populate.
-function wcFromSchedule(sched){
-  return (sched?.matches || []).map(m => ({
-    fixture: { id: m.fixture_id, date: m.date, status: { short: m.status, elapsed: m.elapsed ?? null } },
-    league: { id: 1, name: 'FIFA World Cup', round: m.round || '' },
-    teams: { home: { id: m.home?.id, name: m.home?.name, logo: m.home?.logo }, away: { id: m.away?.id, name: m.away?.name, logo: m.away?.logo } },
-    goals: { home: m.goals?.home ?? null, away: m.goals?.away ?? null },
-    _leagueName: 'FIFA World Cup',
-  }));
-}
 async function load(){
   document.getElementById('league').innerHTML += LEAGUES.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
-  const [wcSched, ...batches] = await Promise.allSettled([
-    fetch('/api/wc-schedule').then(r => r.ok ? r.json() : null),
-    ...LEAGUES.map(l => fetch(`/api/fixtures?league=${l.id}`).then(r => r.ok ? r.json() : null).then(d => flatten(d || {}, l))),
-  ]);
+  const batches = await Promise.allSettled(
+    LEAGUES.map(l => fetch(`/api/fixtures?league=${l.id}`).then(r => r.ok ? r.json() : null).then(d => flatten(d || {}, l))),
+  );
   const seen = new Set();
-  const wcAll = wcSched.status === 'fulfilled' ? wcFromSchedule(wcSched.value) : [];
-  all = [...wcAll, ...batches.flatMap(b => b.status === 'fulfilled' ? b.value : [])].filter(fx => {
+  all = batches.flatMap(b => b.status === 'fulfilled' ? b.value : []).filter(fx => {
     const id = fx.fixture?.id;
     if (!id || seen.has(id)) return false;
     seen.add(id);

@@ -33,7 +33,6 @@ const LEAGUE_EMOJI = {
 const LEAGUE_SHORT = {
   39: 'EPL',
   2: 'UCL',
-  1: 'WC',
   140: 'LaLiga',
   78: 'BL',
   135: 'Serie A',
@@ -230,7 +229,7 @@ function firstSentence(text) {
   return (m ? m[0] : s).trim();
 }
 
-// Lightweight pre-match update used for full World Cup coverage. Posts a
+// Lightweight pre-match update used for full match-day coverage. Posts a
 // "kicking off soon" card — teams, kickoff in MYT, venue — and, when a
 // prediction is available, a compact pick line: the pick, its confidence and
 // one short form/H2H sentence (the content the user asked for).
@@ -290,7 +289,7 @@ export function buildMatchUpdateCaption({ fixture, pick = null, siteUrl = 'https
   lines.push(`👉 https://ocs8my.com/signup?ref=OCSFMZ6HVI`);
   lines.push('');
   lines.push(`⚠ 18+`);
-  lines.push(`#WorldCup2026 #ScoreOcs8 #足球预测`);
+  lines.push(`#Football #EPL #UCL #ScoreOcs8 #足球预测`);
   return lines.join('\n');
 }
 
@@ -326,32 +325,32 @@ export function buildResultCaption({ fixture, pickCorrect = null, weekAcc = null
   return lines.join('\n');
 }
 
-// Caption for the daily /wc-card/ group digest screenshot. The card image
-// carries the fixtures + standings, so the caption is a short framing line
+// Caption for the daily /wc-card/ match digest screenshot. The card image
+// carries the fixtures + scores, so the caption is a short framing line
 // plus the schedule link and signup CTA.
 export function buildWcCardCaption({ date, siteUrl = 'https://scoreocs8.com', recap = false }) {
   const lines = [];
   if (recap) {
-    lines.push(`📊 <b>World Cup Daily Recap · 今日回顾</b>`);
+    lines.push(`📊 <b>Daily Results Recap · 今日回顾</b>`);
     if (date) lines.push(`📅 ${esc(fmtDate(date))}`);
     lines.push('');
     lines.push(`Final scores from today's matches 🏁 (Malaysia Time 🇲🇾)`);
     lines.push(`今日赛事全场比分（马来西亚时间）。`);
   } else {
-    lines.push(`🏆 <b>Today at the World Cup · 今日世界杯</b>`);
+    lines.push(`⚽ <b>Today's Football · 今日赛事</b>`);
     if (date) lines.push(`📅 ${esc(fmtDate(date))}`);
     lines.push('');
     lines.push(`Every match today — scores &amp; kickoffs in Malaysia Time 🇲🇾`);
     lines.push(`今日全部赛事，比分与开赛时间（马来西亚时间）。`);
   }
   lines.push('');
-  lines.push(`🔗 <b>Full schedule &amp; standings</b> | 完整赛程与积分榜:`);
-  lines.push(`👉 ${siteUrl}/predictions/fifa-world-cup/`);
+  lines.push(`🔗 <b>Full fixtures &amp; predictions</b> | 完整赛程与预测:`);
+  lines.push(`👉 ${siteUrl}/predictions/`);
   lines.push('');
   lines.push(`🆕 <b>Sign up · OCS8 Sports</b> | 立即注册:`);
   lines.push(`👉 https://ocs8my.com/signup?ref=OCSFMZ6HVI`);
   lines.push('');
-  lines.push(`#WorldCup2026 #ScoreOcs8 #足球预测`);
+  lines.push(`#Football #EPL #UCL #ScoreOcs8 #足球预测`);
   const out = lines.join('\n');
   return out.length > 1020 ? out.slice(0, 1017) + '...' : out;
 }
@@ -360,18 +359,18 @@ export function buildWcCardCaption({ date, siteUrl = 'https://scoreocs8.com', re
 export function buildWcUpcomingCaption({ siteUrl = 'https://scoreocs8.com' }) {
   const lines = [];
   lines.push(`📅 <b>Upcoming Matches · 即将开赛</b>`);
-  lines.push(`🏆 2026 FIFA World Cup`);
+  lines.push(`⚽ 2026/27 Season · EPL · UCL · Europe`);
   lines.push('');
   lines.push(`Next up — all kickoff times in Malaysia Time 🇲🇾 (MYT).`);
   lines.push(`下一轮赛事，全部为马来西亚时间。`);
   lines.push('');
-  lines.push(`🔗 <b>Full schedule &amp; standings</b> | 完整赛程与积分榜:`);
-  lines.push(`👉 ${siteUrl}/predictions/fifa-world-cup/`);
+  lines.push(`🔗 <b>Full fixtures &amp; predictions</b> | 完整赛程与预测:`);
+  lines.push(`👉 ${siteUrl}/predictions/`);
   lines.push('');
   lines.push(`🆕 <b>Sign up · OCS8 Sports</b> | 立即注册:`);
   lines.push(`👉 https://ocs8my.com/signup?ref=OCSFMZ6HVI`);
   lines.push('');
-  lines.push(`#WorldCup2026 #ScoreOcs8 #足球预测`);
+  lines.push(`#Football #EPL #UCL #ScoreOcs8 #足球预测`);
   const out = lines.join('\n');
   return out.length > 1020 ? out.slice(0, 1017) + '...' : out;
 }

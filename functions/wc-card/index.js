@@ -1,10 +1,12 @@
-// GET /wc-card/  — screenshot-ready "Today at the World Cup" digest card.
+// GET /wc-card/  — screenshot-ready "Today's Football" digest card.
 //
 // Renders a 1080×1350 portrait card (OCS8 × ScoreOCS8 branded) listing
-// every World Cup match on a given day — across all groups — with live
-// scores / kickoff times in MYT. The posting cron screenshots this and
-// sends it to Telegram. One card per day, always accurate to that day
-// (a single-group card couldn't represent a 4-match, multi-group day).
+// every match we cover on a given day — across all six competitions — with
+// live scores / kickoff times in MYT. The posting cron screenshots this and
+// sends it to Telegram. One card per day, always accurate to that day.
+//
+// (Path kept as /wc-card/ so the cron's screenshot URL and any saved links
+// keep working; the content is the 2026-27 season, not the World Cup.)
 //
 // Query params:
 //   date    YYYY-MM-DD (MYT) to feature. Default: today MYT, else the next
@@ -14,6 +16,15 @@
 // fully painted on first byte for a clean screenshot.
 
 const SITE = 'https://scoreocs8.com';
+const SEASON = '2026';
+const COMPETITIONS = [
+  { id: 39,  short: 'EPL' },
+  { id: 2,   short: 'UCL' },
+  { id: 140, short: 'LA LIGA' },
+  { id: 135, short: 'SERIE A' },
+  { id: 78,  short: 'BUNDESLIGA' },
+  { id: 61,  short: 'LIGUE 1' },
+];
 
 function esc(s) {
   return String(s ?? '').replace(/[<>"'&]/g, c => ({
@@ -61,27 +72,33 @@ export async function onRequestGet({ request }) {
   const url = new URL(request.url);
   const wantDate = url.searchParams.get('date') || '';
 
-  const [sched, standings] = await Promise.all([
-    getJSON(`${SITE}/api/wc-schedule`),
-    getJSON(`${SITE}/api/standings?league=1&season=2026`),
-  ]);
+  // Season feed: every competition we cover, merged and flattened into the
+  // shape the rows below expect ({date,status,goals,elapsed,home,away,comp}).
+  const packs = await Promise.all(COMPETITIONS.map(c =>
+    getJSON(`${SITE}/api/fixtures?league=${c.id}&season=${SEASON}`).then(d => ({ comp: c, data: d }))
+  ));
+  const seen = new Set();
+  const matches = packs.flatMap(({ comp, data }) => {
+    const lg = data?.leagues?.[0];
+    if (!lg) return [];
+    return [...(lg.today || []), ...(lg.next || []), ...(lg.last || [])].map(f => ({
+      date: f.fixture?.date,
+      status: f.fixture?.status?.short,
+      elapsed: f.fixture?.status?.elapsed ?? null,
+      goals: f.goals || {},
+      home: f.teams?.home || {},
+      away: f.teams?.away || {},
+      comp: comp.short,
+      fixture_id: f.fixture?.id,
+    }));
+  }).filter(m => {
+    if (!m.fixture_id || seen.has(m.fixture_id)) return false;
+    seen.add(m.fixture_id);
+    return true;
+  });
 
-  const matches = sched?.matches || [];
-  const groups = standings?.response?.[0]?.league?.standings || [];
-
-  // Team→group from standings, lettered groups only. API-Football returns a
-  // junk "Group Stage" bucket mixing teams together — skip it so group tags
-  // stay correct.
-  const teamGroup = {};
-  for (const g of groups) {
-    const label = g?.[0]?.group || '';
-    if (!/^Group\s+[A-L]$/i.test(label)) continue;
-    const letter = label.replace(/^Group\s*/i, '').toUpperCase();
-    for (const row of g) if (row?.team?.id) teamGroup[row.team.id] = letter;
-  }
-  const groupTag = m =>
-    teamGroup[m.home?.id] || teamGroup[m.away?.id] ||
-    (m.group || '').replace(/^Group\s*/i, '').toUpperCase().replace(/^STAGE$/, '');
+  // Competition tag shown above each match row (replaces the WC group letter).
+  const groupTag = m => m.comp || '';
 
   // Target day: requested, else today MYT, else the next day that has matches.
   const today = todayMYT();
@@ -116,14 +133,14 @@ export async function onRequestGet({ request }) {
       ? `<img src="${esc(u)}" alt="">`
       : `<span class="m-ph">${esc((nm || '?').slice(0, 1))}</span>`;
     return `<div class="m">
-      ${tag ? `<div class="m-grp">GROUP ${esc(tag)}</div>` : '<div class="m-grp"></div>'}
+      ${tag ? `<div class="m-grp">${esc(tag)}</div>` : '<div class="m-grp"></div>'}
       <div class="m-row">
         <div class="m-team">${logo(m.home?.logo, m.home?.name)}<span>${esc(m.home?.name || 'TBD')}</span></div>
         <div class="m-mid">${right}</div>
         <div class="m-team away"><span>${esc(m.away?.name || 'TBD')}</span>${logo(m.away?.logo, m.away?.name)}</div>
       </div>
     </div>`;
-  }).join('') || `<div class="m-empty">No World Cup matches scheduled — full fixture list on scoreocs8.com</div>`;
+  }).join('') || `<div class="m-empty">No matches scheduled — full fixture list on scoreocs8.com</div>`;
 
   const html = `<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
@@ -188,8 +205,8 @@ export async function onRequestGet({ request }) {
       <div class="datepill">${esc(fmtDayLabel(dayKey))}</div>
     </div>
     <div class="title">
-      <div class="t1">${isToday ? 'TODAY AT THE WORLD CUP' : 'WORLD CUP · MATCH DAY'}</div>
-      <div class="t2">2026 FIFA World Cup · ${esc(dayMatches.length)} match${dayMatches.length === 1 ? '' : 'es'}</div>
+      <div class="t1">${isToday ? "TODAY'S FOOTBALL" : 'MATCH DAY'}</div>
+      <div class="t2">2026/27 Season · ${esc(dayMatches.length)} match${dayMatches.length === 1 ? '' : 'es'}</div>
     </div>
     <div class="matches">${rows}</div>
     ${nextDayKey ? `<div class="nextline">Next match day · ${esc(fmtDayLabel(nextDayKey))} — full schedule on scoreocs8.com</div>` : ''}

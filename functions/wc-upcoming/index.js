@@ -1,8 +1,12 @@
 // GET /wc-upcoming/  — screenshot-ready "Upcoming Matches" digest card.
 //
-// Renders a 1080x1350 portrait card listing the NEXT day's upcoming World Cup
-// fixtures (group, flags, teams, kickoff in MYT) in the MatchDay style. The
-// cron screenshots this and posts it once a day's matches have all finished.
+// Renders a 1080x1350 portrait card listing the next day's upcoming fixtures
+// across the competitions we cover (competition, badges, teams, kickoff in
+// MYT) in the MatchDay style. The cron screenshots this and posts it once a
+// day's matches have all finished.
+//
+// (Path kept as /wc-upcoming/ so the cron's screenshot URL keeps working;
+// the content is the 2026-27 season, not the World Cup.)
 //
 // Query params:
 //   date   YYYY-MM-DD (MYT) to feature. Default: the MYT date of the next
@@ -49,48 +53,47 @@ async function getJSON(url) {
 }
 
 const FINISHED = new Set(['FT', 'AET', 'PEN', 'AWD', 'WO']);
+const SEASON = '2026';
+const COMPETITIONS = [
+  { id: 39,  short: 'EPL' },
+  { id: 2,   short: 'UCL' },
+  { id: 140, short: 'LA LIGA' },
+  { id: 135, short: 'SERIE A' },
+  { id: 78,  short: 'BUNDESLIGA' },
+  { id: 61,  short: 'LIGUE 1' },
+];
 
 export async function onRequestGet({ request }) {
   const url = new URL(request.url);
   const wantDate = url.searchParams.get('date') || '';
   const maxN = Math.max(1, Math.min(6, parseInt(url.searchParams.get('n') || '6', 10) || 6));
 
-  const [sched, standings] = await Promise.all([
-    getJSON(`${SITE}/api/wc-schedule`),
-    getJSON(`${SITE}/api/standings?league=1&season=2026`),
-  ]);
-  let matches = sched?.matches || [];
-  // Fallback: if /api/wc-schedule is momentarily empty/unavailable, derive the
-  // fixtures from /api/fixtures — the same source the predictions page uses —
-  // so the card is never blank when data actually exists.
-  if (!matches.length) {
-    const fxData = await getJSON(`${SITE}/api/fixtures?league=1&season=2026`);
-    const lg = fxData?.leagues?.[0];
-    const buckets = lg ? [...(lg.today || []), ...(lg.next || []), ...(lg.last || [])] : [];
-    matches = buckets.map(f => ({
+  // Season feed: merge every competition we cover into one fixture list.
+  const packs = await Promise.all(COMPETITIONS.map(c =>
+    getJSON(`${SITE}/api/fixtures?league=${c.id}&season=${SEASON}`).then(d => ({ comp: c, data: d }))
+  ));
+  const seen = new Set();
+  const matches = packs.flatMap(({ comp, data }) => {
+    const lg = data?.leagues?.[0];
+    if (!lg) return [];
+    return [...(lg.today || []), ...(lg.next || []), ...(lg.last || [])].map(f => ({
       fixture_id: f.fixture?.id,
       date: f.fixture?.date,
       status: f.fixture?.status?.short || 'NS',
-      group: '',
+      comp: comp.short,
       venue: f.fixture?.venue?.name || '',
       city: f.fixture?.venue?.city || '',
       home: { id: f.teams?.home?.id, name: f.teams?.home?.name || 'TBD', logo: f.teams?.home?.logo || '' },
       away: { id: f.teams?.away?.id, name: f.teams?.away?.name || 'TBD', logo: f.teams?.away?.logo || '' },
     }));
-  }
-  const groups = standings?.response?.[0]?.league?.standings || [];
+  }).filter(m => {
+    if (!m.fixture_id || seen.has(m.fixture_id)) return false;
+    seen.add(m.fixture_id);
+    return true;
+  });
 
-  // team -> group letter, so we can label each match even when the schedule's
-  // own group join is briefly empty.
-  const teamGroup = {};
-  for (const g of groups) {
-    for (const row of g) {
-      if (row?.team?.id) teamGroup[row.team.id] = (row.group || '').replace(/^Group\s*/i, '').toUpperCase();
-    }
-  }
-  const groupOf = m =>
-    (m.group || '').replace(/^Group\s*/i, '').toUpperCase()
-    || teamGroup[m.home?.id] || teamGroup[m.away?.id] || '';
+  // Competition label per match (replaces the World Cup group letter).
+  const groupOf = m => m.comp || '';
 
   const now = Date.now();
   // Upcoming = not finished AND kickoff still ahead (small grace so a match
@@ -110,7 +113,7 @@ export async function onRequestGet({ request }) {
   const rows = dayMatches.map(m => {
     const g = groupOf(m);
     return `<div class="m">
-      ${g ? `<div class="grp">Group ${esc(g)}</div>` : ''}
+      ${g ? `<div class="grp">${esc(g)}</div>` : ''}
       <div class="row">
         <div class="flag">${flagTile(m.home?.logo, m.home?.name)}</div>
         <div class="mid">
@@ -184,7 +187,7 @@ export async function onRequestGet({ request }) {
       <div class="datepill">${esc(headerDate)}</div>
     </div>
     <div class="title">
-      <div class="t1">2026 WORLD CUP</div>
+      <div class="t1">2026/27 SEASON</div>
       <div class="t2">Upcoming Matches</div>
     </div>
     <div class="matches">${rows}</div>

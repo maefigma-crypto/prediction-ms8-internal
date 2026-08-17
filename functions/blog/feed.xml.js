@@ -33,7 +33,7 @@ export async function onRequestGet({ env }) {
     <title>ScoreOcs8 Blog | Soccer Predictions Malaysia</title>
     <link>${SITE_URL}/blog/</link>
     <atom:link href="${SITE_URL}/blog/feed.xml" rel="self" type="application/rss+xml"/>
-    <description>Daily soccer match previews, predictions and league analysis for EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1 and FIFA World Cup 2026, in MYT.</description>
+    <description>Daily football match previews, predictions and league analysis for EPL, UCL, La Liga, Serie A, Bundesliga and Ligue 1, in MYT.</description>
     <language>en-my</language>
 ${items.join('\n')}
   </channel>
