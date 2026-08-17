@@ -2384,10 +2384,10 @@ export default {
       ctx.waitUntil(postPreMatchAlerts(env));
       ctx.waitUntil(postPrematchPolls(env));
       ctx.waitUntil(checkFinishedMatches(env));
-      // Engagement posts, all KV-deduped: goal alerts every tick while WC
+      // Engagement posts, all KV-deduped: goal alerts every tick while
       // matches are live; Golden Boot race ~every 2 days (13:00 MYT); fan
-      // market daily (11:00 MYT). Group standings fire from checkFinished-
-      // Matches when the day's slate completes.
+      // market daily (11:00 MYT). The league-table digest fires from
+      // checkFinishedMatches when the day's slate completes.
       ctx.waitUntil(postGoalAlerts(env));
       ctx.waitUntil(postScorersRace(env));
       ctx.waitUntil(postFanMarket(env));
@@ -2397,9 +2397,14 @@ export default {
       // heartbeat instead, time-gated to a window (so a transient failure
       // retries on the next tick) and protected by the same per-day dedup so
       // each card still posts exactly once.
-      const { h, m } = nowMytHM();
-      if ((h === 0 && m >= 30) || (h >= 1 && h < 3)) {
-        ctx.waitUntil(postMatchdayCard(env, 'preview')); // ~00:30 MYT, before kickoffs
+      //
+      // Windows follow European kickoffs, not the old World Cup ones: club
+      // football lands roughly 19:00 MYT - 06:00 MYT, so the preview goes out
+      // in the early evening (before the night's games) and the recap in the
+      // afternoon (once the whole slate has finished).
+      const { h } = nowMytHM();
+      if (h >= 17 && h < 19) {
+        ctx.waitUntil(postMatchdayCard(env, 'preview')); // ~17:00 MYT, before kickoffs
       } else if (h >= 15 && h < 17) {
         ctx.waitUntil(postMatchdayCard(env, 'recap'));    // ~15:00 MYT, after the slate
       }
