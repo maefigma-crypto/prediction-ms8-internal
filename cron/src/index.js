@@ -2310,7 +2310,7 @@ async function postFanMarket(env, opts = {}) {
     `❓ ${pickMkt.q}`, '',
     `✅ YES ${pickMkt.yesPct}%  ·  ❌ NO ${pickMkt.noPct}%`,
     `🗳 ${pickMkt.votes} fan votes so far`, '',
-    `Cast your vote 👉 ${SITE_URL}/worldcup-markets/`, '',
+    `Cast your vote 👉 ${SITE_URL}/fan-markets/`, '',
     `#FanVote #Football #ScoreOcs8 #足球预测`,
   ];
   const msg = await sendMessage(env, { text: lines.join('\n') });

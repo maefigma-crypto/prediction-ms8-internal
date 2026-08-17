@@ -17,3 +17,12 @@
 /badminton/*  /   301
 /dota2-site/*      /   301
 /badminton-site/*  /   301
+
+# World Cup URLs retired (Aug 2026). Both pages were repurposed for the
+# 2026-27 season and have now moved to paths that match their content — the
+# old ones were still being printed in Telegram posts. 301 so the indexed
+# URLs, and every link already sent to the channel, land on the new pages.
+/worldcup-markets           /fan-markets/         301
+/worldcup-markets/*         /fan-markets/         301
+/predictions/fifa-world-cup      /predictions/today/   301
+/predictions/fifa-world-cup/*    /predictions/today/   301

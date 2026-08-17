@@ -30,8 +30,8 @@ export async function onRequestGet({ env, request }) {
     { loc: `${SITE_URL}/predictions/ligue-1/`,            priority: '0.9', changefreq: 'daily' },
     // Repurposed for 2026-27: the old World Cup URLs now serve the
     // cross-competition "today's matches" page and the season fan markets.
-    { loc: `${SITE_URL}/predictions/fifa-world-cup/`,     priority: '0.8', changefreq: 'daily' },
-    { loc: `${SITE_URL}/worldcup-markets/`,               priority: '0.7', changefreq: 'daily' },
+    { loc: `${SITE_URL}/predictions/today/`,     priority: '0.8', changefreq: 'daily' },
+    { loc: `${SITE_URL}/fan-markets/`,               priority: '0.7', changefreq: 'daily' },
   ];
 
   // Dynamic per-match pages: /match/<id>-<home>-vs-<away>/
