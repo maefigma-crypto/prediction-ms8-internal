@@ -431,12 +431,16 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeBurger();});
     <div class="seo-block">
       <h2>What We Cover</h2>
       <ul>
-        <li>Match winner predictions (Home / Draw / Away)</li>
-        <li>Correct score predictions with probability</li>
-        <li>Over/Under 2.5 goals analysis</li>
-        <li>Asian Handicap recommendations</li>
-        <li>Both Teams to Score (BTTS) picks</li>
-        <li>Live standings updated after every match</li>
+        <!-- This list states only what we actually produce. Correct-score,
+             Over/Under and BTTS were dropped in Aug 2026 (an exact scoreline
+             is not something we can call, and the goals lines were derived
+             from it). Asian Handicap was listed but never produced at all. -->
+        <li>Match winner predictions (Home / Draw / Away) with a confidence score</li>
+        <li>Win probability for each outcome, and the double chance that follows</li>
+        <li>Head-to-head record and recent form for both teams</li>
+        <li>A written pre-match note explaining the pick</li>
+        <li>Live scores, standings and top scorers, updated through the match</li>
+        <li>Every result logged publicly in our track record, win or lose</li>
         <li>Free daily alerts via Telegram @scoreocs8</li>
       </ul>
     </div>

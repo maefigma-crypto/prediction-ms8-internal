@@ -245,8 +245,6 @@ export async function onRequest(context) {
   // Label honestly: premium AI pick vs the data-driven form preview.
   const pickKindLabel = pickRaw?.source === 'ai' ? 'Pro Pick' : 'Form Pick';
   // Predicted correct score (e.g. "2-1" = home-away), rendered with team names.
-  const csRaw = String(pickRaw?.correctScore || '').match(/(\d+)\s*[-–:]\s*(\d+)/);
-  const predScore = csRaw ? { h: csRaw[1], a: csRaw[2] } : null;
 
   // Extra prediction markets derived from the projected score + 1X2
   // probabilities, so "See more" reveals more than a single line.
@@ -257,28 +255,21 @@ export async function onRequest(context) {
     : (pickRaw?.risk === 'HIGH' || (confNum != null && confNum < 60)) ? 'High risk'
     : 'Medium risk';
   const riskCls = riskLabel === 'Lower risk' ? 'low' : riskLabel === 'High risk' ? 'high' : 'med';
-  // Correct-score chance tier (how likely the exact scoreline is).
-  const scoreChance = confNum != null ? (confNum >= 78 ? 'High chance' : confNum >= 66 ? 'Mid tier' : 'Low chance') : null;
-  const scoreChanceCls = scoreChance === 'High chance' ? 'sc-high' : scoreChance === 'Mid tier' ? 'sc-mid' : 'sc-low';
-  const pH = predScore ? Number(predScore.h) : null;
-  const pA = predScore ? Number(predScore.a) : null;
-  const totalGoals = (pH != null && pA != null) ? pH + pA : null;
-  const ouPick = totalGoals != null ? (totalGoals >= 3 ? 'Over 2.5' : 'Under 2.5') : null;
-  const bttsPick = (pH != null && pA != null) ? (pH > 0 && pA > 0 ? 'Yes' : 'No') : null;
+  // Total-goals and both-teams-to-score used to be derived from the projected
+  // scoreline — arithmetic on a number we no longer publish, presented as if
+  // they were separate calls. Both are gone. Double chance below stays: it
+  // comes from the model's own win probabilities, not from a scoreline.
   let dcPick = null;
   if (probs) {
     const least = [['home', probs.home], ['draw', probs.draw], ['away', probs.away]].sort((a, b) => a[1] - b[1])[0][0];
     dcPick = least === 'away' ? `${home} or Draw` : least === 'home' ? `Draw or ${away}` : `${home} or ${away}`;
   }
   // One-line "why", weaving the markets into the form reasoning.
-  const whyExtra = totalGoals != null
-    ? ` The projected ${pH}–${pA} scoreline points to ${ouPick} total goals and both teams to score: ${bttsPick}.`
-    : '';
-  const hasMore = !!(predScore || probs);
+  const whyExtra = '';
+  const hasMore = !!probs;
 
   // Light "Statistical breakdown" — win-probability bars, recent form badges
   // and headline stats. Probs/goals from the prediction; form from match-detail.
-  const bttsChance = bttsPick ? (bttsPick === 'Yes' ? 'High' : 'Low') : null;
   const matchType = confNum != null ? (confNum >= 78 ? 'Clear edge' : confNum >= 66 ? 'Leaning' : 'Closely contested') : null;
   const homeForm = Array.isArray(detail?.homeForm) ? detail.homeForm : [];
   const awayForm = Array.isArray(detail?.awayForm) ? detail.awayForm : [];
@@ -299,9 +290,6 @@ export async function onRequest(context) {
       <div class="sb-form"><div class="sb-form-t">${esc(away)}: recent form</div><div class="sb-form-b">${formBadges(awayForm)}</div></div>
     </div>` : ''}
     ${probs ? `<div class="sb-cards">
-      ${totalGoals != null ? `<div class="sb-c"><span>Est. goals</span><strong>⚡ ${esc(totalGoals)}</strong></div>` : ''}
-      ${bttsChance ? `<div class="sb-c"><span>BTTS chance</span><strong>${esc(bttsChance)}</strong></div>` : ''}
-      ${ouPick ? `<div class="sb-c"><span>Goals line</span><strong>${esc(ouPick)}</strong></div>` : ''}
       ${matchType ? `<div class="sb-c"><span>Match type</span><strong>${esc(matchType)}</strong></div>` : ''}
     </div>` : ''}
   </section>` : '';
@@ -316,8 +304,7 @@ export async function onRequest(context) {
       pk = pl === home.toLowerCase() ? 'HOME' : pl === away.toLowerCase() ? 'AWAY' : pl.includes('draw') ? 'DRAW' : '';
     }
     if (pk) {
-      const exact = predScore && Number(predScore.h) === homeScore && Number(predScore.a) === awayScore;
-      verdict = { correct: pk === actual, exact, scoreline: `${homeScore}-${awayScore}` };
+      verdict = { correct: pk === actual, scoreline: `${homeScore}-${awayScore}` };
     }
   }
 
@@ -364,7 +351,7 @@ export async function onRequest(context) {
   const ogImage = `${SITE}/og/match?home=${encodeURIComponent(home)}&away=${encodeURIComponent(away)}&league=${encodeURIComponent(leagueName)}&date=${encodeURIComponent(fx?.fixture?.date || '')}`;
 
   // FAQ entries (drive both FAQ schema and a visible Q&A block). Tense follows
-  // match state: pre-match targets "who will win / predicted score" queries,
+  // match state: pre-match targets "who will win" queries,
   // post-match answers "who won / what was the score" with the real result.
   const faqReason = reason || `${home} face ${away} in ${leagueName}.`;
   const faqEntries = [];
@@ -378,19 +365,13 @@ export async function onRequest(context) {
     });
     faqEntries.push({
       q: `What was the final score of ${home} vs ${away}?`,
-      a: `The match finished ${home} ${homeScore}–${awayScore} ${away}${venue ? ` at ${venue}` : ''}.${predScore ? ` ScoreOcs8's pre-match projection was ${predScore.h}–${predScore.a}.` : ''}`,
+      a: `The match finished ${home} ${homeScore}–${awayScore} ${away}${venue ? ` at ${venue}` : ''}.`,
     });
   } else {
     if (pickLabel && pickLabel !== 'Preview coming up') {
       faqEntries.push({
         q: `Who will win ${home} vs ${away}?`,
         a: `ScoreOcs8's prediction favours ${pickLabel}${pickRaw?.confidence != null ? ` with ${pickRaw.confidence}% confidence` : ''}. ${faqReason}`,
-      });
-    }
-    if (predScore) {
-      faqEntries.push({
-        q: `What is the predicted score for ${home} vs ${away}?`,
-        a: `ScoreOcs8 projects a final score of ${home} ${predScore.h}–${predScore.a} ${away}. This is a form-and-data projection, not a guaranteed result.`,
       });
     }
     if (kickoff) {
@@ -778,20 +759,13 @@ table.stats td:nth-child(2){font-family:var(--fm);font-size:11px;font-weight:500
         </div>
       </div>
       ${verdict ? `<div class="pick-verdict ${verdict.correct ? 'won' : 'lost'}">
-        ${verdict.correct ? '✅ Prediction WON' : '❌ Prediction LOST'}${predScore ? ` · predicted ${esc(predScore.h)}–${esc(predScore.a)}` : ''} · final ${esc(verdict.scoreline)}${verdict.exact ? ' · exact score 🎯' : ''}
-      </div>` : ''}
-      ${predScore ? `<div class="pick-score" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;padding:12px 14px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);">
-        <span class="label">Predicted correct score${scoreChance ? ` · <em class="${scoreChanceCls}">${esc(scoreChance)}</em>` : ''}</span>
-        <span style="font-family:var(--ff);font-weight:700;font-size:16px;">${esc(home)} <span style="color:var(--accent);">${esc(predScore.h)}–${esc(predScore.a)}</span> ${esc(away)}</span>
+        ${verdict.correct ? '✅ Prediction WON' : '❌ Prediction LOST'} · final ${esc(verdict.scoreline)}
       </div>` : ''}
       ${reason ? `<div class="pick-reason">${isDone ? '<b>Pre-match analysis:</b> ' : ''}${esc(reason)}</div>` : ''}
       ${hasMore ? `<details class="pred-more">
         <summary>See more prediction &amp; why →</summary>
         <div class="pred-more-grid">
           <div><span>Match result</span><strong>${esc(pickLabel)}</strong></div>
-          ${predScore ? `<div><span>Predicted score</span><strong>${esc(home)} ${esc(predScore.h)}–${esc(predScore.a)} ${esc(away)}</strong></div>` : ''}
-          ${ouPick ? `<div><span>Total goals</span><strong>${esc(ouPick)}</strong></div>` : ''}
-          ${bttsPick ? `<div><span>Both teams to score</span><strong>${esc(bttsPick)}</strong></div>` : ''}
           ${dcPick ? `<div><span>Double chance</span><strong>${esc(dcPick)}</strong></div>` : ''}
           ${probs ? `<div><span>Win probability</span><strong>${esc(home)} ${probs.home}% · Draw ${probs.draw}% · ${esc(away)} ${probs.away}%</strong></div>` : ''}
         </div>

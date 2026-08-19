@@ -3,7 +3,12 @@ const ODDS_API_BASE = 'https://api.the-odds-api.com/v4';
 const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
 const CLAUDE_MODEL = 'claude-sonnet-4-6';
 
-const LEAGUES = { EPL: 39, UCL: 2, WC: 1 };
+// The competitions the default /api/fixtures feed covers — this is what the
+// homepage prediction grid reads. It used to be EPL + UCL + the World Cup,
+// which meant the grid could fill with finished July WC ties while La Liga,
+// Serie A, Bundesliga and Ligue 1 were missing entirely. Now it matches the
+// six competitions the site actually covers (same set as HIGHLIGHT_LEAGUES).
+const LEAGUES = { EPL: 39, UCL: 2, LALIGA: 140, SERIEA: 135, BUNDESLIGA: 78, LIGUE1: 61 };
 const HIGHLIGHT_LEAGUES = [
   { id: 39, key: 'EPL', name: 'Premier League' },
   { id: 2, key: 'UCL', name: 'UEFA Champions League' },

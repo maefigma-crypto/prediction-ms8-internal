@@ -1391,7 +1391,7 @@ function knockoutStageTitle(round) {
   return '';
 }
 
-// Branded pre-match PREDICTION card image (pick, confidence, predicted score,
+// Branded pre-match PREDICTION card image (pick, confidence,
 // risk) — screenshotted and posted with the pre-match alert.
 function tgPredictionCardUrl(fx, pick) {
   const stage = fx?.league?.id === 2 ? knockoutStageTitle(fx?.league?.round) : '';
@@ -1407,7 +1407,6 @@ function tgPredictionCardUrl(fx, pick) {
   if (tag) params.set('tag', String(tag));
   if (pick?.pick) params.set('pick', String(pick.pick));
   if (pick?.confidence != null) params.set('confidence', String(pick.confidence));
-  if (pick?.correctScore) params.set('score', String(pick.correctScore));
   if (pick?.risk) params.set('risk', String(pick.risk));
   return `${PUBLIC_SITE_URL}/og/tg-prediction?${params.toString()}`;
 }

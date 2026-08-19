@@ -2193,7 +2193,7 @@ footer{
       <a href="/predictions/premier-league/" style="display:block;padding:20px;border-radius:14px;background:linear-gradient(160deg,rgba(249,115,22,.10),rgba(249,115,22,.02));border:1px solid rgba(249,115,22,.28);text-decoration:none;color:var(--text);">
         <div style="font-size:26px;">🏴󠁧󠁢󠁥󠁮󠁧󠁿</div>
         <div style="font-family:var(--ff);font-size:20px;font-weight:700;margin:8px 0 4px;">Premier League</div>
-        <div style="font-size:13.5px;color:var(--text2);line-height:1.6;">Matchweek picks, correct scores and live tables for England’s top flight.</div>
+        <div style="font-size:13.5px;color:var(--text2);line-height:1.6;">Matchweek picks with confidence, form context and live tables for England’s top flight.</div>
       </a>
       <a href="/predictions/champions-league/" style="display:block;padding:20px;border-radius:14px;background:linear-gradient(160deg,rgba(249,115,22,.10),rgba(249,115,22,.02));border:1px solid rgba(249,115,22,.28);text-decoration:none;color:var(--text);">
         <div style="font-size:26px;">⭐</div>
@@ -2362,11 +2362,8 @@ async function openMatchDetail(fixtureId){
       const pickLabel=pred.pickLabel||pred.pick||'';
       if(!pickLabel)return '';
       const conf=pred.confidence!=null?pred.confidence+'%':'—';
-      const cs=String(pred.correctScore||'').match(/(\d+)\s*[-–:]\s*(\d+)/);
-      const ph=cs?+cs[1]:null, pa=cs?+cs[2]:null;
-      const total=(ph!=null&&pa!=null)?ph+pa:null;
-      const ou=total!=null?(total>=3?'Over 2.5':'Under 2.5'):null;
-      const btts=(ph!=null&&pa!=null)?((ph>0&&pa>0)?'Yes':'No'):null;
+      // Total goals / BTTS were arithmetic on the projected scoreline, shown
+      // as if they were separate calls. Removed with the scoreline itself.
       const pp=pred.probabilities&&pred.probabilities.home!=null?pred.probabilities:null;
       let dc=null;
       if(pp){const least=[['home',pp.home],['draw',pp.draw],['away',pp.away]].sort((a,b)=>a[1]-b[1])[0][0];dc=least==='away'?home+' or Draw':least==='home'?'Draw or '+away:home+' or '+away;}
@@ -2374,8 +2371,6 @@ async function openMatchDetail(fixtureId){
       const slug=(home+'-vs-'+away).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
       const cell=(label,val)=>val?`<div class="detail-mkt"><span>${esc(label)}</span><strong>${esc(val)}</strong></div>`:'';
       const riskTxt=(pred.risk==='LOW'||(pred.confidence!=null&&pred.confidence>=75))?'Lower risk':(pred.risk==='HIGH'||(pred.confidence!=null&&pred.confidence<60))?'High risk':'Medium risk';
-      const scoreChance=pred.confidence!=null?(pred.confidence>=78?'High chance':pred.confidence>=66?'Mid tier':'Low chance'):null;
-      const scoreChanceCls=scoreChance==='High chance'?'sc-high':scoreChance==='Mid tier'?'sc-mid':'sc-low';
       const riskC=riskTxt==='Lower risk'?'low':riskTxt==='High risk'?'high':'med';
       const FIN=['FT','AET','PEN'];
       let verdictHtml='';
@@ -2383,7 +2378,7 @@ async function openMatchDetail(fixtureId){
         const gh=fx.goals.home,ga=fx.goals.away;const actual=gh>ga?'HOME':gh<ga?'AWAY':'DRAW';
         let pk=String(pred.pick||'').toUpperCase();
         if(!['HOME','AWAY','DRAW'].includes(pk)){const pl=String(pred.pickLabel||'').toLowerCase();pk=pl===home.toLowerCase()?'HOME':pl===away.toLowerCase()?'AWAY':pl.includes('draw')?'DRAW':'';}
-        if(pk){const ok=pk===actual;verdictHtml=`<div class="detail-verdict ${ok?'won':'lost'}">${ok?'✅ Prediction WON':'❌ Prediction LOST'}${cs?` · predicted ${esc(cs[1])}–${esc(cs[2])}`:''} · final ${esc(gh)}–${esc(ga)}</div>`;}
+        if(pk){const ok=pk===actual;verdictHtml=`<div class="detail-verdict ${ok?'won':'lost'}">${ok?'✅ Prediction WON':'❌ Prediction LOST'} · final ${esc(gh)}–${esc(ga)}</div>`;}
       }
       return `<div class="detail-section">
         <div class="detail-section-title">⚡ Prediction</div>
@@ -2393,9 +2388,6 @@ async function openMatchDetail(fixtureId){
         </div>
         ${verdictHtml}
         <div class="detail-mkts">
-          ${cs?`<div class="detail-mkt"><span>Predicted score${scoreChance?` · <em class="${scoreChanceCls}">${scoreChance}</em>`:''}</span><strong>${esc(home)} ${esc(cs[1])}–${esc(cs[2])} ${esc(away)}</strong></div>`:''}
-          ${cell('Total goals',ou)}
-          ${cell('Both teams to score',btts)}
           ${cell('Double chance',dc)}
           ${pp?`<div class="detail-mkt"><span>Win probability</span><strong>${esc(home)} ${esc(pp.home)}% · Draw ${esc(pp.draw)}% · ${esc(away)} ${esc(pp.away)}%</strong></div>`:''}
         </div>
@@ -3441,7 +3433,6 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     // We show only our genuine outputs — the pick (who wins) and the predicted
     // correct score. No fake "odds" (we're not a bookmaker).
     const cardForm = arr => (Array.isArray(arr) && arr.length) ? `<div class="card-form">${arr.map(r => `<span class="cf cf-${String(r).toLowerCase()}">${esc(r)}</span>`).join('')}</div>` : '';
-    const predScore = (ai?.correctScore && /\d+\s*[-–:]\s*\d+/.test(ai.correctScore)) ? ai.correctScore.replace(/\s/g,'') : '';
     const details = fullAnalysis
       ? `<details class="easy-details"><summary>Read full pro note</summary><p>${esc(fullAnalysis.slice(0, 520))}${fullAnalysis.length > 520 ? '...' : ''}</p></details>`
       : '';
@@ -3488,10 +3479,6 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
             </div>
             <div class="easy-conf"><strong>${esc(confText)}</strong><span>Confidence</span></div>
           </div>
-          ${predScore ? `<div class="cs-block">
-            <div class="cs-head">Predicted Score</div>
-            <div class="cs-scores"><div class="cs-s main"><b>${esc(predScore)}</b></div></div>
-          </div>` : ''}
           <div class="mini-foot">
             <span class="mini-risk risk-${(riskText||'').toLowerCase().replace(/\W+/g,'')}">${esc(riskText)}</span>
             <a class="mini-link" href="/match/${fx.fixture.id}-${slugify(`${homeName}-vs-${awayName}`)}/" onclick="event.stopPropagation();event.preventDefault();openMatchDetail(${fx.fixture.id})" aria-label="View ${esc(homeName)} vs ${esc(awayName)} prediction" title="View ${esc(homeName)} vs ${esc(awayName)} prediction">More info »</a>
