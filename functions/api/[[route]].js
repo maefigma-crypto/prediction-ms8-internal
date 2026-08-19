@@ -211,6 +211,45 @@ async function handleMarkets(env) {
   return { updated: Date.now(), count: SEASON_MARKETS.length, markets: SEASON_MARKETS.map((m, i) => marketShape(m, votes[i], results[i])) };
 }
 
+// ───── Per-fixture fan votes (real counts, stored in KV) ─────
+// Replaces the old client-side vote bars, which were seeded from the model's
+// own confidence and saved to the visitor's localStorage — so every visitor
+// saw a "crowd" that was really just our confidence number, and their vote
+// only ever moved their own browser. These are real, shared counts.
+//
+// Key: fxvote:<fixtureId> = { home: n, away: n }. No pre-seeding: a fixture
+// nobody has voted on reports zeros, and the UI says so.
+const FXVOTE_TTL = 30 * 24 * 3600; // fixtures stop mattering well before this
+
+async function handleFixtureVotes(env, url) {
+  const ids = (url.searchParams.get('ids') || '')
+    .split(',').map(s => s.trim()).filter(s => /^\d+$/.test(s)).slice(0, 40);
+  if (!ids.length) return { updated: Date.now(), votes: {} };
+  const rows = await Promise.all(
+    ids.map(id => env.CACHE.get(`fxvote:${id}`, 'json').catch(() => null))
+  );
+  const votes = {};
+  ids.forEach((id, i) => {
+    const v = rows[i] || { home: 0, away: 0 };
+    votes[id] = { home: v.home || 0, away: v.away || 0 };
+  });
+  return { updated: Date.now(), votes };
+}
+
+async function handleFixtureVote(env, url) {
+  const id = (url.searchParams.get('fixture') || '').trim();
+  const side = url.searchParams.get('side');
+  if (!/^\d+$/.test(id) || (side !== 'home' && side !== 'away')) {
+    return { error: 'invalid fixture or side', status: 400 };
+  }
+  const key = `fxvote:${id}`;
+  // KV read-modify-write can drop concurrent votes; fine for fan sentiment.
+  const v = (await env.CACHE.get(key, 'json').catch(() => null)) || { home: 0, away: 0 };
+  v[side] = (v[side] || 0) + 1;
+  await env.CACHE.put(key, JSON.stringify(v), { expirationTtl: FXVOTE_TTL });
+  return { fixture_id: Number(id), home: v.home || 0, away: v.away || 0, total: (v.home || 0) + (v.away || 0) };
+}
+
 async function handleMarketVote(env, url) {
   const id = url.searchParams.get('id') || '';
   const side = url.searchParams.get('side');
@@ -892,6 +931,13 @@ export async function onRequest(context) {
         result = await handleStandings(env, url); break;
       case 'markets':
         return json(await handleMarkets(env));
+      case 'fixture-votes':
+        result = await handleFixtureVotes(env, url); break;
+      case 'fixture-vote': {
+        const fv = await handleFixtureVote(env, url);
+        if (fv.status && fv.error) return json({ error: fv.error }, fv.status);
+        return json(fv);
+      }
       case 'markets/vote': {
         const vote = await handleMarketVote(env, url);
         if (vote.status && vote.error) return json({ error: vote.error }, vote.status);

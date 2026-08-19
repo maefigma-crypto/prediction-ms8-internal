@@ -305,6 +305,10 @@ body > nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-it
 .vote-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--accent));border-radius:99px;transition:width .35s ease;}
 .vote-row{display:flex;justify-content:space-between;gap:12px;font-family:var(--fm);font-size:15px;color:var(--text2);}
 .vote-row strong{font-family:var(--ff);font-size:21px;color:var(--text);}
+.vote-row span{display:flex;gap:5px;align-items:baseline;}
+.vote-empty{margin-top:9px;text-align:center;font-family:var(--fm);font-size:12px;color:var(--text3);}
+.vote-done{margin:2px 0 4px;text-align:center;font-family:var(--fm);font-size:12px;color:var(--green);}
+.vote-note{margin-top:8px;text-align:center;font-family:var(--fm);font-size:10.5px;line-height:1.5;color:var(--text3);}
 .odds-wrap{margin-top:13px;}
 .stage-banner{margin:-4px 0 14px;padding:12px 14px;border-radius:10px;text-align:center;font-family:var(--ff);font-size:21px;font-weight:700;letter-spacing:.08em;color:#ffd9b3;background:linear-gradient(135deg,rgba(249,115,22,.24),rgba(255,176,104,.08));border:1px solid rgba(249,115,22,.5);text-shadow:0 2px 12px rgba(249,115,22,.4);}
 .stage-banner span{color:var(--accent);}
@@ -1316,11 +1320,14 @@ footer{
         <a href="/predictions/" class="btn-o" id="hl-btn1">📊 Match Prediction</a>
         <a href="#" class="btn-o" id="hl-btn3" onclick="event.preventDefault();openHiw();">💡 How It Works</a>
       </div>
+      <!-- Live figures from /api/track-record. Nothing here is hardcoded:
+           if the API is unreachable the tiles show a dash rather than a
+           number we cannot stand behind. -->
       <div class="hstats">
-        <div class="hsc"><div class="hscv" id="accctr">87%</div><div class="hscl" id="hl-acc">Accuracy</div><div class="hsct">↑ 3% this month</div></div>
-        <div class="hsc"><div class="hscv">10K+</div><div class="hscl" id="hl-users">Active Users</div><div class="hsct">↑ 12% this week</div></div>
-        <div class="hsc"><div class="hscv">100K+</div><div class="hscl" id="hl-matches">Matches Analysed</div><div class="hsct">↑ 35 today</div></div>
-        <div class="hsc"><div class="hscv">94%</div><div class="hscl" id="hl-sat">Satisfaction</div><div class="hsct">↑ 2% this quarter</div></div>
+        <div class="hsc"><div class="hscv" id="accctr">–</div><div class="hscl" id="hl-acc">Accuracy</div><div class="hsct" id="acc-sample">loading record…</div></div>
+        <div class="hsc"><div class="hscv" id="logged-ctr">–</div><div class="hscl" id="hl-matches">Results Logged</div><div class="hsct">every pick, win or lose</div></div>
+        <div class="hsc"><div class="hscv" id="streak-ctr">–</div><div class="hscl" id="hl-streak">Win Streak</div><div class="hsct">current run</div></div>
+        <div class="hsc"><div class="hscv">6</div><div class="hscl" id="hl-comps">Competitions</div><div class="hsct">EPL · UCL · Europe</div></div>
       </div>
     </div>
   </div>
@@ -1380,30 +1387,33 @@ footer{
     <div class="skd fu" id="season-key-dates"></div>
 
     <!-- ── SEASON FIXTURES (live, all major competitions) ── -->
+    <!-- Primary control: pick a competition. This drives BOTH the fixture
+         list and the table/scorers panel below, so there is one league
+         control on the page instead of two that disagreed. -->
+    <div class="lg-pick fu" id="lg-pick" role="tablist" aria-label="Choose competition">
+      <button class="lg-btn active" data-league="all"><span class="lg-flag">🌍</span><span class="lg-name">All</span></button>
+      <button class="lg-btn" data-league="39"><span class="lg-flag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span><span class="lg-name">Premier League</span></button>
+      <button class="lg-btn" data-league="2"><span class="lg-flag">⭐</span><span class="lg-name">Champions League</span></button>
+      <button class="lg-btn" data-league="140"><span class="lg-flag">🇪🇸</span><span class="lg-name">La Liga</span></button>
+      <button class="lg-btn" data-league="135"><span class="lg-flag">🇮🇹</span><span class="lg-name">Serie A</span></button>
+      <button class="lg-btn" data-league="78"><span class="lg-flag">🇩🇪</span><span class="lg-name">Bundesliga</span></button>
+      <button class="lg-btn" data-league="61"><span class="lg-flag">🇫🇷</span><span class="lg-name">Ligue 1</span></button>
+    </div>
+
+    <!-- Secondary control: which slice of that competition to show. -->
     <div class="wcs-bar fu">
       <div class="wcs-filters" id="wcs-filters">
-        <button class="wcs-chip active" data-comp="upcoming">⏰ Upcoming</button>
-        <button class="wcs-chip" data-comp="today">📅 Today</button>
-        <button class="wcs-chip" data-comp="39">EPL</button>
-        <button class="wcs-chip" data-comp="2">UCL</button>
-        <button class="wcs-chip" data-comp="140">La Liga</button>
-        <button class="wcs-chip" data-comp="135">Serie A</button>
-        <button class="wcs-chip" data-comp="78">Bundesliga</button>
-        <button class="wcs-chip" data-comp="61">Ligue 1</button>
-        <button class="wcs-chip" data-comp="results">✅ Results</button>
+        <button class="wcs-chip active" data-view="upcoming">⏰ Upcoming</button>
+        <button class="wcs-chip" data-view="today">📅 Today</button>
+        <button class="wcs-chip" data-view="results">✅ Results</button>
       </div>
       <span class="wcs-count" id="wcs-count"></span>
     </div>
     <div class="wcs-list fu" id="wcs-list"><div class="msc-loading">Loading fixtures…</div></div>
 
-    <div class="msc-tabs fu" style="margin-top:26px;">
-      <button class="msc-tab active" data-league="39" data-name="Premier League">🏴󠁧󠁢󠁥󠁮󠁧󠁿 EPL</button>
-      <button class="msc-tab" data-league="2" data-name="Champions League">⭐ UCL</button>
-      <button class="msc-tab" data-league="140" data-name="La Liga">🇪🇸 La Liga</button>
-      <button class="msc-tab" data-league="135" data-name="Serie A">🇮🇹 Serie A</button>
-      <button class="msc-tab" data-league="78" data-name="Bundesliga">🇩🇪 Bundesliga</button>
-      <button class="msc-tab" data-league="61" data-name="Ligue 1">🇫🇷 Ligue 1</button>
-    </div>
+    <!-- League detail (table / scorers / fixtures / results) follows the
+         picker above — no second row of league buttons. -->
+    <div class="msc-heading fu" id="msc-heading" style="margin-top:26px;"></div>
 
     <div class="msc-grid fu">
       <div class="msc-card">
@@ -1436,6 +1446,31 @@ footer{
       .wcs-chip:hover{background:rgba(255,255,255,0.08);color:var(--text);border-color:rgba(249,115,22,0.30);}
       .wcs-chip.active{background:linear-gradient(180deg,#ff9c4a 0%,#f97316 50%,#c75808 100%);color:#fff;border-color:transparent;box-shadow:0 3px 10px rgba(249,115,22,0.35);}
       .wcs-count{font-family:var(--fm);font-size:11px;color:var(--text3);}
+      /* Primary league picker — the main way a visitor chooses what to see. */
+      .lg-pick{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;margin-bottom:14px;}
+      .lg-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+        min-height:76px;padding:10px 6px;cursor:pointer;border-radius:12px;
+        background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.10);
+        color:var(--text2);font-family:var(--ff);transition:all .18s ease;}
+      .lg-btn:hover{background:rgba(255,255,255,.07);color:var(--text);border-color:rgba(249,115,22,.35);transform:translateY(-1px);}
+      .lg-btn.active{background:linear-gradient(180deg,rgba(249,115,22,.22),rgba(249,115,22,.08));
+        border-color:rgba(249,115,22,.65);color:var(--text);box-shadow:0 4px 14px rgba(249,115,22,.18);}
+      .lg-flag{font-size:24px;line-height:1;}
+      .lg-name{font-size:12.5px;font-weight:700;letter-spacing:.02em;text-align:center;line-height:1.2;}
+      .msc-heading{margin-bottom:14px;}
+      .msc-h-title{font-family:var(--ff);font-size:21px;font-weight:700;letter-spacing:.03em;color:var(--text);}
+      .msc-h-title span{color:var(--text3);font-weight:600;}
+      .msc-h-sub{font-family:var(--fm);font-size:11px;color:var(--text3);margin-top:2px;}
+      @media(max-width:900px){
+        .lg-pick{grid-template-columns:repeat(4,minmax(0,1fr));}
+        .lg-btn{min-height:66px;}
+        .lg-name{font-size:11px;}
+      }
+      @media(max-width:520px){
+        .lg-pick{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;}
+        .lg-flag{font-size:20px;}
+        .lg-name{font-size:10.5px;}
+      }
       .skd{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
       .skd-item{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10);border-radius:10px;padding:9px 13px;}
       .skd-item b{font-family:var(--fm);font-size:10px;letter-spacing:.08em;color:var(--accent);text-transform:uppercase;white-space:nowrap;}
@@ -1537,7 +1572,6 @@ footer{
 
     <script>
     (function(){
-      const tabs = document.querySelectorAll('.msc-tab');
       const elTable = document.getElementById('msc-table');
       const elScorers = document.getElementById('msc-scorers');
       const elUpcoming = document.getElementById('msc-upcoming');
@@ -1692,17 +1726,21 @@ footer{
         renderTable(std); renderScorers(scor); renderUpcoming(fx); renderResults(fx);
       }
 
-      tabs.forEach(t => t.addEventListener('click', () => {
-        tabs.forEach(b => b.classList.remove('active'));
-        t.classList.add('active');
-        loadLeague(t.dataset.league);
-      }));
-
-      // Initial load — EPL is the default league tab for the 2026-27 season.
-      const initialLeague = '39';
-      const initTab = document.querySelector(`.msc-tab[data-league="${initialLeague}"]`);
-      if (initTab) { tabs.forEach(b => b.classList.remove('active')); initTab.classList.add('active'); }
-      loadLeague(initialLeague);
+      // The league picker above is the single source of truth. "All" has no
+      // single table to show, so the detail panel falls back to the EPL while
+      // the fixture list stays across every competition.
+      const LG_NAMES = { 39:'Premier League', 2:'Champions League', 140:'La Liga', 135:'Serie A', 78:'Bundesliga', 61:'Ligue 1' };
+      const mscHeading = document.getElementById('msc-heading');
+      window.applyLeagueSelection = function (league) {
+        const detailLeague = league === 'all' ? '39' : league;
+        if (mscHeading) {
+          mscHeading.innerHTML = league === 'all'
+            ? `<div class="msc-h-title">Premier League <span>table &amp; scorers</span></div><div class="msc-h-sub">Pick a competition above to switch this panel</div>`
+            : `<div class="msc-h-title">${esc(LG_NAMES[detailLeague] || '')} <span>table &amp; scorers</span></div>`;
+        }
+        loadLeague(detailLeague);
+      };
+      window.applyLeagueSelection('all');
 
       /* ── SEASON FIXTURES (all major competitions, live from /api/fixtures) ── */
       const wcsList = document.getElementById('wcs-list');
@@ -1712,7 +1750,8 @@ footer{
       const WCS_DONE = new Set(['FT','AET','PEN']);
       const COMP_NAME = { 39:'Premier League', 2:'Champions League', 140:'La Liga', 135:'Serie A', 78:'Bundesliga', 61:'Ligue 1' };
       let wcsMatches = null;
-      let wcsView = 'upcoming';
+      let wcsView = 'upcoming';   // upcoming | today | results
+      let wcsLeague = 'all';      // 'all' | league id
 
       const klDate = iso => { try { return new Date(new Date(iso).getTime() + 8*3600*1000).toISOString().slice(0,10); } catch { return ''; } };
       const wcsDateHead = iso => { try { return new Date(iso).toLocaleDateString('en-MY',{timeZone:'Asia/Kuala_Lumpur',weekday:'short',day:'numeric',month:'short'}).toUpperCase(); } catch { return ''; } };
@@ -1764,24 +1803,24 @@ footer{
         const today = klDate(new Date().toISOString());
         const now = Date.now();
         const notStarted = m => !WCS_LIVE.has(m.status) && !WCS_DONE.has(m.status);
+        // League filter first, then the view slice.
+        const pool = wcsLeague === 'all'
+          ? wcsMatches
+          : wcsMatches.filter(m => String(m.leagueId) === String(wcsLeague));
         let list;
         if (wcsView === 'upcoming') {
-          const live = wcsMatches.filter(m => WCS_LIVE.has(m.status));
-          const next = wcsMatches.filter(m => notStarted(m) && new Date(m.date).getTime() > now - 3*3600*1000)
-                                 .sort((a,b) => new Date(a.date) - new Date(b.date));
+          const live = pool.filter(m => WCS_LIVE.has(m.status));
+          const next = pool.filter(m => notStarted(m) && new Date(m.date).getTime() > now - 3*3600*1000)
+                           .sort((a,b) => new Date(a.date) - new Date(b.date));
           list = [...live, ...next].slice(0, 20);
         } else if (wcsView === 'today') {
-          list = wcsMatches.filter(m => klDate(m.date) === today).sort((a,b) => new Date(a.date) - new Date(b.date));
+          list = pool.filter(m => klDate(m.date) === today).sort((a,b) => new Date(a.date) - new Date(b.date));
         } else if (wcsView === 'results') {
-          list = wcsMatches.filter(m => WCS_DONE.has(m.status)).sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 20);
-        } else {
-          list = wcsMatches.filter(m => String(m.leagueId) === wcsView)
-                           .filter(m => WCS_LIVE.has(m.status) || notStarted(m))
-                           .sort((a,b) => new Date(a.date) - new Date(b.date)).slice(0, 20);
+          list = pool.filter(m => WCS_DONE.has(m.status)).sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 20);
         }
         if (wcsCount) wcsCount.textContent = list.length ? `${list.length} matches` : '';
         if (!list.length) {
-          wcsList.innerHTML = '<div class="wcs-empty">No matches in this view right now. Try another competition.</div>';
+          wcsList.innerHTML = `<div class="wcs-empty">No ${wcsView === 'results' ? 'finished matches' : 'matches'} here right now${wcsLeague === 'all' ? '' : ' for this competition'}. Try another competition or view.</div>`;
           return;
         }
         let html = '', lastDay = '';
@@ -1796,9 +1835,20 @@ footer{
       wcsChips.forEach(c => c.addEventListener('click', () => {
         wcsChips.forEach(b => b.classList.remove('active'));
         c.classList.add('active');
-        wcsView = c.dataset.comp;
+        wcsView = c.dataset.view;
         wcsRender();
       }));
+
+      // League picker drives the fixture list AND the detail panel below.
+      document.querySelectorAll('#lg-pick .lg-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('#lg-pick .lg-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          wcsLeague = btn.dataset.league;
+          wcsRender();
+          if (window.applyLeagueSelection) window.applyLeagueSelection(wcsLeague);
+        });
+      });
 
       function wcsFlatten(payload) {
         const out = [];
@@ -1960,7 +2010,7 @@ footer{
       <div class="wc"><div class="wci">🎯</div><div class="wct">Pro Match Analysis</div><div class="wcd">Advanced ML models analyse thousands of data points per match: form, H2H, injuries, odds movements.</div></div>
       <div class="wc"><div class="wci">⚡</div><div class="wct">Real-time Updates</div><div class="wcd">Instant updates on matches, odds and predictions. Live scores every 30s. All times in MYT (Asia/KL).</div></div>
       <div class="wc"><div class="wci">🛡️</div><div class="wct">Comprehensive Data</div><div class="wcd">EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1. Major leagues only, no small competition noise.</div></div>
-      <div class="wc"><div class="wci">📈</div><div class="wct">87% Accuracy</div><div class="wcd">Prediction accuracy backed by historical data. Full transparency: every result logged publicly.</div></div>
+      <div class="wc"><div class="wci">📈</div><div class="wct">Public Track Record</div><div class="wcd">Every pick is logged with its result, win or lose. Our live accuracy and sample size are shown at the top of this page.</div></div>
     </div>
     <h3 class="stitle" style="text-align:center;margin-top:56px;font-size:26px;">Our Track Record</h3>
     <p class="ssub" style="text-align:center">Prediction performance · updated daily</p>
@@ -1974,7 +2024,7 @@ footer{
       </div>
       <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
-          <div><div style="font-family:var(--ff);font-size:14px;font-weight:600;letter-spacing:.04em;">Outcome Distribution</div><div style="font-size:11px;color:var(--text3);margin-top:2px;">Breakdown across 102K matches</div></div>
+          <div><div style="font-family:var(--ff);font-size:14px;font-weight:600;letter-spacing:.04em;">Outcome Distribution</div><div style="font-size:11px;color:var(--text3);margin-top:2px;">How our current picks are split</div></div>
           <div style="width:28px;height:28px;background:rgba(249,115,22,.1);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:14px;">📊</div>
         </div>
         <div style="display:flex;align-items:center;gap:12px;">
@@ -1982,15 +2032,15 @@ footer{
             <canvas id="dc" style="position:absolute;top:0;left:0;width:64px!important;height:64px!important;max-width:64px;max-height:64px;"></canvas>
           </div>
           <div style="flex:1;display:flex;flex-direction:column;gap:9px;">
-            <div><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:12px;color:var(--text2);">Home Win</span><span style="font-family:var(--ff);font-size:13px;font-weight:600;color:var(--accent);">42%</span></div><div style="height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;"><div class="dist-bar" style="width:0%;height:100%;background:var(--accent);border-radius:2px;transition:width 1.8s ease;"></div></div><div style="font-family:var(--fm);font-size:9px;color:var(--text3);margin-top:2px;">42,847 matches · <span style="color:var(--green)">↑5%</span></div></div>
-            <div><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:12px;color:var(--text2);">Draw</span><span style="font-family:var(--ff);font-size:13px;font-weight:600;color:var(--amber);">23%</span></div><div style="height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;"><div class="dist-bar" style="width:0%;height:100%;background:var(--amber);border-radius:2px;transition:width 2.2s ease;"></div></div><div style="font-family:var(--fm);font-size:9px;color:var(--text3);margin-top:2px;">23,456 matches · <span style="color:var(--text3)">→0%</span></div></div>
-            <div><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:12px;color:var(--text2);">Away Win</span><span style="font-family:var(--ff);font-size:13px;font-weight:600;color:var(--blue);">35%</span></div><div style="height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;"><div class="dist-bar" style="width:0%;height:100%;background:var(--blue);border-radius:2px;transition:width 2.6s ease;"></div></div><div style="font-family:var(--fm);font-size:9px;color:var(--text3);margin-top:2px;">35,697 matches · <span style="color:var(--red)">↓3%</span></div></div>
+            <div><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:12px;color:var(--text2);">Home Win</span><span style="font-family:var(--ff);font-size:13px;font-weight:600;color:var(--accent);"><span id="dist-home-pct">&ndash;</span></span></div><div style="height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;"><div class="dist-bar" style="width:0%;height:100%;background:var(--accent);border-radius:2px;transition:width 1.8s ease;"></div></div><div style="font-family:var(--fm);font-size:9px;color:var(--text3);margin-top:2px;"><span id="dist-sample">based on current picks</span></div></div>
+            <div><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:12px;color:var(--text2);">Draw</span><span style="font-family:var(--ff);font-size:13px;font-weight:600;color:var(--amber);"><span id="dist-draw-pct">&ndash;</span></span></div><div style="height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;"><div class="dist-bar" style="width:0%;height:100%;background:var(--amber);border-radius:2px;transition:width 2.2s ease;"></div></div><div style="font-family:var(--fm);font-size:9px;color:var(--text3);margin-top:2px;">23,456 matches · <span style="color:var(--text3)">→0%</span></div></div>
+            <div><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:12px;color:var(--text2);">Away Win</span><span style="font-family:var(--ff);font-size:13px;font-weight:600;color:var(--blue);"><span id="dist-away-pct">&ndash;</span></span></div><div style="height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;"><div class="dist-bar" style="width:0%;height:100%;background:var(--blue);border-radius:2px;transition:width 2.6s ease;"></div></div><div style="font-family:var(--fm);font-size:9px;color:var(--text3);margin-top:2px;">35,697 matches · <span style="color:var(--red)">↓3%</span></div></div>
           </div>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:0.75rem;">
-          <div style="background:var(--bg3);border-radius:4px;padding:7px;text-align:center;"><div style="font-family:var(--ff);font-size:16px;font-weight:700;color:var(--accent);">87%</div><div style="font-family:var(--fm);font-size:9px;color:var(--text3);margin-top:1px;">Accuracy</div></div>
-          <div style="background:var(--bg3);border-radius:4px;padding:7px;text-align:center;"><div style="font-family:var(--ff);font-size:16px;font-weight:700;color:var(--green);">+18%</div><div style="font-family:var(--fm);font-size:9px;color:var(--text3);margin-top:1px;">Avg. ROI</div></div>
-          <div style="background:var(--bg3);border-radius:4px;padding:7px;text-align:center;"><div style="font-family:var(--ff);font-size:16px;font-weight:700;color:var(--amber);">4.9/5</div><div style="font-family:var(--fm);font-size:9px;color:var(--text3);margin-top:1px;">User Rating</div></div>
+        <div style="display:grid;grid-template-columns:1fr;gap:6px;margin-top:0.75rem;">
+          <!-- Live accuracy only. The average-ROI and user-rating tiles that
+               used to sit here were removed: neither had a source behind it. -->
+          <div style="background:var(--bg3);border-radius:4px;padding:9px;text-align:center;"><div style="font-family:var(--ff);font-size:16px;font-weight:700;color:var(--accent);" id="tr-pct">&ndash;</div><div style="font-family:var(--fm);font-size:9px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;" id="tr-sample">accuracy &middot; loading</div></div>
         </div>
       </div>
     </div>
@@ -2413,11 +2463,11 @@ document.addEventListener('click',e=>{if(e.target.classList&&e.target.classList.
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeBurger();});
 document.addEventListener('click',e=>{const li=document.getElementById('auth-logged-in');const lw=document.getElementById('lang-wrap');const am=document.getElementById('auth-modal');const ld=document.getElementById('league-dropdown');if(li&&!li.contains(e.target))document.getElementById('profile-dropdown').style.display='none';if(lw&&!lw.contains(e.target)){const lm=document.getElementById('lang-menu');if(lm)lm.style.display='none';}if(ld&&!ld.contains(e.target)){ld.classList.remove('open');const a=ld.querySelector('a');if(a)a.setAttribute('aria-expanded','false');}if(e.target===am)closeModal();});
 function setLang(lang,flag){document.getElementById('lang-current').textContent='🌐 '+lang;document.getElementById('lang-menu').style.display='none';
-const t={EN:{hero1:'2026/27 Season',hero2:'Football Predictions',hero3:'EPL · UCL · Europe',herosub:"ScoreOcs8 is your football hub for the 2026-27 season: EPL, Champions League, La Liga, Serie A, Bundesliga and Ligue 1 — fixtures in MYT, daily pro picks with H2H context, live scores and settled results in one place.",btn1:'View Predictions',btn2:'Live Streaming',acc:'Accuracy',users:'Active Users',matches:'Matches Analysed',sat:'Satisfaction',predtitle:'Football Predictions',predsub:'Updated daily 08:00 MYT · Major leagues only · Powered by ScoreOcs8 Pro Analysis',motdtitle:'Match of the Day',tgtitle:'Get Picks on Telegram',tgsub:'Join @scoreocs8. Predictions auto-posted before every match. Free forever.'},
-BM:{hero1:'Musim 2026/27',hero2:'Ramalan Bola Sepak',hero3:'EPL · UCL · Eropah',herosub:'ScoreOcs8 ialah hab bola sepak anda untuk musim 2026-27: EPL, Liga Juara-Juara, La Liga, Serie A, Bundesliga dan Ligue 1 — jadual dalam MYT, pilihan pro harian dengan konteks H2H, skor langsung dan rekod keputusan.',btn1:'Lihat Ramalan',btn2:'Siaran Langsung',acc:'Ketepatan',users:'Pengguna Aktif',matches:'Perlawanan Dianalisa',sat:'Kepuasan',predtitle:'Ramalan Bola Sepak',predsub:'Dikemas kini harian 08:00 MYT · Liga utama sahaja · Dikuasakan oleh ScoreOcs8 Pro Analysis',motdtitle:'Perlawanan Hari Ini',tgtitle:'Dapatkan Pilihan di Telegram',tgsub:'Sertai @scoreocs8. Ramalan dipos automatik sebelum setiap perlawanan. Percuma selamanya.'},
-中文:{hero1:'2026/27 赛季',hero2:'足球预测',hero3:'英超 · 欧冠 · 欧洲联赛',herosub:'ScoreOcs8 是你的 2026-27 赛季足球主场：英超、欧冠、西甲、意甲、德甲与法甲 — 完整赛程（MYT）、每日专业推荐、H2H 数据、实时比分与已结算赛果。',btn1:'查看预测',btn2:'直播',acc:'准确率',users:'活跃用户',matches:'已分析比赛',sat:'满意度',predtitle:'足球比赛预测',predsub:'每日08:00 MYT更新 · 仅主要联赛 · 由ScoreOcs8 Pro Analysis驱动',motdtitle:'今日焦点赛事',tgtitle:'在Telegram获取预测',tgsub:'加入@scoreocs8，每场比赛前自动发布预测。永久免费。'}};
+const t={EN:{hero1:'2026/27 Season',hero2:'Football Predictions',hero3:'EPL · UCL · Europe',herosub:"ScoreOcs8 is your football hub for the 2026-27 season: EPL, Champions League, La Liga, Serie A, Bundesliga and Ligue 1 — fixtures in MYT, daily pro picks with H2H context, live scores and settled results in one place.",btn1:'View Predictions',btn2:'Live Streaming',acc:'Accuracy',users:'Win Streak',matches:'Results Logged',sat:'Competitions',predtitle:'Football Predictions',predsub:'Updated daily 08:00 MYT · Major leagues only · Powered by ScoreOcs8 Pro Analysis',motdtitle:'Match of the Day',tgtitle:'Get Picks on Telegram',tgsub:'Join @scoreocs8. Predictions auto-posted before every match. Free forever.'},
+BM:{hero1:'Musim 2026/27',hero2:'Ramalan Bola Sepak',hero3:'EPL · UCL · Eropah',herosub:'ScoreOcs8 ialah hab bola sepak anda untuk musim 2026-27: EPL, Liga Juara-Juara, La Liga, Serie A, Bundesliga dan Ligue 1 — jadual dalam MYT, pilihan pro harian dengan konteks H2H, skor langsung dan rekod keputusan.',btn1:'Lihat Ramalan',btn2:'Siaran Langsung',acc:'Ketepatan',users:'Rentetan Menang',matches:'Keputusan Direkod',sat:'Pertandingan',predtitle:'Ramalan Bola Sepak',predsub:'Dikemas kini harian 08:00 MYT · Liga utama sahaja · Dikuasakan oleh ScoreOcs8 Pro Analysis',motdtitle:'Perlawanan Hari Ini',tgtitle:'Dapatkan Pilihan di Telegram',tgsub:'Sertai @scoreocs8. Ramalan dipos automatik sebelum setiap perlawanan. Percuma selamanya.'},
+中文:{hero1:'2026/27 赛季',hero2:'足球预测',hero3:'英超 · 欧冠 · 欧洲联赛',herosub:'ScoreOcs8 是你的 2026-27 赛季足球主场：英超、欧冠、西甲、意甲、德甲与法甲 — 完整赛程（MYT）、每日专业推荐、H2H 数据、实时比分与已结算赛果。',btn1:'查看预测',btn2:'直播',acc:'准确率',users:'连胜',matches:'已记录结果',sat:'赛事',predtitle:'足球比赛预测',predsub:'每日08:00 MYT更新 · 仅主要联赛 · 由ScoreOcs8 Pro Analysis驱动',motdtitle:'今日焦点赛事',tgtitle:'在Telegram获取预测',tgsub:'加入@scoreocs8，每场比赛前自动发布预测。永久免费。'}};
 const d=t[lang]||t['EN'];
-const ids=[['hl-hero1',d.hero1],['hl-hero2',d.hero2],['hl-hero3',d.hero3],['hl-herosub',d.herosub],['hl-btn1',d.btn1],['hl-btn2',d.btn2],['hl-acc',d.acc],['hl-users',d.users],['hl-matches',d.matches],['hl-sat',d.sat],['hl-predtitle',d.predtitle],['hl-predsub',d.predsub],['hl-motdtitle',d.motdtitle],['hl-tgtitle',d.tgtitle],['hl-tgsub',d.tgsub]];
+const ids=[['hl-hero1',d.hero1],['hl-hero2',d.hero2],['hl-hero3',d.hero3],['hl-herosub',d.herosub],['hl-btn1',d.btn1],['hl-btn2',d.btn2],['hl-acc',d.acc],['hl-streak',d.users],['hl-matches',d.matches],['hl-comps',d.sat],['hl-predtitle',d.predtitle],['hl-predsub',d.predsub],['hl-motdtitle',d.motdtitle],['hl-tgtitle',d.tgtitle],['hl-tgsub',d.tgsub]];
 ids.forEach(([id,val])=>{const el=document.getElementById(id);if(el)el.textContent=val;});
 }
 const SCOREOCS8_I18N = {
@@ -2434,9 +2484,9 @@ const SCOREOCS8_I18N = {
       prediction: '📊 Match Prediction',
       how: '💡 How It Works',
       accuracy: 'Accuracy',
-      users: 'Active Users',
-      analysed: 'Matches Analysed',
-      satisfaction: 'Satisfaction',
+      streak: 'Win Streak',
+      analysed: 'Results Logged',
+      comps: 'Competitions',
       introTag: 'Bet On OCS8',
       introTitle: 'Bet on Pro Match Predictions, Win Real Money',
       introSub: 'ScoreOcs8 covers major football leagues only: EPL, UEFA Champions League, La Liga, Serie A, Bundesliga and Ligue 1. Read daily pro picks, match context, and result records before kickoff.',
@@ -2477,8 +2527,8 @@ const SCOREOCS8_I18N = {
       why2d: 'Instant updates on matches, odds and predictions. Live scores every 30s. All times in MYT (Asia/KL).',
       why3: 'Comprehensive Data',
       why3d: 'EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1. Major leagues only, no small competition noise.',
-      why4: '87% Accuracy',
-      why4d: 'Prediction accuracy backed by historical data. Full transparency: every result logged publicly.',
+      why4: 'Public Track Record',
+      why4d: 'Every pick is logged with its result, win or lose. Our live accuracy and sample size are shown at the top of this page.',
       performance: 'Performance',
       insights: 'Prediction Insights',
       insightsSub: 'Real-time accuracy stats · Updated daily',
@@ -2547,9 +2597,9 @@ const SCOREOCS8_I18N = {
       prediction: '📊 Ramalan Perlawanan',
       how: '💡 Cara Ia Berfungsi',
       accuracy: 'Ketepatan',
-      users: 'Pengguna Aktif',
-      analysed: 'Perlawanan Dianalisis',
-      satisfaction: 'Kepuasan',
+      streak: 'Rentetan Menang',
+      analysed: 'Keputusan Direkod',
+      comps: 'Pertandingan',
       introTag: 'Bet Di OCS8',
       introTitle: 'Bet Pada Ramalan Pro, Menang Wang Sebenar',
       introSub: 'ScoreOcs8 hanya meliputi liga bola sepak utama: EPL, Liga Juara-Juara UEFA, La Liga, Serie A, Bundesliga dan Ligue 1. Baca pilihan pro harian, konteks perlawanan dan rekod keputusan sebelum sepak mula.',
@@ -2590,8 +2640,8 @@ const SCOREOCS8_I18N = {
       why2d: 'Update segera untuk perlawanan, odds dan ramalan. Skor live setiap 30s. Semua masa dalam MYT (Asia/KL).',
       why3: 'Data Menyeluruh',
       why3d: 'EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1. Liga utama sahaja, tiada gangguan liga kecil.',
-      why4: 'Ketepatan 87%',
-      why4d: 'Ketepatan ramalan disokong data sejarah. Telus sepenuhnya: setiap keputusan direkod secara publik.',
+      why4: 'Rekod Awam',
+      why4d: 'Setiap pilihan direkod bersama keputusannya, menang atau kalah. Ketepatan semasa dan saiz sampel dipaparkan di bahagian atas halaman ini.',
       performance: 'Prestasi',
       insights: 'Insight Ramalan',
       insightsSub: 'Stat ketepatan masa nyata · Dikemas kini harian',
@@ -2660,9 +2710,9 @@ const SCOREOCS8_I18N = {
       prediction: '📊 比赛预测',
       how: '💡 如何使用',
       accuracy: '准确率',
-      users: '活跃用户',
-      analysed: '已分析赛事',
-      satisfaction: '满意度',
+      streak: '连胜',
+      analysed: '已记录结果',
+      comps: '赛事',
       introTag: '在 OCS8 投注',
       introTitle: '跟随专业赛事预测，赢取真钱回报',
       introSub: 'ScoreOcs8 只覆盖主要足球联赛：英超、欧冠、西甲、意甲、德甲和法甲。开赛前先阅读每日专业推荐、赛事背景和结果记录。',
@@ -2703,8 +2753,8 @@ const SCOREOCS8_I18N = {
       why2d: '比赛、赔率和预测即时更新。实时比分每 30 秒刷新。全部时间为 MYT（Asia/KL）。',
       why3: '完整数据',
       why3d: 'EPL、UCL、La Liga、Serie A、Bundesliga、Ligue 1。只做主要联赛，不做小联赛噪音。',
-      why4: '87% 准确率',
-      why4d: '预测准确率由历史数据支持。完全透明：每个结果都会公开记录。',
+      why4: '公开战绩',
+      why4d: '每个预测都会连同结果一起记录，无论输赢。当前准确率与样本数量显示在本页顶部。',
       performance: '表现',
       insights: '预测数据洞察',
       insightsSub: '实时准确率数据 · 每日更新',
@@ -2790,9 +2840,9 @@ function setLang(lang) {
   i18nSetText('#hl-btn1', d.prediction);
   i18nSetText('#hl-btn3', d.how);
   i18nSetText('#hl-acc', d.accuracy);
-  i18nSetText('#hl-users', d.users);
   i18nSetText('#hl-matches', d.analysed);
-  i18nSetText('#hl-sat', d.satisfaction);
+  i18nSetText('#hl-streak', d.streak);
+  i18nSetText('#hl-comps', d.comps);
 
   i18nSetText('#intro .stag', d.introTag);
   i18nSetText('#intro .stitle', d.introTitle);
@@ -2865,11 +2915,62 @@ window.addEventListener('load',()=>{
   const tc=document.getElementById('tc');
   if(tc)new Chart(tc,{type:'line',data:{labels:['Nov','Dec','Jan','Feb','Mar','Apr'],datasets:[{data:[82,82.5,83.5,85.5,87,87],borderColor:'#f97316',backgroundColor:'rgba(249,115,22,0.12)',borderWidth:2,fill:true,tension:0.4,pointBackgroundColor:'#f97316',pointRadius:3}]},options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#4a5a72',font:{size:11}},grid:{color:'rgba(255,255,255,0.04)'}},y:{min:79,max:90,ticks:{color:'#4a5a72',font:{size:11}},grid:{color:'rgba(255,255,255,0.04)'}}}}});
   const dc=document.getElementById('dc');
-  if(dc){dc.width=64;dc.height=64;new Chart(dc,{type:'doughnut',data:{datasets:[{data:[42,23,35],backgroundColor:['#f97316','#f5a623','#3d8fff'],borderWidth:0,hoverOffset:2}]},options:{responsive:false,animation:{duration:2000,easing:'easeInOutQuart'},cutout:'68%',plugins:{legend:{display:false}}},plugins:[{id:'ct',beforeDraw(c){const{width:w,height:h,ctx}=c;ctx.restore();ctx.font='bold 9px Rajdhani,sans-serif';ctx.fillStyle='#f97316';ctx.textBaseline='middle';const t='102K';ctx.fillText(t,w/2-ctx.measureText(t).width/2,h/2-4);ctx.font='7px DM Mono,monospace';ctx.fillStyle='#4a5a72';const s='Total';ctx.fillText(s,w/2-ctx.measureText(s).width/2,h/2+5);ctx.save();}}]});}
-  const distObs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){document.querySelectorAll('.dist-bar').forEach((b,i)=>{const w=['42%','23%','35%'][i];setTimeout(()=>{b.style.width=w;},i*200);});distObs.disconnect();}});},{threshold:.3});
-  const distEl=document.querySelector('.dist-bar');if(distEl)distObs.observe(distEl.closest('div').parentElement.parentElement);
-  const a=document.getElementById('accctr');
-  if(a){let n=0;const t=setInterval(()=>{n=Math.min(n+2,87);a.textContent=n+'%';if(n>=87)clearInterval(t);},20);}
+  if(dc){dc.width=64;dc.height=64;new Chart(dc,{type:'doughnut',data:{datasets:[{data:(window.pickSplit&&window.pickSplit())||[0,0,0],backgroundColor:['#f97316','#f5a623','#3d8fff'],borderWidth:0,hoverOffset:2}]},options:{responsive:false,animation:{duration:2000,easing:'easeInOutQuart'},cutout:'68%',plugins:{legend:{display:false}}},plugins:[{id:'ct',beforeDraw(c){const{width:w,height:h,ctx}=c;ctx.restore();ctx.font='bold 9px Rajdhani,sans-serif';ctx.fillStyle='#f97316';ctx.textBaseline='middle';const t=String((window.pickSplit?window.pickSplit():[0,0,0]).reduce((a,b)=>a+b,0));ctx.fillText(t,w/2-ctx.measureText(t).width/2,h/2-4);ctx.font='7px DM Mono,monospace';ctx.fillStyle='#4a5a72';const s='picks';ctx.fillText(s,w/2-ctx.measureText(s).width/2,h/2+5);ctx.save();}}]});}
+  // Pick distribution: computed from the predictions actually loaded in the
+  // feed, not a fixed shape. Until predictions land, the rows show a dash.
+  function renderPickDistribution() {
+    const st = window.predictionState;
+    const aiMap = st && st.aiMap;
+    if (!aiMap) return;
+    let home = 0, draw = 0, away = 0;
+    for (const k of Object.keys(aiMap)) {
+      const pk = String(aiMap[k] && aiMap[k].pick || '').toUpperCase();
+      if (pk === 'HOME') home++; else if (pk === 'AWAY') away++; else if (pk === 'DRAW') draw++;
+    }
+    const total = home + draw + away;
+    const bars = document.querySelectorAll('.dist-bar');
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = total ? v + '%' : '–'; };
+    if (!total) {
+      bars.forEach(b => { b.style.width = '0%'; });
+      const s0 = document.getElementById('dist-sample');
+      if (s0) s0.textContent = 'no picks loaded yet';
+      return;
+    }
+    const pct = n => Math.round((n / total) * 100);
+    const vals = [pct(home), pct(draw), pct(away)];
+    const sample = document.getElementById('dist-sample');
+    if (sample) sample.textContent = `based on ${total} current pick${total === 1 ? '' : 's'}`;
+    set('dist-home-pct', vals[0]); set('dist-draw-pct', vals[1]); set('dist-away-pct', vals[2]);
+    bars.forEach((b, i) => { setTimeout(() => { b.style.width = vals[i] + '%'; }, i * 200); });
+  }
+  window.renderPickDistribution = renderPickDistribution;
+  // Same numbers the bars use, for the doughnut chart.
+  window.pickSplit = function () {
+    const aiMap = (window.predictionState || {}).aiMap || {};
+    let home = 0, draw = 0, away = 0;
+    for (const k of Object.keys(aiMap)) {
+      const pk = String(aiMap[k] && aiMap[k].pick || '').toUpperCase();
+      if (pk === 'HOME') home++; else if (pk === 'AWAY') away++; else if (pk === 'DRAW') draw++;
+    }
+    return [home, draw, away];
+  };
+  // Hero stats come from the live track record — the same numbers the
+  // Track Record section below shows. Never invent one: on failure the tiles
+  // keep their dash.
+  (async () => {
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    try {
+      const d = await fetch('/api/track-record').then(r => r.ok ? r.json() : null);
+      if (!d) return;
+      const n = d.overall?.count ?? 0;
+      set('accctr', n ? `${d.overall.pct}%` : '–');
+      set('acc-sample', n ? `from ${n} logged result${n === 1 ? '' : 's'}` : 'no results logged yet');
+      set('logged-ctr', String(n));
+      set('streak-ctr', String(d.winStreak ?? 0));
+      set('tr-pct', n ? `${d.overall.pct}%` : '–');
+      set('tr-sample', n ? `accuracy · ${n} result${n === 1 ? '' : 's'}` : 'no results logged yet');
+    } catch (_) { /* leave the dashes */ }
+  })();
 });
 </script>
 
@@ -3151,50 +3252,58 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     return 'A confidence guide — not a guaranteed result.';
   }
 
-  function aiVoteSeed(pick, homeName, awayName, confValue) {
-    const conf = Number.isFinite(Number(confValue)) ? Math.max(52, Math.min(88, Number(confValue))) : 58;
-    const text = String(pick || '').toLowerCase();
-    const home = String(homeName || '').toLowerCase();
-    const away = String(awayName || '').toLowerCase();
-    if ((away && text.includes(away) && !(home && text.includes(home))) || text.includes('away')) return { home: 100 - conf, away: conf };
-    return { home: conf, away: 100 - conf };
+  /* ───── Fan votes (real, shared counts from /api/fixture-votes) ─────
+     These used to be seeded from our own confidence number and saved to
+     localStorage, so every visitor saw a "crowd" that was really just the
+     model's confidence, and a vote only ever moved that visitor's own bar.
+     The counts now come from KV and are the same for everyone. A fixture
+     nobody has voted on shows zero and says so — we never pre-fill a bar. */
+  const voteCounts = {};            // fixture_id -> { home, away }
+  const votedLocally = new Set();   // one vote per fixture per browser
+
+  try {
+    JSON.parse(localStorage.getItem('ocs8_voted') || '[]').forEach(id => votedLocally.add(String(id)));
+  } catch (_) {}
+
+  async function loadVotes(ids) {
+    const want = [...new Set((ids || []).map(String))].filter(id => /^\d+$/.test(id)).slice(0, 40);
+    if (!want.length) return;
+    const d = await getJSON(API + '/fixture-votes?ids=' + want.join(','));
+    if (d && d.votes) Object.assign(voteCounts, d.votes);
   }
 
-  function voteState(fixtureId, pick, homeName, awayName, confValue) {
-    const seed = aiVoteSeed(pick, homeName, awayName, confValue);
-    try {
-      const saved = JSON.parse(localStorage.getItem(`ocs8_vote_${fixtureId}`) || 'null');
-      if (saved && Number.isFinite(saved.home) && Number.isFinite(saved.away)) return saved;
-    } catch (_) {}
-    return seed;
+  function voteMarkup(fixtureId) {
+    const v = voteCounts[fixtureId] || { home: 0, away: 0 };
+    const total = (v.home || 0) + (v.away || 0);
+    const done = votedLocally.has(String(fixtureId));
+    const pct = total ? Math.round((v.home / total) * 100) : 50;
+    const bar = total
+      ? `<div class="vote-bar"><div class="vote-fill" style="width:${pct}%"></div></div>
+         <div class="vote-row"><span>Home <strong>${v.home}</strong></span><span>${total} vote${total === 1 ? '' : 's'}</span><span>Away <strong>${v.away}</strong></span></div>`
+      : `<div class="vote-empty">${done ? 'Counts update shortly.' : 'No votes yet — be the first.'}</div>`;
+    const actions = done
+      ? `<div class="vote-done">✓ Your vote is counted</div>`
+      : `<div class="vote-actions">
+           <button class="vote-btn home" onclick="castVote(${Number(fixtureId)},'home',event)">Home win</button>
+           <button class="vote-btn away" onclick="castVote(${Number(fixtureId)},'away',event)">Away win</button>
+         </div>`;
+    return `<div class="quick-vote" data-fixture-id="${Number(fixtureId)}">
+      <div class="quick-vote-title">Who do you think wins?</div>
+      ${actions}${bar}
+      <div class="vote-note">Reader votes — not our prediction, and not counted in our track record.</div>
+    </div>`;
   }
 
-  function quickVote(fixtureId, side, event) {
-    if (event) event.stopPropagation();
+  window.castVote = async function (fixtureId, side, event) {
+    if (event) { event.stopPropagation(); event.preventDefault(); }
+    if (votedLocally.has(String(fixtureId))) return;
+    votedLocally.add(String(fixtureId));
+    try { localStorage.setItem('ocs8_voted', JSON.stringify([...votedLocally])); } catch (_) {}
+    const d = await getJSON(`${API}/fixture-vote?fixture=${encodeURIComponent(fixtureId)}&side=${side}`);
+    if (d && Number.isFinite(d.home)) voteCounts[fixtureId] = { home: d.home, away: d.away };
     const wrap = document.querySelector(`.quick-vote[data-fixture-id="${fixtureId}"]`);
-    if (!wrap) return;
-    const current = {
-      home: Number(wrap.dataset.homeVotes || 0),
-      away: Number(wrap.dataset.awayVotes || 0)
-    };
-    current[side] = Math.min(99, current[side] + 8);
-    const total = Math.max(1, current.home + current.away);
-    const next = {
-      home: Math.round((current.home / total) * 100),
-      away: Math.round((current.away / total) * 100)
-    };
-    try { localStorage.setItem(`ocs8_vote_${fixtureId}`, JSON.stringify(next)); } catch (_) {}
-    wrap.dataset.homeVotes = next.home;
-    wrap.dataset.awayVotes = next.away;
-    const fill = wrap.querySelector('.vote-fill');
-    const home = wrap.querySelector('[data-vote-home]');
-    const away = wrap.querySelector('[data-vote-away]');
-    const note = wrap.querySelector('.vote-note');
-    if (fill) fill.style.width = `${next.home}%`;
-    if (home) home.textContent = `${next.home}%`;
-    if (away) away.textContent = `${next.away}%`;
-    if (note) note.textContent = 'Your click is saved on this device. Use this as customer sentiment, not confirmed match data.';
-  }
+    if (wrap) wrap.outerHTML = voteMarkup(fixtureId);
+  };
 
   function renderLiveCenter(all, aiMap, slipMap = {}) {
     const main = document.getElementById('live-main');
@@ -3287,19 +3396,6 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
   }
   // Competitions whose knockout rounds are worth shouting about on the card.
   const BANNER_COMPS = { 2: '⭐ CHAMPIONS LEAGUE' };
-  // From a "h-a" correct score + pick side, derive 3 scoreline options + a
-  // goals (over/under) line + a likely total range. Numbers only, no team names.
-  function scorePack(cs, pickSide) {
-    const m = String(cs || '').match(/(\d+)\s*[-–:]\s*(\d+)/);
-    if (!m) return null;
-    const h = +m[1], a = +m[2], total = h + a, pk = String(pickSide || '').toUpperCase();
-    const set = []; const push = s => { if (s && !set.includes(s)) set.push(s); };
-    push(`${h}-${a}`);
-    if (pk === 'AWAY') { push(`${Math.max(h - 1, 0)}-${a}`); push('1-1'); push(`${h}-${a + 1}`); }
-    else if (pk === 'DRAW') { push('1-1'); push('2-2'); push('0-0'); }
-    else { push(`${h}-${Math.max(a - 1, 0)}`); push('1-1'); push(`${h + 1}-${a}`); }
-    return { scores: set.slice(0, 3), goalsLine: total <= 3 ? 'Under 3.5' : 'Over 3.5', totalRange: `${Math.max(1, total - 1)}-${total}` };
-  }
   function predCard(fx, idx, aiMap, slipMap = {}) {
     const m = metaOf(fx);
     const live_ = isLive(fx);
@@ -3346,9 +3442,6 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     // correct score. No fake "odds" (we're not a bookmaker).
     const cardForm = arr => (Array.isArray(arr) && arr.length) ? `<div class="card-form">${arr.map(r => `<span class="cf cf-${String(r).toLowerCase()}">${esc(r)}</span>`).join('')}</div>` : '';
     const predScore = (ai?.correctScore && /\d+\s*[-–:]\s*\d+/.test(ai.correctScore)) ? ai.correctScore.replace(/\s/g,'') : '';
-    const votes = voteState(fx.fixture.id, pickLabel, homeName, awayName, confValue);
-    const voteHome = Math.max(0, Math.min(100, Number(votes.home) || 0));
-    const voteAway = Math.max(0, Math.min(100, Number(votes.away) || 0));
     const details = fullAnalysis
       ? `<details class="easy-details"><summary>Read full pro note</summary><p>${esc(fullAnalysis.slice(0, 520))}${fullAnalysis.length > 520 ? '...' : ''}</p></details>`
       : '';
@@ -3395,16 +3488,16 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
             </div>
             <div class="easy-conf"><strong>${esc(confText)}</strong><span>Confidence</span></div>
           </div>
-          ${(() => { const sp = scorePack(ai?.correctScore, ai?.pick); if (!sp) return ''; const lbls = ['Main', '2nd', 'Alt']; return `<div class="cs-block">
-            <div class="cs-head">Correct Score</div>
-            <div class="cs-scores">${sp.scores.map((s, i) => `<div class="cs-s${i === 0 ? ' main' : ''}"><span>${lbls[i] || 'Alt'}</span><b>${esc(s)}</b></div>`).join('')}</div>
-            <div class="cs-goals">Goals O/U <b>${esc(sp.goalsLine)}</b> · likely total <b>${esc(sp.totalRange)}</b></div>
-          </div>`; })()}
+          ${predScore ? `<div class="cs-block">
+            <div class="cs-head">Predicted Score</div>
+            <div class="cs-scores"><div class="cs-s main"><b>${esc(predScore)}</b></div></div>
+          </div>` : ''}
           <div class="mini-foot">
             <span class="mini-risk risk-${(riskText||'').toLowerCase().replace(/\W+/g,'')}">${esc(riskText)}</span>
             <a class="mini-link" href="/match/${fx.fixture.id}-${slugify(`${homeName}-vs-${awayName}`)}/" onclick="event.stopPropagation();event.preventDefault();openMatchDetail(${fx.fixture.id})" aria-label="View ${esc(homeName)} vs ${esc(awayName)} prediction" title="View ${esc(homeName)} vs ${esc(awayName)} prediction">More info »</a>
           </div>
         </div>
+        ${voteMarkup(fx.fixture.id)}
       </div>
     </div>`;
   }
@@ -3427,6 +3520,18 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
   // Season feed ordering. The World Cup is over (final: 19 Jul 2026) and the
   // site is football-club-only, so the feed is simply every covered league in
   // date order — no tournament gets promoted ahead of the others.
+
+  // Pull the real vote counts for whatever is about to be rendered, then
+  // re-render so the bars show shared totals rather than an empty state.
+  async function refreshVotes(list) {
+    const ids = (list || []).map(fx => fx?.fixture?.id).filter(Boolean);
+    const before = JSON.stringify(voteCounts);
+    await loadVotes(ids);
+    if (JSON.stringify(voteCounts) !== before) {
+      const st = window.predictionState;
+      if (st) renderPreds(st.all || [], st.aiMap || {}, st.slipMap || {});
+    }
+  }
 
   function renderPreds(all, aiMap, slipMap = {}) {
     const grid = document.getElementById('pred-grid'); if (!grid) return;
@@ -3577,6 +3682,8 @@ function gohiw(n){[1,2,3].forEach(function(i){var s=document.getElementById('hiw
     renderLiveCenter(all, aiMap, state.slipMap);
     renderPreds(all, aiMap, state.slipMap);
     renderMotd(all);
+    refreshVotes(all);
+    if (window.renderPickDistribution) window.renderPickDistribution();
     renderStandings(standings);
     renderTopScorers(topScorers);
 
