@@ -255,10 +255,8 @@ export async function onRequest(context) {
     : (pickRaw?.risk === 'HIGH' || (confNum != null && confNum < 60)) ? 'High risk'
     : 'Medium risk';
   const riskCls = riskLabel === 'Lower risk' ? 'low' : riskLabel === 'High risk' ? 'high' : 'med';
-  // Total-goals and both-teams-to-score used to be derived from the projected
-  // scoreline — arithmetic on a number we no longer publish, presented as if
-  // they were separate calls. Both are gone. Double chance below stays: it
-  // comes from the model's own win probabilities, not from a scoreline.
+  // Rows derived from a projected scoreline were removed. Double chance below
+  // stays: it comes from the model's own win probabilities.
   let dcPick = null;
   if (probs) {
     const least = [['home', probs.home], ['draw', probs.draw], ['away', probs.away]].sort((a, b) => a[1] - b[1])[0][0];

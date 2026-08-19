@@ -2362,8 +2362,7 @@ async function openMatchDetail(fixtureId){
       const pickLabel=pred.pickLabel||pred.pick||'';
       if(!pickLabel)return '';
       const conf=pred.confidence!=null?pred.confidence+'%':'—';
-      // Total goals / BTTS were arithmetic on the projected scoreline, shown
-      // as if they were separate calls. Removed with the scoreline itself.
+      // Market rows derived from a projected scoreline were removed here.
       const pp=pred.probabilities&&pred.probabilities.home!=null?pred.probabilities:null;
       let dc=null;
       if(pp){const least=[['home',pp.home],['draw',pp.draw],['away',pp.away]].sort((a,b)=>a[1]-b[1])[0][0];dc=least==='away'?home+' or Draw':least==='home'?'Draw or '+away:home+' or '+away;}
