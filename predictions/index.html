@@ -72,9 +72,12 @@ a{color:inherit}
   </section>
 
   <section class="stats">
-    <div class="stat"><b>87%</b><span>Accuracy Rate</span></div>
-    <div class="stat"><b>10,000+</b><span>Matches Analyzed</span></div>
-    <div class="stat"><b>AI</b><span>Powered Picks</span></div>
+    <!-- Live figures from /api/track-record. The fixed accuracy-rate and
+         matches-analyzed tiles that used to sit here were invented; accuracy
+         is now shown with the sample size behind it. -->
+    <div class="stat"><b id="ph-acc">&ndash;</b><span id="ph-acc-l">Accuracy</span></div>
+    <div class="stat"><b id="ph-logged">&ndash;</b><span>Results Logged</span></div>
+    <div class="stat"><b>6</b><span>Competitions Covered</span></div>
   </section>
 
   <section class="grid" id="grid"><div class="empty">Loading predictions...</div></section>
@@ -172,5 +175,16 @@ document.getElementById('reset').addEventListener('click', () => { document.getE
 load().catch(() => { document.getElementById('grid').innerHTML = '<div class="empty">Could not load predictions right now.</div>'; });
 </script>
 <script src="/betting-tutorial.js" defer></script>
+<script>
+/* Real figures only — a failed call leaves the dash in place. */
+fetch('/api/track-record').then(r => r.ok ? r.json() : null).then(d => {
+  if (!d) return;
+  const n = d.overall?.count ?? 0;
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('ph-acc', n ? d.overall.pct + '%' : '–');
+  set('ph-acc-l', n ? `Accuracy · ${n} result${n === 1 ? '' : 's'}` : 'No results logged yet');
+  set('ph-logged', String(n));
+}).catch(() => {});
+</script>
 </body>
 </html>
