@@ -222,9 +222,11 @@ async function handleMarkets(env) {
 const FXVOTE_TTL = 30 * 24 * 3600; // fixtures stop mattering well before this
 
 async function handleFixtureVotes(env, url) {
+  // The route table below serialises `result.data`, so this returns the
+  // { data, source } shape the cached() helpers use.
   const ids = (url.searchParams.get('ids') || '')
     .split(',').map(s => s.trim()).filter(s => /^\d+$/.test(s)).slice(0, 40);
-  if (!ids.length) return { updated: Date.now(), votes: {} };
+  if (!ids.length) return { data: { updated: Date.now(), votes: {} }, source: 'kv' };
   const rows = await Promise.all(
     ids.map(id => env.CACHE.get(`fxvote:${id}`, 'json').catch(() => null))
   );
@@ -233,7 +235,7 @@ async function handleFixtureVotes(env, url) {
     const v = rows[i] || { home: 0, away: 0 };
     votes[id] = { home: v.home || 0, away: v.away || 0 };
   });
-  return { updated: Date.now(), votes };
+  return { data: { updated: Date.now(), votes }, source: 'kv' };
 }
 
 async function handleFixtureVote(env, url) {
